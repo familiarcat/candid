@@ -2,9 +2,9 @@ import Navigation from './Navigation'
 
 export default function Layout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-candid-gray-50">
       <Navigation />
-      <main>{children}</main>
+      <main className="container-app section-padding">{children}</main>
     </div>
   )
 }

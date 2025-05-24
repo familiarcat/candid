@@ -1,57 +1,132 @@
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
 export default function DashboardCards() {
+  const [stats, setStats] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Simulate loading stats
+    setTimeout(() => {
+      setStats({
+        matches: 47,
+        jobSeekers: 156,
+        companies: 23,
+        positions: 89,
+        skills: 127,
+        globalConnections: 342
+      })
+      setLoading(false)
+    }, 1000)
+  }, [])
+
   const cards = [
-    { 
-      title: 'Job Matches', 
-      icon: '🎯', 
-      color: 'bg-emerald-100 border-emerald-300', 
+    {
+      title: 'Job Matches',
+      icon: '🎯',
+      gradient: 'from-primary-500 to-primary-600',
       path: '/matches',
-      description: 'View and manage job seeker-position matches'
+      description: 'View and manage job seeker-position matches',
+      stat: stats.matches,
+      statLabel: 'Active Matches'
     },
-    { 
-      title: 'Job Seekers', 
-      icon: '👥', 
-      color: 'bg-blue-100 border-blue-300', 
+    {
+      title: 'Job Seekers',
+      icon: '👥',
+      gradient: 'from-secondary-500 to-secondary-600',
       path: '/job-seekers',
-      description: 'Manage candidates and their skills'
+      description: 'Manage candidates and their skills',
+      stat: stats.jobSeekers,
+      statLabel: 'Candidates'
     },
-    { 
-      title: 'Companies', 
-      icon: '🏢', 
-      color: 'bg-teal-100 border-teal-300', 
+    {
+      title: 'Companies',
+      icon: '🏢',
+      gradient: 'from-candid-blue-500 to-candid-blue-600',
       path: '/companies',
-      description: 'Explore organizational hierarchies'
+      description: 'Explore organizational hierarchies',
+      stat: stats.companies,
+      statLabel: 'Organizations'
     },
-    { 
-      title: 'Skills', 
-      icon: '🛠️', 
-      color: 'bg-amber-100 border-amber-300', 
+    {
+      title: 'Positions',
+      icon: '📋',
+      gradient: 'from-accent-500 to-accent-600',
+      path: '/positions',
+      description: 'Browse open positions and requirements',
+      stat: stats.positions,
+      statLabel: 'Open Roles'
+    },
+    {
+      title: 'Skills',
+      icon: '🛠️',
+      gradient: 'from-candid-orange-500 to-candid-orange-600',
       path: '/skills',
-      description: 'Analyze market demand and skill trends'
+      description: 'Analyze market demand and skill trends',
+      stat: stats.skills,
+      statLabel: 'Skills Tracked'
     },
-    { 
-      title: 'Global View', 
-      icon: '🌐', 
-      color: 'bg-indigo-100 border-indigo-300', 
+    {
+      title: 'Global View',
+      icon: '🌐',
+      gradient: 'from-candid-navy-600 to-candid-navy-700',
       path: '/global-view',
-      description: 'Complete network visualization'
+      description: 'Complete network visualization',
+      stat: stats.globalConnections,
+      statLabel: 'Connections'
     }
   ]
-  
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="dashboard-grid">
       {cards.map((card) => (
-        <Link 
-          key={card.title} 
+        <Link
+          key={card.title}
           href={card.path}
-          className={`block p-6 border-2 rounded-lg shadow-sm hover:shadow-md transition-shadow ${card.color}`}
+          className="card-interactive group"
         >
-          <div className="flex items-center mb-3">
-            <span className="text-2xl mr-2">{card.icon}</span>
-            <h2 className="text-xl font-semibold">{card.title}</h2>
+          <div className="card-body">
+            {/* Header with Icon and Gradient */}
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 bg-gradient-to-br ${card.gradient} rounded-xl flex items-center justify-center shadow-soft group-hover:shadow-medium transition-all duration-200`}>
+                <span className="text-white text-xl">{card.icon}</span>
+              </div>
+
+              {/* Stats */}
+              <div className="text-right">
+                {loading ? (
+                  <div className="w-8 h-8 loading-spinner"></div>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold text-candid-navy-900">
+                      {card.stat}
+                    </div>
+                    <div className="text-xs text-candid-gray-500 uppercase tracking-wide">
+                      {card.statLabel}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-semibold text-candid-navy-900 mb-2 group-hover:text-primary-600 transition-colors duration-200">
+              {card.title}
+            </h3>
+
+            {/* Description */}
+            <p className="text-candid-gray-600 text-sm leading-relaxed">
+              {card.description}
+            </p>
+
+            {/* Action Indicator */}
+            <div className="mt-4 flex items-center text-primary-600 text-sm font-medium group-hover:text-primary-700 transition-colors duration-200">
+              <span>Explore</span>
+              <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
           </div>
-          <p className="text-gray-700">{card.description}</p>
         </Link>
       ))}
     </div>
