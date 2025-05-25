@@ -123,9 +123,11 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
         }
       })
       .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .attr("font-weight", "500")
-      .attr("fill", "#374151")
+      .attr("font-family", "Inter, system-ui, -apple-system, sans-serif")
+      .attr("font-size", "11px")
+      .attr("font-weight", "600")
+      .attr("fill", "#1f2937")
+      .style("text-shadow", "0 1px 2px rgba(255, 255, 255, 0.8)")
 
     // Add authority level indicators
     node.filter(d => d.type === "authority")
@@ -134,9 +136,11 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
       .attr("x", 0)
       .attr("y", 5)
       .attr("text-anchor", "middle")
+      .attr("font-family", "Inter, system-ui, -apple-system, sans-serif")
       .attr("font-size", "10px")
-      .attr("font-weight", "bold")
-      .attr("fill", "#fff")
+      .attr("font-weight", "700")
+      .attr("fill", "#ffffff")
+      .style("text-shadow", "0 1px 2px rgba(0, 0, 0, 0.3)")
 
     // Add company size indicators
     node.filter(d => d.type === "company")
@@ -149,9 +153,11 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
       .attr("x", 0)
       .attr("y", 5)
       .attr("text-anchor", "middle")
+      .attr("font-family", "Inter, system-ui, -apple-system, sans-serif")
       .attr("font-size", "12px")
-      .attr("font-weight", "bold")
-      .attr("fill", "#fff")
+      .attr("font-weight", "700")
+      .attr("fill", "#ffffff")
+      .style("text-shadow", "0 1px 2px rgba(0, 0, 0, 0.3)")
 
     // Add hover effects
     node
@@ -167,11 +173,11 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
 
         // Highlight connected links
         link
-          .attr("stroke-opacity", l => 
+          .attr("stroke-opacity", l =>
             l.source.id === d.id || l.target.id === d.id ? 1 : 0.1
           )
-          .attr("stroke-width", l => 
-            l.source.id === d.id || l.target.id === d.id ? 
+          .attr("stroke-width", l =>
+            l.source.id === d.id || l.target.id === d.id ?
             Math.sqrt(l.strength || 1) * 3 : Math.sqrt(l.strength || 1) * 2
           )
       })
@@ -238,7 +244,7 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
   return (
     <div className="relative">
       <svg ref={svgRef} className="border border-gray-200 rounded-lg bg-white"></svg>
-      
+
       {/* Legend */}
       <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg border">
         <h4 className="font-semibold text-sm mb-2">Network Legend</h4>
@@ -267,7 +273,7 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
         <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg border max-w-xs">
           <div className="flex justify-between items-start mb-2">
             <h4 className="font-semibold text-sm">{selectedNode.name || selectedNode.id}</h4>
-            <button 
+            <button
               onClick={() => setSelectedNode(null)}
               className="text-gray-400 hover:text-gray-600"
             >
