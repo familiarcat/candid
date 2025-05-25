@@ -22,15 +22,12 @@ export default function Home() {
 
   // Manual test function
   const handleTestFetch = async () => {
-    console.log('Manual fetch triggered')
     try {
       const response = await fetch('/api/companies')
       const data = await response.json()
-      console.log('Direct fetch result:', data.length, 'companies')
-      alert(`Fetched ${data.length} companies directly`)
+      alert(`✅ SUCCESS: Fetched ${data.length} companies directly!\n\nFirst company: ${data[0]?.name || 'No companies'}\n\nCurrent state companies: ${companies?.length || 0}`)
     } catch (error) {
-      console.error('Direct fetch error:', error)
-      alert('Fetch failed: ' + error.message)
+      alert('❌ FAILED: ' + error.message)
     }
   }
 
@@ -145,13 +142,58 @@ export default function Home() {
       </div>
 
       {/* Debug Section */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-8 p-6 bg-gray-100 rounded-lg">
+        <h3 className="text-lg font-semibold mb-4">🔍 Real-Time Data Debug</h3>
+
+        {/* Data Counts */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 text-sm">
+          <div className={`p-2 rounded ${companies?.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            Companies: {companies?.length || 0}
+          </div>
+          <div className={`p-2 rounded ${jobSeekers?.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            Job Seekers: {jobSeekers?.length || 0}
+          </div>
+          <div className={`p-2 rounded ${hiringAuthorities?.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            Authorities: {hiringAuthorities?.length || 0}
+          </div>
+          <div className={`p-2 rounded ${skills?.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            Skills: {skills?.length || 0}
+          </div>
+          <div className={`p-2 rounded ${positions?.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            Positions: {positions?.length || 0}
+          </div>
+          <div className={`p-2 rounded ${matches?.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            Matches: {matches?.length || 0}
+          </div>
+        </div>
+
+        {/* Loading States */}
+        <div className="mb-4 text-sm">
+          <div className={`inline-block px-3 py-1 rounded ${loading.global ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-600'}`}>
+            Global Loading: {loading.global ? '🔄 Loading...' : '✅ Ready'}
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="mb-4 text-xs text-gray-600">
+          Stats: Companies={stats.totalCompanies}, Authorities={stats.totalAuthorities}, JobSeekers={stats.totalJobSeekers}
+        </div>
+
+        {/* Test Button */}
         <button
           onClick={handleTestFetch}
           className="bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors"
         >
-          🔄 Test Fetch Data (Debug)
+          🔄 Test Direct API Fetch
         </button>
+
+        {/* Data Sample */}
+        {companies?.length > 0 && (
+          <div className="mt-4 text-xs text-left bg-white p-3 rounded">
+            <strong>Sample Company:</strong> {companies[0]?.name || 'No name'}
+            {companies[0]?.industry && ` (${companies[0].industry})`}
+          </div>
+        )}
       </div>
 
       {/* Dashboard Cards */}

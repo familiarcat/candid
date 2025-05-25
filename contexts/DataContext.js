@@ -90,18 +90,21 @@ function dataReducer(state, action) {
       }
 
     case DATA_ACTIONS.SET_DATA:
-      console.log(`SET_DATA reducer: setting ${action.entity} with ${action.data?.length} items`)
+      // Ensure data is always an array
+      const safeData = Array.isArray(action.data) ? action.data : []
+      console.log(`🔄 REDUCER SET_DATA: ${action.entity} with ${safeData.length} items`)
+      console.log(`📊 Raw data sample:`, safeData.slice(0, 2))
 
       const newStats = calculateStats({
         ...state,
-        [action.entity]: action.data
+        [action.entity]: safeData
       })
 
-      console.log(`New stats calculated:`, newStats)
+      console.log(`📈 New stats:`, newStats)
 
       const newState = {
         ...state,
-        [action.entity]: action.data,
+        [action.entity]: safeData,
         lastUpdated: {
           ...state.lastUpdated,
           [action.entity]: new Date().toISOString()
@@ -117,7 +120,8 @@ function dataReducer(state, action) {
         stats: newStats
       }
 
-      console.log(`New state for ${action.entity}:`, newState[action.entity]?.length, 'items')
+      console.log(`✅ REDUCER COMPLETE: ${action.entity} now has ${safeData.length} items`)
+      console.log(`🎯 Updated state keys:`, Object.keys(newState).filter(key => Array.isArray(newState[key]) && newState[key].length > 0))
       return newState
 
     case DATA_ACTIONS.UPDATE_ENTITY:
@@ -421,10 +425,47 @@ export function DataProvider({ children }) {
 
   // Initial data fetch
   useEffect(() => {
-    console.log('DataProvider useEffect triggered - fetching all data')
-    console.log('fetchAllData function:', typeof fetchAllData)
-    fetchAllData()
-  }, [fetchAllData]) // Add back dependency but with proper memoization
+    const loadAllData = async () => {
+      try {
+        // Fetch companies
+        const companiesResponse = await fetch('/api/companies')
+        const companiesData = await companiesResponse.json()
+        dispatch({ type: DATA_ACTIONS.SET_DATA, entity: 'companies', data: companiesData })
+
+        // Fetch job seekers
+        const jobSeekersResponse = await fetch('/api/job-seekers')
+        const jobSeekersData = await jobSeekersResponse.json()
+        dispatch({ type: DATA_ACTIONS.SET_DATA, entity: 'jobSeekers', data: jobSeekersData })
+
+        // Fetch hiring authorities
+        const authoritiesResponse = await fetch('/api/hiring-authorities')
+        const authoritiesData = await authoritiesResponse.json()
+        // Extract authorities array from paginated response
+        const authoritiesArray = authoritiesData.authorities || authoritiesData || []
+        dispatch({ type: DATA_ACTIONS.SET_DATA, entity: 'hiringAuthorities', data: authoritiesArray })
+
+        // Fetch skills
+        const skillsResponse = await fetch('/api/skills')
+        const skillsData = await skillsResponse.json()
+        dispatch({ type: DATA_ACTIONS.SET_DATA, entity: 'skills', data: skillsData })
+
+        // Fetch positions
+        const positionsResponse = await fetch('/api/positions')
+        const positionsData = await positionsResponse.json()
+        dispatch({ type: DATA_ACTIONS.SET_DATA, entity: 'positions', data: positionsData })
+
+        // Fetch matches
+        const matchesResponse = await fetch('/api/matches')
+        const matchesData = await matchesResponse.json()
+        dispatch({ type: DATA_ACTIONS.SET_DATA, entity: 'matches', data: matchesData })
+
+      } catch (error) {
+        console.error('Error loading data:', error)
+      }
+    }
+
+    loadAllData()
+  }, [])
 
   const value = {
     // State
