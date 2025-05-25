@@ -21,7 +21,7 @@ export default function Navigation() {
   return (
     <nav className="bg-white shadow-soft border-b border-candid-gray-200">
       <div className="container-app">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-16">
           {/* Logo - Geometric Network Style */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center space-x-3 group">
@@ -52,21 +52,21 @@ export default function Navigation() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:block">
-            <div className="flex items-center space-x-1">
+          {/* Desktop Navigation - Compact Grid */}
+          <div className="hidden lg:block flex-1 max-w-4xl mx-8">
+            <div className="flex items-center justify-center space-x-1">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                     router.pathname === item.path
                       ? 'nav-link-active'
                       : 'nav-link'
                   }`}
                 >
-                  <span className="text-base">{item.icon}</span>
-                  <span>{item.name}</span>
+                  <span className="text-sm">{item.icon}</span>
+                  <span className="hidden xl:block">{item.name}</span>
                 </Link>
               ))}
             </div>
