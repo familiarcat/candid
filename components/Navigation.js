@@ -6,16 +6,20 @@ export default function Navigation() {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const navItems = [
-    { name: 'Dashboard', path: '/', icon: '🏠' },
-    { name: 'Matches', path: '/matches', icon: '🎯' },
-    { name: 'Job Seekers', path: '/job-seekers', icon: '👥' },
-    { name: 'Hiring Authorities', path: '/hiring-authorities', icon: '👔' },
-    { name: 'Companies', path: '/companies', icon: '🏢' },
-    { name: 'Positions', path: '/positions', icon: '📋' },
-    { name: 'Skills', path: '/skills', icon: '🛠️' },
-    { name: 'Visualizations', path: '/visualizations', icon: '📊' },
-    { name: 'Network View', path: '/global-view', icon: '🌐' }
+  // Primary navigation - core user flows (Salinger: progressive disclosure)
+  const primaryNavItems = [
+    { name: 'Dashboard', path: '/', icon: '🏠', desc: 'Overview' },
+    { name: 'Matches', path: '/matches', icon: '🎯', desc: 'Connections' },
+    { name: 'Authorities', path: '/hiring-authorities', icon: '👔', desc: 'Decision Makers' },
+    { name: 'Seekers', path: '/job-seekers', icon: '👥', desc: 'Candidates' },
+    { name: 'Companies', path: '/companies', icon: '🏢', desc: 'Organizations' }
+  ]
+
+  // Secondary navigation - analysis and tools (Brockman: descriptive clarity)
+  const secondaryNavItems = [
+    { name: 'Positions', path: '/positions', icon: '📋', desc: 'Open Roles' },
+    { name: 'Skills', path: '/skills', icon: '🛠️', desc: 'Market Analysis' },
+    { name: 'Network', path: '/global-view', icon: '🌐', desc: 'Graph View' }
   ]
 
   return (
@@ -52,39 +56,69 @@ export default function Navigation() {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Compact Grid with Text Labels */}
-          <div className="hidden lg:block flex-1 max-w-5xl mx-8">
-            <div className="flex items-center justify-center space-x-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`flex flex-col items-center px-2 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
-                    router.pathname === item.path
-                      ? 'nav-link-active'
-                      : 'nav-link'
-                  }`}
-                >
-                  <span className="text-sm mb-1">{item.icon}</span>
-                  <span className="text-xs">{item.name}</span>
-                </Link>
-              ))}
+          {/* Desktop Navigation - Progressive Disclosure (Salinger/Brockman) */}
+          <div className="hidden lg:block flex-1 max-w-6xl mx-8">
+            <div className="flex items-center justify-center space-x-6">
+              {/* Primary Navigation - Core User Flows */}
+              <div className="flex items-center space-x-1">
+                {primaryNavItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={`group flex flex-col items-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                      router.pathname === item.path
+                        ? 'nav-link-active'
+                        : 'nav-link'
+                    }`}
+                  >
+                    <span className="text-base mb-1">{item.icon}</span>
+                    <span className="text-xs">{item.name}</span>
+                    <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-candid-gray-500">
+                      {item.desc}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Separator */}
+              <div className="h-8 w-px bg-candid-gray-300"></div>
+
+              {/* Secondary Navigation - Analysis Tools */}
+              <div className="flex items-center space-x-1">
+                {secondaryNavItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={`group flex flex-col items-center px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                      router.pathname === item.path
+                        ? 'nav-link-active'
+                        : 'nav-link'
+                    }`}
+                  >
+                    <span className="text-base mb-1">{item.icon}</span>
+                    <span className="text-xs">{item.name}</span>
+                    <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-candid-gray-500">
+                      {item.desc}
+                    </span>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/admin"
-              className="btn-outline text-sm py-2 px-4"
-            >
-              ⚙️ Admin
-            </Link>
+          {/* CTA Buttons - Compact */}
+          <div className="hidden md:flex items-center space-x-2">
             <Link
               href="/visualizations"
-              className="btn-outline text-sm py-2 px-4"
+              className="btn-outline text-sm py-2 px-3"
             >
               📊 Visualize
+            </Link>
+            <Link
+              href="/admin"
+              className="btn-outline text-sm py-2 px-3"
+            >
+              ⚙️ Admin
             </Link>
             <Link
               href="https://portal.candid-connections.com/user/login"
@@ -117,31 +151,75 @@ export default function Navigation() {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="lg:hidden border-t border-candid-gray-200 py-4">
-            <div className="space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                    router.pathname === item.path
-                      ? 'nav-link-active'
-                      : 'nav-link'
-                  }`}
-                >
-                  <span className="text-lg">{item.icon}</span>
-                  <span>{item.name}</span>
-                </Link>
-              ))}
+            <div className="space-y-4">
+              {/* Primary Navigation */}
+              <div className="space-y-1">
+                <div className="px-4 py-2">
+                  <h3 className="text-xs font-semibold text-candid-gray-500 uppercase tracking-wider">Core</h3>
+                </div>
+                {primaryNavItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                      router.pathname === item.path
+                        ? 'nav-link-active'
+                        : 'nav-link'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-lg">{item.icon}</span>
+                      <span>{item.name}</span>
+                    </div>
+                    <span className="text-xs text-candid-gray-500">{item.desc}</span>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Secondary Navigation */}
+              <div className="space-y-1">
+                <div className="px-4 py-2">
+                  <h3 className="text-xs font-semibold text-candid-gray-500 uppercase tracking-wider">Analysis</h3>
+                </div>
+                {secondaryNavItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                      router.pathname === item.path
+                        ? 'nav-link-active'
+                        : 'nav-link'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-lg">{item.icon}</span>
+                      <span>{item.name}</span>
+                    </div>
+                    <span className="text-xs text-candid-gray-500">{item.desc}</span>
+                  </Link>
+                ))}
+              </div>
 
               {/* Mobile CTA Buttons */}
               <div className="pt-4 space-y-2">
+                <div className="px-4 py-2">
+                  <h3 className="text-xs font-semibold text-candid-gray-500 uppercase tracking-wider">Tools</h3>
+                </div>
                 <Link
                   href="/visualizations"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block w-full btn-outline text-center"
                 >
                   📊 Visualize
+                </Link>
+                <Link
+                  href="/admin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full btn-outline text-center"
+                >
+                  ⚙️ Admin
                 </Link>
                 <Link
                   href="https://portal.candid-connections.com/user/login"
