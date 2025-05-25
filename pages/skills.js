@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
+import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
-import VisualizationModal from '../components/VisualizationModal'
-import { generateSampleGraphData } from '../lib/graphData'
+import DetailModal from '../components/ui/DetailModal'
 
 export default function Skills() {
+  const router = useRouter()
   const [skills, setSkills] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [showVisualization, setShowVisualization] = useState(false)
-  const [graphData, setGraphData] = useState(null)
+  const [selectedSkill, setSelectedSkill] = useState(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
   const [sortBy, setSortBy] = useState('demand')
@@ -17,8 +18,28 @@ export default function Skills() {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        // Simulate API call - in real app this would fetch from /api/skills
-        setTimeout(() => {
+        const response = await fetch('/api/skills')
+        if (response.ok) {
+          const data = await response.json()
+          const skillsData = data.skills || data
+
+          // Enhance skills with calculated metrics
+          const enhancedSkills = skillsData.map(skill => ({
+            ...skill,
+            demand: skill.demand === 'Very High' ? 95 : skill.demand === 'High' ? 85 : skill.demand === 'Medium' ? 70 : 60,
+            supply: Math.floor(Math.random() * 40) + 60, // Simulated supply data
+            averageSalary: calculateAverageSalary(skill.category),
+            jobSeekers: Math.floor(Math.random() * 100) + 50,
+            openPositions: Math.floor(Math.random() * 50) + 20,
+            growth: `+${Math.floor(Math.random() * 25) + 5}%`,
+            description: getSkillDescription(skill.name),
+            relatedSkills: getRelatedSkills(skill.name),
+            icon: getSkillIcon(skill.category)
+          }))
+
+          setSkills(enhancedSkills)
+        } else {
+          // Fallback to sample data if API fails
           const sampleSkills = [
             {
               id: 'skill_1',
@@ -133,11 +154,9 @@ export default function Skills() {
               icon: '🟢'
             }
           ]
-          
           setSkills(sampleSkills)
-          setGraphData(generateSampleGraphData())
-          setLoading(false)
-        }, 1000)
+        }
+        setLoading(false)
       } catch (err) {
         setError(err.message)
         setLoading(false)
@@ -147,13 +166,101 @@ export default function Skills() {
     fetchSkills()
   }, [])
 
+  // Helper functions
+  const calculateAverageSalary = (category) => {
+    const salaryRanges = {
+      'Frontend': '$95,000',
+      'Backend': '$98,000',
+      'DevOps': '$115,000',
+      'Design': '$85,000',
+      'Cloud': '$110,000',
+      'AI': '$125,000',
+      'Data Science': '$120,000',
+      'Systems': '$105,000',
+      'Soft Skills': '$90,000',
+      'Business': '$95,000',
+      'Methodology': '$85,000'
+    }
+    return salaryRanges[category] || '$95,000'
+  }
+
+  const getSkillDescription = (skillName) => {
+    const descriptions = {
+      'React': 'JavaScript library for building user interfaces',
+      'Node.js': 'JavaScript runtime for server-side development',
+      'Python': 'High-level programming language for web development and data science',
+      'TypeScript': 'Typed superset of JavaScript',
+      'Kubernetes': 'Container orchestration platform',
+      'Docker': 'Containerization platform',
+      'Terraform': 'Infrastructure as code tool',
+      'AWS': 'Amazon Web Services cloud platform',
+      'Blockchain': 'Distributed ledger technology',
+      'Solidity': 'Programming language for smart contracts',
+      'Figma': 'Collaborative design tool',
+      'User Research': 'Methods for understanding user needs',
+      'Machine Learning': 'AI technique for pattern recognition',
+      'TensorFlow': 'Open-source machine learning framework',
+      'C++': 'General-purpose programming language',
+      'Embedded Systems': 'Computer systems with dedicated functions',
+      'Robotics': 'Technology for automated machines',
+      'Leadership': 'Ability to guide and inspire teams',
+      'Product Management': 'Strategic product development and planning',
+      'Agile': 'Iterative software development methodology'
+    }
+    return descriptions[skillName] || `Professional skill in ${skillName}`
+  }
+
+  const getRelatedSkills = (skillName) => {
+    const related = {
+      'React': ['JavaScript', 'TypeScript', 'Redux', 'Next.js'],
+      'Node.js': ['Express.js', 'MongoDB', 'GraphQL', 'REST APIs'],
+      'Python': ['Django', 'Flask', 'FastAPI', 'NumPy'],
+      'TypeScript': ['JavaScript', 'React', 'Angular', 'Node.js'],
+      'Kubernetes': ['Docker', 'Terraform', 'AWS', 'Jenkins'],
+      'Docker': ['Kubernetes', 'CI/CD', 'DevOps', 'Containerization'],
+      'AWS': ['Cloud Computing', 'EC2', 'S3', 'Lambda'],
+      'Figma': ['Sketch', 'Adobe XD', 'Prototyping', 'User Research'],
+      'Machine Learning': ['Python', 'TensorFlow', 'PyTorch', 'Data Science']
+    }
+    return related[skillName] || ['Technology', 'Software', 'Development']
+  }
+
+  const getSkillIcon = (category) => {
+    const icons = {
+      'Frontend': '⚛️',
+      'Backend': '🐍',
+      'DevOps': '☸️',
+      'Design': '🎨',
+      'Cloud': '☁️',
+      'AI': '🤖',
+      'Data Science': '📊',
+      'Systems': '⚙️',
+      'Soft Skills': '👥',
+      'Business': '💼',
+      'Methodology': '📋',
+      'Blockchain': '⛓️',
+      'Hardware': '🔧',
+      'Engineering': '🏗️'
+    }
+    return icons[category] || '🛠️'
+  }
+
+  const handleViewDetails = (skill) => {
+    setSelectedSkill(skill)
+    setShowDetailModal(true)
+  }
+
+  const handleFindTalent = (skill) => {
+    router.push(`/job-seekers?skill=${encodeURIComponent(skill.name)}`)
+  }
+
   const filteredSkills = skills.filter(skill => {
     const matchesSearch = skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          skill.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          skill.description.toLowerCase().includes(searchTerm.toLowerCase())
-    
+
     const matchesCategory = filterCategory === 'all' || skill.category === filterCategory
-    
+
     return matchesSearch && matchesCategory
   })
 
@@ -227,15 +334,15 @@ export default function Skills() {
       <Head>
         <title>Skills Analysis | Candid Connections Katra</title>
       </Head>
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Skills Analysis</h1>
           <button
-            onClick={() => setShowVisualization(true)}
-            className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors"
+            onClick={() => router.push('/visualizations')}
+            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
           >
-            🌐 View Network
+            📊 Visualize
           </button>
         </div>
 
@@ -251,7 +358,7 @@ export default function Skills() {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">Category:</label>
               <select
@@ -266,7 +373,7 @@ export default function Skills() {
                 ))}
               </select>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">Sort by:</label>
               <select
@@ -357,10 +464,16 @@ export default function Skills() {
 
               {/* Actions */}
               <div className="flex space-x-2">
-                <button className="flex-1 bg-amber-600 text-white px-3 py-2 rounded text-sm hover:bg-amber-700 transition-colors">
+                <button
+                  onClick={() => handleViewDetails(skill)}
+                  className="flex-1 bg-primary-600 text-white px-3 py-2 rounded text-sm hover:bg-primary-700 transition-colors"
+                >
                   View Details
                 </button>
-                <button className="flex-1 border border-amber-600 text-amber-600 px-3 py-2 rounded text-sm hover:bg-amber-50 transition-colors">
+                <button
+                  onClick={() => handleFindTalent(skill)}
+                  className="flex-1 border border-primary-600 text-primary-600 px-3 py-2 rounded text-sm hover:bg-primary-50 transition-colors"
+                >
                   Find Talent
                 </button>
               </div>
@@ -377,12 +490,13 @@ export default function Skills() {
         )}
       </div>
 
-      {/* Visualization Modal */}
-      <VisualizationModal
-        isOpen={showVisualization}
-        onClose={() => setShowVisualization(false)}
-        data={graphData}
-        title="Skills Network"
+      {/* Detail Modal */}
+      <DetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        entity={selectedSkill}
+        entityType="skill"
+        onFindTalent={handleFindTalent}
       />
     </Layout>
   )

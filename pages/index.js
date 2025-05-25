@@ -79,7 +79,7 @@ export default function Home() {
               Explore Network Connections
             </button>
             <button className="border-2 border-primary-400 text-primary-400 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-400 hover:text-secondary-900 transition-all duration-300">
-              View Hiring Authorities
+              Visualize
             </button>
           </div>
         </div>
