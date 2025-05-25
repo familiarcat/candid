@@ -7,35 +7,36 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Candid Connections Brand Color Palette
+        // Authentic Candid Connections Brand Color Palette
         candid: {
-          // Primary Navy/Dark Blue (from their headers and text)
+          // Deep Navy/Cosmic Dark (from their hero backgrounds)
           navy: {
-            50: '#f0f4f8',
-            100: '#d9e2ec',
-            200: '#bcccdc',
-            300: '#9fb3c8',
-            400: '#829ab1',
-            500: '#627d98',
-            600: '#486581',
-            700: '#334e68',
-            800: '#243b53',
-            900: '#102a43',
+            50: '#f0f9ff',
+            100: '#e0f2fe',
+            200: '#bae6fd',
+            300: '#7dd3fc',
+            400: '#38bdf8',
+            500: '#0ea5e9',
+            600: '#0284c7',
+            700: '#0369a1',
+            800: '#1e3a8a', // Their deep navy
+            900: '#1e2a4a', // Their darkest navy
+            950: '#0f1629', // Their cosmic dark
           },
-          // Bright Blue/Cyan (from their CTAs and links)
-          blue: {
-            50: '#e6f7ff',
-            100: '#bae7ff',
-            200: '#7dd3fc',
-            300: '#38bdf8',
-            400: '#0ea5e9',
-            500: '#0284c7',
-            600: '#0369a1',
-            700: '#075985',
-            800: '#0c4a6e',
-            900: '#0f3460',
+          // Bright Cyan/Turquoise (their signature color)
+          cyan: {
+            50: '#ecfeff',
+            100: '#cffafe',
+            200: '#a5f3fc',
+            300: '#67e8f9',
+            400: '#22d3ee',
+            500: '#00d4ff', // Their signature cyan
+            600: '#0891b2',
+            700: '#0e7490',
+            800: '#155e75',
+            900: '#164e63',
           },
-          // Orange/Coral accent (from their highlights)
+          // Warm accent colors from their illustrations
           orange: {
             50: '#fff7ed',
             100: '#ffedd5',
@@ -48,7 +49,7 @@ module.exports = {
             800: '#9a3412',
             900: '#7c2d12',
           },
-          // Professional Grays
+          // Neutral grays with blue undertones
           gray: {
             50: '#f8fafc',
             100: '#f1f5f9',
@@ -62,30 +63,30 @@ module.exports = {
             900: '#0f172a',
           }
         },
-        // Semantic color mappings
+        // Semantic color mappings (Authentic Candid Connections)
         primary: {
-          50: '#e6f7ff',
-          100: '#bae7ff',
-          200: '#7dd3fc',
-          300: '#38bdf8',
-          400: '#0ea5e9',
-          500: '#0284c7', // Main brand blue
-          600: '#0369a1',
-          700: '#075985',
-          800: '#0c4a6e',
-          900: '#0f3460',
+          50: '#ecfeff',
+          100: '#cffafe',
+          200: '#a5f3fc',
+          300: '#67e8f9',
+          400: '#22d3ee',
+          500: '#00d4ff', // Their signature cyan
+          600: '#0891b2',
+          700: '#0e7490',
+          800: '#155e75',
+          900: '#164e63',
         },
         secondary: {
-          50: '#f0f4f8',
-          100: '#d9e2ec',
-          200: '#bcccdc',
-          300: '#9fb3c8',
-          400: '#829ab1',
-          500: '#627d98', // Professional navy
-          600: '#486581',
-          700: '#334e68',
-          800: '#243b53',
-          900: '#102a43',
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#1e3a8a', // Their deep navy
+          600: '#1e2a4a',
+          700: '#0f1629',
+          800: '#0a0f1c',
+          900: '#050812',
         },
         accent: {
           50: '#fff7ed',
@@ -93,7 +94,7 @@ module.exports = {
           200: '#fed7aa',
           300: '#fdba74',
           400: '#fb923c',
-          500: '#f97316', // Orange accent
+          500: '#f97316', // Orange accent from illustrations
           600: '#ea580c',
           700: '#c2410c',
           800: '#9a3412',

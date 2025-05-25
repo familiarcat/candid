@@ -226,4 +226,99 @@
   .table-header-cell {
     @apply table-cell font-medium text-candid-navy-900 uppercase tracking-wider;
   }
+
+  /* Cosmic/Network Theme Animations */
+  .cosmic-glow {
+    animation: cosmic-pulse 3s ease-in-out infinite;
+  }
+
+  .network-node {
+    @apply rounded-full transition-all duration-300;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .network-node:nth-child(2) {
+    animation-delay: -2s;
+  }
+
+  .network-node:nth-child(3) {
+    animation-delay: -4s;
+  }
+
+  .connection-line {
+    animation: connection-flow 4s linear infinite;
+  }
+
+  /* Floating animation for network elements */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) scale(1);
+    }
+    50% {
+      transform: translateY(-10px) scale(1.05);
+    }
+  }
+
+  /* Cosmic pulse effect */
+  @keyframes cosmic-pulse {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+
+  /* Connection flow animation */
+  @keyframes connection-flow {
+    0% {
+      stroke-dasharray: 0 10;
+    }
+    50% {
+      stroke-dasharray: 5 5;
+    }
+    100% {
+      stroke-dasharray: 10 0;
+    }
+  }
+
+  /* Network connection background - subtle and non-distracting */
+  .network-background {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.05) 0%, transparent 30%);
+    background-size: 800px 800px, 600px 600px, 400px 400px;
+    animation: network-drift 30s ease-in-out infinite;
+  }
+
+  @keyframes network-drift {
+    0%, 100% {
+      background-position: 0% 0%, 100% 100%, 50% 50%;
+    }
+    33% {
+      background-position: 30% 20%, 70% 80%, 60% 40%;
+    }
+    66% {
+      background-position: 70% 30%, 30% 70%, 40% 60%;
+    }
+  }
+
+  /* Enhanced gradient text for cosmic theme */
+  .cosmic-gradient {
+    @apply bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 bg-clip-text text-transparent;
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
 }

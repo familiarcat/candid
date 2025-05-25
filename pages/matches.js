@@ -26,18 +26,34 @@ export default function Matches() {
                 id: 'js_1',
                 name: 'Sarah Chen',
                 title: 'Senior Frontend Developer',
-                skills: ['React', 'TypeScript', 'Node.js', 'GraphQL']
+                skills: ['React', 'TypeScript', 'Node.js', 'GraphQL'],
+                experience: '6 years'
+              },
+              hiringAuthority: {
+                id: 'auth_1',
+                name: 'Mike Wilson',
+                role: 'VP Engineering',
+                level: 'Executive',
+                company: 'TechCorp Inc.',
+                companySize: 'Enterprise (1000+)',
+                hiringPower: 'High',
+                decisionMaker: true
               },
               position: {
                 id: 'pos_1',
                 title: 'Lead Frontend Engineer',
-                company: 'TechCorp Inc.',
                 requirements: ['React', 'TypeScript', 'Leadership', 'GraphQL']
               },
               score: 92,
               status: 'pending',
               createdAt: new Date('2024-01-15'),
-              matchReasons: ['Strong React expertise', 'TypeScript proficiency', 'GraphQL experience']
+              matchReasons: [
+                'Skills align with authority requirements',
+                'Experience level matches hiring criteria',
+                'Direct path to decision maker'
+              ],
+              connectionStrength: 'Strong',
+              hierarchyMatch: 'Perfect - Executive level for senior role'
             },
             {
               id: 'match_2',
@@ -173,12 +189,16 @@ export default function Matches() {
   return (
     <Layout>
       <Head>
-        <title>Job Matches | Candid Connections Katra</title>
+        <title>Authority Matches | Candid Connections Katra</title>
+        <meta name="description" content="Job seeker to hiring authority matches based on graph database connections and company hierarchy." />
       </Head>
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Job Matches</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-secondary-800">Authority Matches</h1>
+            <p className="text-candid-gray-600 mt-2">Job seekers connected to the right hiring authorities</p>
+          </div>
           <button
             onClick={() => setShowVisualization(true)}
             className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors"

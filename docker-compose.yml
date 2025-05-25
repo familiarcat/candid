@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  arangodb:
+    image: arangodb:3.11
+    container_name: candid-connections-arangodb
+    environment:
+      ARANGO_NO_AUTH: 1
+    ports:
+      - "8529:8529"
+    volumes:
+      - arangodb_data:/var/lib/arangodb3
+      - arangodb_apps:/var/lib/arangodb3-apps
+    restart: unless-stopped
+
+volumes:
+  arangodb_data:
+  arangodb_apps:

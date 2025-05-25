@@ -8,26 +8,42 @@ export default function Navigation() {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: '🏠' },
-    { name: 'Job Matches', path: '/matches', icon: '🎯' },
+    { name: 'Authority Matches', path: '/matches', icon: '🎯' },
     { name: 'Job Seekers', path: '/job-seekers', icon: '👥' },
+    { name: 'Hiring Authorities', path: '/hiring-authorities', icon: '👔' },
     { name: 'Companies', path: '/companies', icon: '🏢' },
     { name: 'Positions', path: '/positions', icon: '📋' },
     { name: 'Skills', path: '/skills', icon: '🛠️' },
-    { name: 'Global View', path: '/global-view', icon: '🌐' }
+    { name: 'Network View', path: '/global-view', icon: '🌐' }
   ]
 
   return (
     <nav className="bg-white shadow-soft border-b border-candid-gray-200">
       <div className="container-app">
         <div className="flex justify-between items-center h-20">
-          {/* Logo */}
+          {/* Logo - Geometric Network Style */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-soft group-hover:shadow-medium transition-all duration-200">
-                <span className="text-white font-bold text-lg">C</span>
+              {/* Geometric Network Logo */}
+              <div className="w-12 h-12 relative group-hover:scale-105 transition-transform duration-200">
+                <svg viewBox="0 0 48 48" className="w-full h-full">
+                  {/* Outer circle */}
+                  <circle cx="24" cy="24" r="22" fill="none" stroke="#1e3a8a" strokeWidth="2"/>
+                  {/* Inner network nodes */}
+                  <circle cx="24" cy="12" r="3" fill="#00d4ff"/>
+                  <circle cx="36" cy="24" r="3" fill="#00d4ff"/>
+                  <circle cx="24" cy="36" r="3" fill="#00d4ff"/>
+                  <circle cx="12" cy="24" r="3" fill="#00d4ff"/>
+                  <circle cx="24" cy="24" r="4" fill="#1e3a8a"/>
+                  {/* Connection lines */}
+                  <line x1="24" y1="15" x2="24" y2="20" stroke="#00d4ff" strokeWidth="2"/>
+                  <line x1="33" y1="24" x2="28" y2="24" stroke="#00d4ff" strokeWidth="2"/>
+                  <line x1="24" y1="33" x2="24" y2="28" stroke="#00d4ff" strokeWidth="2"/>
+                  <line x1="15" y1="24" x2="20" y2="24" stroke="#00d4ff" strokeWidth="2"/>
+                </svg>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-candid-navy-900 group-hover:text-primary-600 transition-colors duration-200">
+                <h1 className="text-xl font-bold text-secondary-800 group-hover:text-primary-500 transition-colors duration-200">
                   Candid Connections
                 </h1>
                 <p className="text-sm text-candid-gray-600 -mt-1">Katra Platform</p>
@@ -57,6 +73,12 @@ export default function Navigation() {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center space-x-4">
+            <Link
+              href="/admin"
+              className="btn-outline text-sm py-2 px-4"
+            >
+              ⚙️ Admin
+            </Link>
             <Link
               href="/global-view"
               className="btn-outline text-sm py-2 px-4"

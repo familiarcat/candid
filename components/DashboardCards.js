@@ -22,11 +22,11 @@ export default function DashboardCards() {
 
   const cards = [
     {
-      title: 'Job Matches',
+      title: 'Authority Matches',
       icon: '🎯',
       gradient: 'from-primary-500 to-primary-600',
       path: '/matches',
-      description: 'View and manage job seeker-position matches',
+      description: 'Job seeker to hiring authority connections',
       stat: stats.matches,
       statLabel: 'Active Matches'
     },
@@ -35,43 +35,43 @@ export default function DashboardCards() {
       icon: '👥',
       gradient: 'from-secondary-500 to-secondary-600',
       path: '/job-seekers',
-      description: 'Manage candidates and their skills',
+      description: 'Candidates seeking the right hiring authority',
       stat: stats.jobSeekers,
       statLabel: 'Candidates'
+    },
+    {
+      title: 'Hiring Authorities',
+      icon: '👔',
+      gradient: 'from-accent-500 to-accent-600',
+      path: '/hiring-authorities',
+      description: 'Decision makers across company hierarchies',
+      stat: stats.hiringAuthorities || 67,
+      statLabel: 'Authorities'
     },
     {
       title: 'Companies',
       icon: '🏢',
       gradient: 'from-candid-blue-500 to-candid-blue-600',
       path: '/companies',
-      description: 'Explore organizational hierarchies',
+      description: 'Organizational structures and hierarchies',
       stat: stats.companies,
       statLabel: 'Organizations'
     },
     {
       title: 'Positions',
       icon: '📋',
-      gradient: 'from-accent-500 to-accent-600',
+      gradient: 'from-candid-orange-500 to-candid-orange-600',
       path: '/positions',
-      description: 'Browse open positions and requirements',
+      description: 'Roles mapped to hiring authorities',
       stat: stats.positions,
       statLabel: 'Open Roles'
     },
     {
-      title: 'Skills',
-      icon: '🛠️',
-      gradient: 'from-candid-orange-500 to-candid-orange-600',
-      path: '/skills',
-      description: 'Analyze market demand and skill trends',
-      stat: stats.skills,
-      statLabel: 'Skills Tracked'
-    },
-    {
-      title: 'Global View',
+      title: 'Network View',
       icon: '🌐',
       gradient: 'from-candid-navy-600 to-candid-navy-700',
       path: '/global-view',
-      description: 'Complete network visualization',
+      description: 'Graph visualization of all connections',
       stat: stats.globalConnections,
       statLabel: 'Connections'
     }
