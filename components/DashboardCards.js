@@ -1,58 +1,11 @@
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useData } from '../contexts/DataContext'
 
 export default function DashboardCards() {
-  const [stats, setStats] = useState({})
-  const [loading, setLoading] = useState(true)
+  const { stats, loading } = useData()
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true)
-
-        // Fetch all data in parallel
-        const [companiesRes, authoritiesRes, jobSeekersRes, skillsRes, positionsRes, matchesRes] = await Promise.all([
-          fetch('/api/companies'),
-          fetch('/api/hiring-authorities'),
-          fetch('/api/job-seekers'),
-          fetch('/api/skills'),
-          fetch('/api/positions'),
-          fetch('/api/matches')
-        ])
-
-        const [companies, authorities, jobSeekers, skills, positions, matches] = await Promise.all([
-          companiesRes.json(),
-          authoritiesRes.json(),
-          jobSeekersRes.json(),
-          skillsRes.json(),
-          positionsRes.json(),
-          matchesRes.json()
-        ])
-
-        // Calculate total connections (all relationships in the graph)
-        const jobSeekerSkills = jobSeekers.reduce((total, js) => total + (js.skills?.length || 0), 0)
-        const authorityPreferences = authorities.reduce((total, auth) => total + (auth.skillsLookingFor?.length || 0), 0)
-        const positionRequirements = positions.reduce((total, pos) => total + (pos.requirements?.length || 0), 0)
-        const globalConnections = jobSeekerSkills + authorityPreferences + positionRequirements + matches.length + authorities.length + positions.length
-
-        setStats({
-          matches: matches.length,
-          jobSeekers: jobSeekers.length,
-          companies: companies.length,
-          positions: positions.length,
-          skills: skills.length,
-          hiringAuthorities: authorities.length,
-          globalConnections
-        })
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [])
+  // Calculate global connections for the network view card
+  const globalConnections = stats.skillConnections + stats.totalMatches + stats.totalAuthorities + stats.totalPositions
 
   const cards = [
     {
@@ -61,7 +14,7 @@ export default function DashboardCards() {
       gradient: 'from-primary-500 to-primary-600',
       path: '/matches',
       description: 'Job seeker to hiring authority connections',
-      stat: stats.matches,
+      stat: stats.totalMatches,
       statLabel: 'Active Matches'
     },
     {
@@ -70,7 +23,7 @@ export default function DashboardCards() {
       gradient: 'from-secondary-500 to-secondary-600',
       path: '/job-seekers',
       description: 'Candidates seeking the right hiring authority',
-      stat: stats.jobSeekers,
+      stat: stats.totalJobSeekers,
       statLabel: 'Candidates'
     },
     {
@@ -79,7 +32,7 @@ export default function DashboardCards() {
       gradient: 'from-accent-500 to-accent-600',
       path: '/hiring-authorities',
       description: 'Decision makers across company hierarchies',
-      stat: stats.hiringAuthorities,
+      stat: stats.totalAuthorities,
       statLabel: 'Authorities'
     },
     {
@@ -88,7 +41,7 @@ export default function DashboardCards() {
       gradient: 'from-candid-blue-500 to-candid-blue-600',
       path: '/companies',
       description: 'Organizational structures and hierarchies',
-      stat: stats.companies,
+      stat: stats.totalCompanies,
       statLabel: 'Organizations'
     },
     {
@@ -97,16 +50,16 @@ export default function DashboardCards() {
       gradient: 'from-candid-orange-500 to-candid-orange-600',
       path: '/positions',
       description: 'Roles mapped to hiring authorities',
-      stat: stats.positions,
+      stat: stats.totalPositions,
       statLabel: 'Open Roles'
     },
     {
       title: 'Network View',
       icon: '🌐',
       gradient: 'from-candid-navy-600 to-candid-navy-700',
-      path: '/global-view',
+      path: '/visualizations',
       description: 'Graph visualization of all connections',
-      stat: stats.globalConnections,
+      stat: globalConnections,
       statLabel: 'Connections'
     }
   ]
@@ -128,12 +81,12 @@ export default function DashboardCards() {
 
               {/* Stats */}
               <div className="text-right">
-                {loading ? (
+                {loading.global ? (
                   <div className="w-8 h-8 loading-spinner"></div>
                 ) : (
                   <>
                     <div className="text-2xl font-bold text-candid-navy-900">
-                      {card.stat}
+                      {card.stat || 0}
                     </div>
                     <div className="text-xs text-candid-gray-500 uppercase tracking-wide">
                       {card.statLabel}
