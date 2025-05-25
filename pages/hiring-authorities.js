@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
+import { CompanyLink, SkillLink } from '../components/ui/LinkButton'
 
 export default function HiringAuthorities() {
+  const router = useRouter()
   const [authorities, setAuthorities] = useState([])
+  const [companies, setCompanies] = useState([])
+  const [skills, setSkills] = useState([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
     role: '',
@@ -13,10 +18,27 @@ export default function HiringAuthorities() {
   })
 
   useEffect(() => {
-    const fetchAuthorities = async () => {
+    const fetchData = async () => {
       try {
-        // Simulate API call - in real app this would fetch from /api/hiring-authorities
-        setTimeout(() => {
+        // Fetch authorities, companies, and skills in parallel
+        const [authoritiesRes, companiesRes, skillsRes] = await Promise.all([
+          fetch('/api/hiring-authorities'),
+          fetch('/api/companies'),
+          fetch('/api/skills')
+        ])
+
+        if (authoritiesRes.ok && companiesRes.ok && skillsRes.ok) {
+          const [authoritiesData, companiesData, skillsData] = await Promise.all([
+            authoritiesRes.json(),
+            companiesRes.json(),
+            skillsRes.json()
+          ])
+
+          setAuthorities(authoritiesData.authorities || authoritiesData)
+          setCompanies(companiesData.companies || companiesData)
+          setSkills(skillsData.skills || skillsData)
+        } else {
+          // Fallback to sample data
           const sampleAuthorities = [
             {
               id: 'auth_1',
@@ -105,16 +127,37 @@ export default function HiringAuthorities() {
             }
           ]
           setAuthorities(sampleAuthorities)
-          setLoading(false)
-        }, 1000)
+          setCompanies([])
+          setSkills([])
+        }
+        setLoading(false)
       } catch (error) {
         console.error('Error fetching authorities:', error)
         setLoading(false)
       }
     }
 
-    fetchAuthorities()
+    fetchData()
   }, [])
+
+  // Helper functions
+  const getCompanyByName = (companyName) => {
+    return companies.find(c => c.name === companyName) || {
+      name: companyName,
+      _key: companyName.toLowerCase().replace(/\s+/g, '-'),
+      industry: 'Technology',
+      employeeCount: 100
+    }
+  }
+
+  const getSkillByName = (skillName) => {
+    return skills.find(s => s.name === skillName) || {
+      name: skillName,
+      _key: skillName.toLowerCase().replace(/\s+/g, '-'),
+      category: 'Technology',
+      demand: 'High'
+    }
+  }
 
   const getHiringPowerColor = (power) => {
     switch (power) {
@@ -165,7 +208,7 @@ export default function HiringAuthorities() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="form-label">Authority Level</label>
-                <select 
+                <select
                   className="form-input"
                   value={filters.role}
                   onChange={(e) => setFilters({...filters, role: e.target.value})}
@@ -179,7 +222,7 @@ export default function HiringAuthorities() {
               </div>
               <div>
                 <label className="form-label">Company Size</label>
-                <select 
+                <select
                   className="form-input"
                   value={filters.companySize}
                   onChange={(e) => setFilters({...filters, companySize: e.target.value})}
@@ -192,7 +235,7 @@ export default function HiringAuthorities() {
               </div>
               <div>
                 <label className="form-label">Industry</label>
-                <select 
+                <select
                   className="form-input"
                   value={filters.industry}
                   onChange={(e) => setFilters({...filters, industry: e.target.value})}
@@ -236,8 +279,10 @@ export default function HiringAuthorities() {
 
                   {/* Company Info */}
                   <div className="mb-4">
-                    <p className="font-medium text-secondary-700">{authority.company}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="mb-2">
+                      <CompanyLink company={getCompanyByName(authority.company)} size="sm" />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       <span className={`badge ${getCompanySizeColor(authority.companySize)}`}>
                         {authority.companySize}
                       </span>
@@ -253,11 +298,9 @@ export default function HiringAuthorities() {
                   {/* Skills Looking For */}
                   <div className="mb-4">
                     <p className="text-sm font-medium text-secondary-700 mb-2">Looking for:</p>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-2">
                       {authority.skillsLookingFor.slice(0, 3).map((skill, index) => (
-                        <span key={index} className="badge badge-primary text-xs">
-                          {skill}
-                        </span>
+                        <SkillLink key={index} skill={getSkillByName(skill)} size="xs" />
                       ))}
                       {authority.skillsLookingFor.length > 3 && (
                         <span className="badge badge-secondary text-xs">
@@ -275,15 +318,12 @@ export default function HiringAuthorities() {
 
                   {/* Actions */}
                   <div className="flex space-x-2">
-                    <Link 
-                      href={`/hiring-authorities/${authority.id}`}
+                    <Link
+                      href={`/hiring-authorities/${authority.id || authority._key}`}
                       className="btn-primary text-sm py-2 px-4 flex-1 text-center"
                     >
                       View Profile
                     </Link>
-                    <button className="btn-outline text-sm py-2 px-4">
-                      Connect
-                    </button>
                   </div>
                 </div>
               </div>
