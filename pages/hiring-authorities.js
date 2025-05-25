@@ -1,144 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
 import { CompanyLink, SkillLink } from '../components/ui/LinkButton'
+import { useData } from '../contexts/DataContext'
 
 export default function HiringAuthorities() {
   const router = useRouter()
-  const [authorities, setAuthorities] = useState([])
-  const [companies, setCompanies] = useState([])
-  const [skills, setSkills] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { hiringAuthorities, companies, skills, loading } = useData()
   const [filters, setFilters] = useState({
     role: '',
     companySize: '',
     industry: ''
   })
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch authorities, companies, and skills in parallel
-        const [authoritiesRes, companiesRes, skillsRes] = await Promise.all([
-          fetch('/api/hiring-authorities'),
-          fetch('/api/companies'),
-          fetch('/api/skills')
-        ])
-
-        if (authoritiesRes.ok && companiesRes.ok && skillsRes.ok) {
-          const [authoritiesData, companiesData, skillsData] = await Promise.all([
-            authoritiesRes.json(),
-            companiesRes.json(),
-            skillsRes.json()
-          ])
-
-          setAuthorities(authoritiesData.authorities || authoritiesData)
-          setCompanies(companiesData.companies || companiesData)
-          setSkills(skillsData.skills || skillsData)
-        } else {
-          // Fallback to sample data
-          const sampleAuthorities = [
-            {
-              id: 'auth_1',
-              name: 'Sarah Wilson',
-              role: 'VP Engineering',
-              level: 'Executive',
-              company: 'TechCorp Inc.',
-              companySize: 'Enterprise (1000+)',
-              industry: 'Technology',
-              email: 'sarah.wilson@techcorp.com',
-              hiringPower: 'High',
-              activePositions: 5,
-              skillsLookingFor: ['React', 'Node.js', 'Python', 'AWS', 'Leadership'],
-              preferredExperience: '5-10 years',
-              decisionMaker: true,
-              avatar: '👩‍💼',
-              connectionStrength: 92
-            },
-            {
-              id: 'auth_2',
-              name: 'Mike Chen',
-              role: 'Director of Product',
-              level: 'Director',
-              company: 'TechCorp Inc.',
-              companySize: 'Enterprise (1000+)',
-              industry: 'Technology',
-              email: 'mike.chen@techcorp.com',
-              hiringPower: 'Medium',
-              activePositions: 3,
-              skillsLookingFor: ['Product Management', 'UX/UI', 'Analytics', 'Agile'],
-              preferredExperience: '3-7 years',
-              decisionMaker: false,
-              avatar: '👨‍💼',
-              connectionStrength: 87
-            },
-            {
-              id: 'auth_3',
-              name: 'Jennifer Rodriguez',
-              role: 'CEO',
-              level: 'C-Suite',
-              company: 'StartupFlow',
-              companySize: 'Startup (<100)',
-              industry: 'FinTech',
-              email: 'jen@startupflow.com',
-              hiringPower: 'Ultimate',
-              activePositions: 8,
-              skillsLookingFor: ['Full Stack', 'Blockchain', 'Finance', 'Startup Experience'],
-              preferredExperience: '2-8 years',
-              decisionMaker: true,
-              avatar: '👩‍💼',
-              connectionStrength: 95
-            },
-            {
-              id: 'auth_4',
-              name: 'David Park',
-              role: 'HR Director',
-              level: 'Director',
-              company: 'MegaCorp Industries',
-              companySize: 'Enterprise (1000+)',
-              industry: 'Manufacturing',
-              email: 'david.park@megacorp.com',
-              hiringPower: 'Medium',
-              activePositions: 12,
-              skillsLookingFor: ['Operations', 'Six Sigma', 'Project Management', 'Engineering'],
-              preferredExperience: '3-10 years',
-              decisionMaker: false,
-              avatar: '👨‍💼',
-              connectionStrength: 78
-            },
-            {
-              id: 'auth_5',
-              name: 'Lisa Thompson',
-              role: 'CTO',
-              level: 'C-Suite',
-              company: 'InnovateTech',
-              companySize: 'Mid-size (100-1000)',
-              industry: 'Technology',
-              email: 'lisa@innovatetech.com',
-              hiringPower: 'High',
-              activePositions: 6,
-              skillsLookingFor: ['Architecture', 'DevOps', 'Machine Learning', 'Team Leadership'],
-              preferredExperience: '7-15 years',
-              decisionMaker: true,
-              avatar: '👩‍💼',
-              connectionStrength: 89
-            }
-          ]
-          setAuthorities(sampleAuthorities)
-          setCompanies([])
-          setSkills([])
-        }
-        setLoading(false)
-      } catch (error) {
-        console.error('Error fetching authorities:', error)
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
+  // Data comes from DataContext - no need for useEffect
 
   // Helper functions
   const getCompanyByName = (companyName) => {
@@ -170,17 +47,17 @@ export default function HiringAuthorities() {
   }
 
   const getCompanySizeColor = (size) => {
-    if (size.includes('Startup')) return 'bg-green-100 text-green-800'
-    if (size.includes('Mid-size')) return 'bg-blue-100 text-blue-800'
-    if (size.includes('Enterprise')) return 'bg-purple-100 text-purple-800'
+    if (size === 'Startup') return 'bg-green-100 text-green-800'
+    if (size === 'Mid-size') return 'bg-blue-100 text-blue-800'
+    if (size === 'Enterprise') return 'bg-purple-100 text-purple-800'
     return 'bg-gray-100 text-gray-800'
   }
 
-  const filteredAuthorities = authorities.filter(auth => {
+  const filteredAuthorities = hiringAuthorities.filter(auth => {
     return (
       (filters.role === '' || auth.level.toLowerCase().includes(filters.role.toLowerCase())) &&
-      (filters.companySize === '' || auth.companySize.includes(filters.companySize)) &&
-      (filters.industry === '' || auth.industry.toLowerCase().includes(filters.industry.toLowerCase()))
+      (filters.companySize === '' || auth.company?.size === filters.companySize) &&
+      (filters.industry === '' || auth.company?.industry.toLowerCase().includes(filters.industry.toLowerCase()))
     )
   })
 
@@ -253,7 +130,7 @@ export default function HiringAuthorities() {
         </div>
 
         {/* Authorities Grid */}
-        {loading ? (
+        {loading.global || loading.hiringAuthorities ? (
           <div className="text-center py-12">
             <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
             <p className="text-candid-gray-600">Loading hiring authorities...</p>
@@ -266,26 +143,26 @@ export default function HiringAuthorities() {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="text-3xl">{authority.avatar}</div>
+                      <div className="text-3xl">{authority.avatar || '👔'}</div>
                       <div>
                         <h3 className="font-semibold text-secondary-800">{authority.name}</h3>
                         <p className="text-sm text-candid-gray-600">{authority.role}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary-600">{authority.connectionStrength}%</div>
-                      <div className="text-xs text-candid-gray-500">Match Score</div>
+                      <div className="text-lg font-bold text-primary-600">{authority.level}</div>
+                      <div className="text-xs text-candid-gray-500">Authority Level</div>
                     </div>
                   </div>
 
                   {/* Company Info */}
                   <div className="mb-4">
                     <div className="mb-2">
-                      <CompanyLink company={getCompanyByName(authority.company)} size="sm" />
+                      <CompanyLink company={authority.company} size="sm" />
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <span className={`badge ${getCompanySizeColor(authority.companySize)}`}>
-                        {authority.companySize}
+                      <span className={`badge ${getCompanySizeColor(authority.company?.size)}`}>
+                        {authority.company?.size}
                       </span>
                       <span className={`badge ${getHiringPowerColor(authority.hiringPower)}`}>
                         {authority.hiringPower} Power
@@ -300,12 +177,12 @@ export default function HiringAuthorities() {
                   <div className="mb-4">
                     <p className="text-sm font-medium text-secondary-700 mb-2">Looking for:</p>
                     <div className="flex flex-wrap gap-2">
-                      {authority.skillsLookingFor.slice(0, 3).map((skill, index) => (
+                      {(authority.skillsLookingFor || []).slice(0, 3).map((skill, index) => (
                         <SkillLink key={index} skill={getSkillByName(skill)} size="xs" />
                       ))}
-                      {authority.skillsLookingFor.length > 3 && (
+                      {(authority.skillsLookingFor || []).length > 3 && (
                         <span className="badge badge-secondary text-xs">
-                          +{authority.skillsLookingFor.length - 3} more
+                          +{(authority.skillsLookingFor || []).length - 3} more
                         </span>
                       )}
                     </div>
@@ -313,8 +190,8 @@ export default function HiringAuthorities() {
 
                   {/* Stats */}
                   <div className="flex justify-between text-sm text-candid-gray-600 mb-4">
-                    <span>{authority.activePositions} open positions</span>
-                    <span>{authority.preferredExperience} exp.</span>
+                    <span>{authority.activePositions || 0} open positions</span>
+                    <span>{authority.preferredExperience || 'N/A'} exp.</span>
                   </div>
 
                   {/* Actions */}
@@ -332,7 +209,7 @@ export default function HiringAuthorities() {
           </div>
         )}
 
-        {filteredAuthorities.length === 0 && !loading && (
+        {filteredAuthorities.length === 0 && !loading.global && !loading.hiringAuthorities && (
           <div className="text-center py-12">
             <p className="text-candid-gray-600">No hiring authorities match your current filters.</p>
           </div>
