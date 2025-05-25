@@ -1,8 +1,68 @@
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Layout from '../components/Layout'
 import DashboardCards from '../components/DashboardCards'
 
 export default function Home() {
+  const [stats, setStats] = useState({
+    jobSeekers: 0,
+    hiringAuthorities: 0,
+    companies: 0,
+    skills: 0,
+    positions: 0,
+    matches: 0,
+    skillConnections: 0
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true)
+
+        // Fetch all data in parallel
+        const [companiesRes, authoritiesRes, jobSeekersRes, skillsRes, positionsRes, matchesRes] = await Promise.all([
+          fetch('/api/companies'),
+          fetch('/api/hiring-authorities'),
+          fetch('/api/job-seekers'),
+          fetch('/api/skills'),
+          fetch('/api/positions'),
+          fetch('/api/matches')
+        ])
+
+        const [companies, authorities, jobSeekers, skills, positions, matches] = await Promise.all([
+          companiesRes.json(),
+          authoritiesRes.json(),
+          jobSeekersRes.json(),
+          skillsRes.json(),
+          positionsRes.json(),
+          matchesRes.json()
+        ])
+
+        // Calculate skill connections (job seeker skills + authority preferences + position requirements)
+        const jobSeekerSkills = jobSeekers.reduce((total, js) => total + (js.skills?.length || 0), 0)
+        const authorityPreferences = authorities.reduce((total, auth) => total + (auth.skillsLookingFor?.length || 0), 0)
+        const positionRequirements = positions.reduce((total, pos) => total + (pos.requirements?.length || 0), 0)
+        const skillConnections = jobSeekerSkills + authorityPreferences + positionRequirements
+
+        setStats({
+          jobSeekers: jobSeekers.length,
+          hiringAuthorities: authorities.length,
+          companies: companies.length,
+          skills: skills.length,
+          positions: positions.length,
+          matches: matches.length,
+          skillConnections
+        })
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
   return (
     <Layout>
       <Head>
@@ -85,22 +145,30 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Network Stats - Hiring Authority Focus */}
+      {/* Network Stats - Real Data */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 max-w-4xl mx-auto">
         <div className="text-center">
-          <div className="text-3xl font-bold text-primary-500">156</div>
+          <div className="text-3xl font-bold text-primary-500">
+            {loading ? '...' : stats.jobSeekers}
+          </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Job Seekers</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-accent-600">67</div>
+          <div className="text-3xl font-bold text-accent-600">
+            {loading ? '...' : stats.hiringAuthorities}
+          </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Hiring Authorities</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-secondary-600">23</div>
+          <div className="text-3xl font-bold text-secondary-600">
+            {loading ? '...' : stats.companies}
+          </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Companies</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-primary-600">1,247</div>
+          <div className="text-3xl font-bold text-primary-600">
+            {loading ? '...' : stats.skillConnections}
+          </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Skill Connections</div>
         </div>
       </div>

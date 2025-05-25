@@ -6,18 +6,52 @@ export default function DashboardCards() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate loading stats
-    setTimeout(() => {
-      setStats({
-        matches: 47,
-        jobSeekers: 156,
-        companies: 23,
-        positions: 89,
-        skills: 127,
-        globalConnections: 342
-      })
-      setLoading(false)
-    }, 1000)
+    const fetchStats = async () => {
+      try {
+        setLoading(true)
+
+        // Fetch all data in parallel
+        const [companiesRes, authoritiesRes, jobSeekersRes, skillsRes, positionsRes, matchesRes] = await Promise.all([
+          fetch('/api/companies'),
+          fetch('/api/hiring-authorities'),
+          fetch('/api/job-seekers'),
+          fetch('/api/skills'),
+          fetch('/api/positions'),
+          fetch('/api/matches')
+        ])
+
+        const [companies, authorities, jobSeekers, skills, positions, matches] = await Promise.all([
+          companiesRes.json(),
+          authoritiesRes.json(),
+          jobSeekersRes.json(),
+          skillsRes.json(),
+          positionsRes.json(),
+          matchesRes.json()
+        ])
+
+        // Calculate total connections (all relationships in the graph)
+        const jobSeekerSkills = jobSeekers.reduce((total, js) => total + (js.skills?.length || 0), 0)
+        const authorityPreferences = authorities.reduce((total, auth) => total + (auth.skillsLookingFor?.length || 0), 0)
+        const positionRequirements = positions.reduce((total, pos) => total + (pos.requirements?.length || 0), 0)
+        const globalConnections = jobSeekerSkills + authorityPreferences + positionRequirements + matches.length + authorities.length + positions.length
+
+        setStats({
+          matches: matches.length,
+          jobSeekers: jobSeekers.length,
+          companies: companies.length,
+          positions: positions.length,
+          skills: skills.length,
+          hiringAuthorities: authorities.length,
+          globalConnections
+        })
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
   }, [])
 
   const cards = [
@@ -45,7 +79,7 @@ export default function DashboardCards() {
       gradient: 'from-accent-500 to-accent-600',
       path: '/hiring-authorities',
       description: 'Decision makers across company hierarchies',
-      stat: stats.hiringAuthorities || 67,
+      stat: stats.hiringAuthorities,
       statLabel: 'Authorities'
     },
     {

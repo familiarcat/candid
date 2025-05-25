@@ -52,21 +52,21 @@ export default function Navigation() {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Compact Grid */}
-          <div className="hidden lg:block flex-1 max-w-4xl mx-8">
+          {/* Desktop Navigation - Compact Grid with Text Labels */}
+          <div className="hidden lg:block flex-1 max-w-5xl mx-8">
             <div className="flex items-center justify-center space-x-1">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                  className={`flex flex-col items-center px-2 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                     router.pathname === item.path
                       ? 'nav-link-active'
                       : 'nav-link'
                   }`}
                 >
-                  <span className="text-sm">{item.icon}</span>
-                  <span className="hidden xl:block">{item.name}</span>
+                  <span className="text-sm mb-1">{item.icon}</span>
+                  <span className="text-xs">{item.name}</span>
                 </Link>
               ))}
             </div>
