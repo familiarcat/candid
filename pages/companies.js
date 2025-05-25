@@ -40,11 +40,15 @@ export default function Companies() {
           const authorities = authoritiesData.authorities || authoritiesData
           const positions = positionsData.positions || positionsData
 
-          // Enhance companies with real data
+          // Companies already come with hiringAuthorities and openPositions from API
           const enhancedCompanies = companies.map(company => ({
             ...company,
-            openPositions: positions.filter(p => p.companyId === `companies/${company._key}`).length,
-            hiringAuthorities: authorities.filter(a => a.companyId === `companies/${company._key}`)
+            _key: company.id, // Ensure _key is available for AuthorityLink
+            // Use API data if available, otherwise calculate from local data
+            openPositions: company.openPositions !== undefined ? company.openPositions :
+              positions.filter(p => p.companyId === `companies/${company.id}`).length,
+            hiringAuthorities: company.hiringAuthorities ||
+              authorities.filter(a => a.companyId === `companies/${company.id}`)
           }))
 
           setCompanies(enhancedCompanies)
@@ -295,7 +299,7 @@ export default function Companies() {
                 <h5 className="text-sm font-medium text-gray-700 mb-2">Key Contacts:</h5>
                 <div className="space-y-2">
                   {(company.hiringAuthorities || []).slice(0, 3).map((authority, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div key={authority.id || index} className="flex items-center justify-between">
                       <div className="flex items-center text-sm text-gray-600">
                         <span className="mr-2">👤</span>
                         <span className="font-medium">{authority.name}</span>
@@ -303,7 +307,12 @@ export default function Companies() {
                         <span>{authority.role}</span>
                       </div>
                       <AuthorityLink
-                        authority={getAuthorityByName(authority.name, `companies/${company._key}`)}
+                        authority={{
+                          ...authority,
+                          _key: authority.id || authority._key,
+                          level: authority.level || 'Manager',
+                          hiringPower: authority.hiringPower || 'Medium'
+                        }}
                         size="xs"
                       >
                         View Profile
