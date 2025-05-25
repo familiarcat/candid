@@ -16,6 +16,9 @@ export default function Matches() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('score')
   const [actionLoading, setActionLoading] = useState({})
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterLevel, setFilterLevel] = useState('all')
+  const [minScore, setMinScore] = useState(0)
 
   useEffect(() => {
     const fetchData = async () => {
