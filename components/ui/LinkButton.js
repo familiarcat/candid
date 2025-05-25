@@ -184,7 +184,7 @@ export function CompanyLink({ company, children, ...props }) {
 export function AuthorityLink({ authority, children, ...props }) {
   return (
     <LinkButton
-      href={`/hiring-authorities?highlight=${authority._key || authority.id}`}
+      href={`/hiring-authorities/${authority._key || authority.id}`}
       variant="authority"
       previewContent={
         <div className="space-y-2">

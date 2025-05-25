@@ -19,20 +19,21 @@ export default function Skills() {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const response = await fetch('/api/skills')
+        const response = await fetch('/api/skills?includeStats=true')
         if (response.ok) {
           const data = await response.json()
           const skillsData = data.skills || data
 
-          // Enhance skills with calculated metrics
+          // Use real database calculations with enhanced metrics
           const enhancedSkills = skillsData.map(skill => ({
             ...skill,
-            demand: skill.demand === 'Very High' ? 95 : skill.demand === 'High' ? 85 : skill.demand === 'Medium' ? 70 : 60,
-            supply: Math.floor(Math.random() * 40) + 60, // Simulated supply data
+            // Use real demand calculation from API, with fallback
+            demand: skill.demand || calculateDemandLevel(skill.openPositions, skill.jobSeekers),
+            supply: skill.supply || skill.jobSeekers || 0,
             averageSalary: calculateAverageSalary(skill.category),
-            jobSeekers: Math.floor(Math.random() * 100) + 50,
-            openPositions: Math.floor(Math.random() * 50) + 20,
-            growth: `+${Math.floor(Math.random() * 25) + 5}%`,
+            jobSeekers: skill.jobSeekers || 0,
+            openPositions: skill.openPositions || 0,
+            growth: skill.growth || calculateGrowthRate(skill.openPositions, skill.jobSeekers),
             description: getSkillDescription(skill.name),
             relatedSkills: getRelatedSkills(skill.name),
             icon: getSkillIcon(skill.category)
@@ -168,6 +169,24 @@ export default function Skills() {
   }, [])
 
   // Helper functions
+  const calculateDemandLevel = (openPositions, jobSeekers) => {
+    if (!openPositions || !jobSeekers) return 50
+    const ratio = openPositions / Math.max(jobSeekers, 1)
+    if (ratio >= 0.8) return 95  // Very High demand
+    if (ratio >= 0.5) return 85  // High demand
+    if (ratio >= 0.3) return 70  // Medium demand
+    return 60  // Low demand
+  }
+
+  const calculateGrowthRate = (openPositions, jobSeekers) => {
+    if (!openPositions || !jobSeekers) return '+5%'
+    const ratio = openPositions / Math.max(jobSeekers, 1)
+    if (ratio >= 0.8) return '+25%'  // High growth for high demand
+    if (ratio >= 0.5) return '+15%'  // Medium-high growth
+    if (ratio >= 0.3) return '+8%'   // Medium growth
+    return '+3%'  // Low growth
+  }
+
   const calculateAverageSalary = (category) => {
     const salaryRanges = {
       'Frontend': '$95,000',
