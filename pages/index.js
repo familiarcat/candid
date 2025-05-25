@@ -1,10 +1,39 @@
+'use client'
+
 import Head from 'next/head'
 import Layout from '../components/Layout'
 import DashboardCards from '../components/DashboardCards'
 import { useData } from '../contexts/DataContext'
 
 export default function Home() {
-  const { stats, loading } = useData()
+  const { stats, loading, companies, jobSeekers, hiringAuthorities, skills, positions, matches, fetchAllData } = useData()
+
+  // Debug logging
+  console.log('DataContext State:', {
+    stats,
+    loading,
+    companiesCount: companies?.length,
+    jobSeekersCount: jobSeekers?.length,
+    authoritiesCount: hiringAuthorities?.length,
+    skillsCount: skills?.length,
+    positionsCount: positions?.length,
+    matchesCount: matches?.length
+  })
+
+  // Manual test function
+  const handleTestFetch = async () => {
+    console.log('Manual fetch triggered')
+    try {
+      const response = await fetch('/api/companies')
+      const data = await response.json()
+      console.log('Direct fetch result:', data.length, 'companies')
+      alert(`Fetched ${data.length} companies directly`)
+    } catch (error) {
+      console.error('Direct fetch error:', error)
+      alert('Fetch failed: ' + error.message)
+    }
+  }
+
   return (
     <Layout>
       <Head>
@@ -113,6 +142,16 @@ export default function Home() {
           </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Skill Connections</div>
         </div>
+      </div>
+
+      {/* Debug Section */}
+      <div className="text-center mb-8">
+        <button
+          onClick={handleTestFetch}
+          className="bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors"
+        >
+          🔄 Test Fetch Data (Debug)
+        </button>
       </div>
 
       {/* Dashboard Cards */}
