@@ -1,26 +1,47 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
+import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
-import VisualizationModal from '../components/VisualizationModal'
-import { generateSampleGraphData } from '../lib/graphData'
+import DetailModal from '../components/ui/DetailModal'
+import { CompanyLink, SkillLink } from '../components/ui/LinkButton'
 import { formatDate, getEntityIcon } from '../lib/utils'
 
 export default function Positions() {
+  const router = useRouter()
   const [positions, setPositions] = useState([])
+  const [companies, setCompanies] = useState([])
+  const [skills, setSkills] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [showVisualization, setShowVisualization] = useState(false)
-  const [graphData, setGraphData] = useState(null)
+  const [selectedPosition, setSelectedPosition] = useState(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterLevel, setFilterLevel] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [sortBy, setSortBy] = useState('posted')
 
   useEffect(() => {
-    const fetchPositions = async () => {
+    const fetchData = async () => {
       try {
-        // Simulate API call - in real app this would fetch from /api/positions
-        setTimeout(() => {
+        // Fetch positions, companies, and skills in parallel
+        const [positionsRes, companiesRes, skillsRes] = await Promise.all([
+          fetch('/api/positions'),
+          fetch('/api/companies'),
+          fetch('/api/skills')
+        ])
+
+        if (positionsRes.ok && companiesRes.ok && skillsRes.ok) {
+          const [positionsData, companiesData, skillsData] = await Promise.all([
+            positionsRes.json(),
+            companiesRes.json(),
+            skillsRes.json()
+          ])
+
+          setPositions(positionsData.positions || positionsData)
+          setCompanies(companiesData.companies || companiesData)
+          setSkills(skillsData.skills || skillsData)
+        } else {
+          // Fallback to sample data
           const samplePositions = [
             {
               id: 'pos_1',
@@ -108,29 +129,57 @@ export default function Positions() {
               status: 'paused'
             }
           ]
-          
           setPositions(samplePositions)
-          setGraphData(generateSampleGraphData())
-          setLoading(false)
-        }, 1000)
+          setCompanies([]) // Sample companies would go here
+          setSkills([]) // Sample skills would go here
+        }
+        setLoading(false)
       } catch (err) {
         setError(err.message)
         setLoading(false)
       }
     }
 
-    fetchPositions()
+    fetchData()
   }, [])
+
+  // Helper functions
+  const handleViewDetails = (position) => {
+    setSelectedPosition(position)
+    setShowDetailModal(true)
+  }
+
+  const handleFindMatches = (position) => {
+    router.push(`/matches?position=${position.id}`)
+  }
+
+  const getCompanyByName = (companyName) => {
+    return companies.find(c => c.name === companyName) || {
+      name: companyName,
+      _key: companyName.toLowerCase().replace(/\s+/g, '-'),
+      industry: 'Technology',
+      employeeCount: 100
+    }
+  }
+
+  const getSkillByName = (skillName) => {
+    return skills.find(s => s.name === skillName) || {
+      name: skillName,
+      _key: skillName.toLowerCase().replace(/\s+/g, '-'),
+      category: 'Technology',
+      demand: 'High'
+    }
+  }
 
   const filteredPositions = positions.filter(position => {
     const matchesSearch = position.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          position.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          position.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          position.requirements.some(req => req.toLowerCase().includes(searchTerm.toLowerCase()))
-    
+
     const matchesLevel = filterLevel === 'all' || position.level === filterLevel
     const matchesType = filterType === 'all' || position.type === filterType
-    
+
     return matchesSearch && matchesLevel && matchesType
   })
 
@@ -205,15 +254,15 @@ export default function Positions() {
       <Head>
         <title>Positions | Candid Connections Katra</title>
       </Head>
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Open Positions</h1>
           <button
-            onClick={() => setShowVisualization(true)}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+            onClick={() => router.push('/visualizations')}
+            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
           >
-            🌐 View Network
+            📊 Visualize
           </button>
         </div>
 
@@ -229,7 +278,7 @@ export default function Positions() {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">Level:</label>
               <select
@@ -257,7 +306,7 @@ export default function Positions() {
                 <option value="Contract">Contract</option>
               </select>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">Sort by:</label>
               <select
@@ -288,7 +337,7 @@ export default function Positions() {
                   <span className="text-2xl mr-3">{position.companyLogo}</span>
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900">{position.title}</h3>
-                    <p className="text-gray-600">{position.company}</p>
+                    <CompanyLink company={getCompanyByName(position.company)} size="sm" />
                   </div>
                 </div>
                 <div className="flex space-x-2">
@@ -328,11 +377,9 @@ export default function Positions() {
               {/* Requirements */}
               <div className="mb-4">
                 <h5 className="text-sm font-medium text-gray-700 mb-2">Required Skills:</h5>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-2">
                   {position.requirements.map((req, index) => (
-                    <span key={index} className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                      {req}
-                    </span>
+                    <SkillLink key={index} skill={getSkillByName(req)} size="xs" />
                   ))}
                 </div>
               </div>
@@ -355,10 +402,16 @@ export default function Positions() {
                   Posted {formatDate(position.postedDate)}
                 </span>
                 <div className="flex space-x-2">
-                  <button className="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-700 transition-colors">
+                  <button
+                    onClick={() => handleViewDetails(position)}
+                    className="bg-primary-600 text-white px-4 py-2 rounded text-sm hover:bg-primary-700 transition-colors"
+                  >
                     View Details
                   </button>
-                  <button className="border border-emerald-600 text-emerald-600 px-4 py-2 rounded text-sm hover:bg-emerald-50 transition-colors">
+                  <button
+                    onClick={() => handleFindMatches(position)}
+                    className="border border-primary-600 text-primary-600 px-4 py-2 rounded text-sm hover:bg-primary-50 transition-colors"
+                  >
                     Find Matches
                   </button>
                 </div>
@@ -376,12 +429,13 @@ export default function Positions() {
         )}
       </div>
 
-      {/* Visualization Modal */}
-      <VisualizationModal
-        isOpen={showVisualization}
-        onClose={() => setShowVisualization(false)}
-        data={graphData}
-        title="Positions Network"
+      {/* Detail Modal */}
+      <DetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        entity={selectedPosition}
+        entityType="position"
+        onFindMatches={handleFindMatches}
       />
     </Layout>
   )

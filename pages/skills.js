@@ -3,6 +3,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
 import DetailModal from '../components/ui/DetailModal'
+import { SkillCard } from '../components/ui/CollapsibleCard'
 
 export default function Skills() {
   const router = useRouter()
@@ -396,88 +397,14 @@ export default function Skills() {
         </div>
 
         {/* Skills Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="space-y-4">
           {sortedSkills.map((skill) => (
-            <div key={skill.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              {/* Skill Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <span className="text-2xl mr-3">{skill.icon}</span>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{skill.name}</h3>
-                    <p className="text-gray-600 text-sm">{skill.category}</p>
-                  </div>
-                </div>
-                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getGrowthColor(skill.growth)}`}>
-                  {skill.growth}
-                </div>
-              </div>
-
-              {/* Metrics */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center">
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getDemandColor(skill.demand)}`}>
-                    {skill.demand}% Demand
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Market Demand</p>
-                </div>
-                <div className="text-center">
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getSupplyColor(skill.supply)}`}>
-                    {skill.supply}% Supply
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Talent Supply</p>
-                </div>
-              </div>
-
-              {/* Salary and Stats */}
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Average Salary:</span>
-                  <span className="font-medium text-emerald-600">{skill.averageSalary}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Job Seekers:</span>
-                  <span className="font-medium">{skill.jobSeekers}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Open Positions:</span>
-                  <span className="font-medium">{skill.openPositions}</span>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p className="text-gray-700 text-sm mb-4">
-                {skill.description}
-              </p>
-
-              {/* Related Skills */}
-              <div className="mb-4">
-                <h5 className="text-sm font-medium text-gray-700 mb-2">Related Skills:</h5>
-                <div className="flex flex-wrap gap-1">
-                  {skill.relatedSkills.map((relatedSkill, index) => (
-                    <span key={index} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                      {relatedSkill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleViewDetails(skill)}
-                  className="flex-1 bg-primary-600 text-white px-3 py-2 rounded text-sm hover:bg-primary-700 transition-colors"
-                >
-                  View Details
-                </button>
-                <button
-                  onClick={() => handleFindTalent(skill)}
-                  className="flex-1 border border-primary-600 text-primary-600 px-3 py-2 rounded text-sm hover:bg-primary-50 transition-colors"
-                >
-                  Find Talent
-                </button>
-              </div>
-            </div>
+            <SkillCard
+              key={skill._key || skill.id}
+              skill={skill}
+              onViewDetails={handleViewDetails}
+              onFindTalent={handleFindTalent}
+            />
           ))}
         </div>
 

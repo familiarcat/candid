@@ -8,7 +8,7 @@ export default function Navigation() {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: '🏠' },
-    { name: 'Authority Matches', path: '/matches', icon: '🎯' },
+    { name: 'Matches', path: '/matches', icon: '🎯' },
     { name: 'Job Seekers', path: '/job-seekers', icon: '👥' },
     { name: 'Hiring Authorities', path: '/hiring-authorities', icon: '👔' },
     { name: 'Companies', path: '/companies', icon: '🏢' },
@@ -81,10 +81,10 @@ export default function Navigation() {
               ⚙️ Admin
             </Link>
             <Link
-              href="/global-view"
+              href="/visualizations"
               className="btn-outline text-sm py-2 px-4"
             >
-              🌐 Network View
+              📊 Visualize
             </Link>
             <Link
               href="https://portal.candid-connections.com/user/login"
@@ -137,11 +137,11 @@ export default function Navigation() {
               {/* Mobile CTA Buttons */}
               <div className="pt-4 space-y-2">
                 <Link
-                  href="/global-view"
+                  href="/visualizations"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block w-full btn-outline text-center"
                 >
-                  🌐 Network View
+                  📊 Visualize
                 </Link>
                 <Link
                   href="https://portal.candid-connections.com/user/login"
