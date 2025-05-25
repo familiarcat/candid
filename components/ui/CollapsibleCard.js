@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-export default function CollapsibleCard({ 
-  title, 
+export default function CollapsibleCard({
+  title,
   subtitle,
   icon,
   primaryMetrics,
@@ -22,36 +22,36 @@ export default function CollapsibleCard({
 
   return (
     <div className={`card ${variants[variant]} transition-all duration-300 ${isExpanded ? 'shadow-lg' : 'shadow-sm hover:shadow-md'} ${className}`}>
-      {/* Collapsed Header */}
-      <div className="p-4">
+      {/* Collapsed Header - Compact */}
+      <div className="p-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 flex-1">
+          <div className="flex items-center space-x-2 flex-1">
             {icon && (
-              <div className="text-2xl">{icon}</div>
+              <div className="text-lg">{icon}</div>
             )}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
+              <h3 className="font-medium text-sm text-gray-900 truncate">{title}</h3>
               {subtitle && (
-                <p className="text-sm text-gray-600 truncate">{subtitle}</p>
+                <p className="text-xs text-gray-600 truncate">{subtitle}</p>
               )}
             </div>
           </div>
-          
+
           {/* Primary Metrics - Always Visible */}
-          <div className="flex items-center space-x-4 mr-4">
+          <div className="flex items-center space-x-3 mr-2">
             {primaryMetrics}
           </div>
 
           {/* Expand/Collapse Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="p-1 rounded hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-primary-500"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            <svg 
-              className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -65,7 +65,7 @@ export default function CollapsibleCard({
         <div className="border-t border-gray-200 bg-white bg-opacity-50">
           <div className="p-4 space-y-4">
             {expandedContent}
-            
+
             {/* Actions */}
             {actions && (
               <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
@@ -84,11 +84,11 @@ export function SkillCard({ skill, onViewDetails, onFindTalent }) {
   const primaryMetrics = (
     <>
       <div className="text-center">
-        <div className="text-lg font-bold text-blue-600">{skill.demand === 'Very High' ? '95%' : skill.demand === 'High' ? '85%' : '70%'}</div>
+        <div className="text-sm font-bold text-blue-600">{skill.demand === 'Very High' ? '95%' : skill.demand === 'High' ? '85%' : '70%'}</div>
         <div className="text-xs text-gray-500">Demand</div>
       </div>
       <div className="text-center">
-        <div className="text-lg font-bold text-green-600">{skill.supply || Math.floor(Math.random() * 40) + 60}%</div>
+        <div className="text-sm font-bold text-green-600">{skill.supply || Math.floor(Math.random() * 40) + 60}%</div>
         <div className="text-xs text-gray-500">Supply</div>
       </div>
     </>
@@ -106,7 +106,7 @@ export function SkillCard({ skill, onViewDetails, onFindTalent }) {
           <p className="text-sm text-gray-900">{skill.averageSalary || '$95,000'}</p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium text-gray-700">Job Seekers</label>
@@ -196,7 +196,7 @@ export function CompanyCard({ company, onViewDetails }) {
           <p className="text-sm text-gray-900">{company.founded || 'N/A'}</p>
         </div>
       </div>
-      
+
       {company.description && (
         <div>
           <label className="text-sm font-medium text-gray-700">Description</label>

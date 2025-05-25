@@ -2,10 +2,10 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 // Reusable link button component with consistent styling and hover effects
-export default function LinkButton({ 
-  href, 
-  children, 
-  variant = 'primary', 
+export default function LinkButton({
+  href,
+  children,
+  variant = 'primary',
   size = 'sm',
   showPreview = false,
   previewContent = null,
@@ -16,7 +16,7 @@ export default function LinkButton({
   const [showPreviewModal, setShowPreviewModal] = useState(false)
 
   const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2'
-  
+
   const variants = {
     primary: 'bg-primary-500 hover:bg-primary-600 text-white focus:ring-primary-500 shadow-sm hover:shadow-md',
     secondary: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 hover:border-gray-400 focus:ring-gray-500 shadow-sm hover:shadow-md',
@@ -87,7 +87,7 @@ export default function LinkButton({
         <button className={classes} onClick={handleClick}>
           {content}
         </button>
-        
+
         {/* Preview Modal */}
         {showPreviewModal && previewContent && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -111,7 +111,7 @@ export default function LinkButton({
                     <Link href={href} className="btn-primary flex-1 text-center">
                       View Full Details
                     </Link>
-                    <button 
+                    <button
                       onClick={() => setShowPreviewModal(false)}
                       className="btn-outline flex-1"
                     >
@@ -158,16 +158,18 @@ export function SkillLink({ skill, children, ...props }) {
 }
 
 export function CompanyLink({ company, children, ...props }) {
+  if (!company) return <span className="text-gray-500">Unknown Company</span>
+
   return (
     <LinkButton
       href={`/companies?highlight=${company._key || company.id}`}
       variant="company"
       previewContent={
         <div className="space-y-2">
-          <p className="text-sm text-gray-600">{company.description || `${company.industry} company`}</p>
+          <p className="text-sm text-gray-600">{company.description || `${company.industry || 'Technology'} company`}</p>
           <div className="flex justify-between text-xs">
-            <span>Industry: <strong>{company.industry}</strong></span>
-            <span>Size: <strong>{company.employeeCount} employees</strong></span>
+            <span>Industry: <strong>{company.industry || 'Technology'}</strong></span>
+            <span>Size: <strong>{company.employeeCount || 100} employees</strong></span>
           </div>
         </div>
       }
