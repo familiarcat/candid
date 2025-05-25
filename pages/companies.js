@@ -55,74 +55,9 @@ export default function Companies() {
           setHiringAuthorities(authorities)
           setPositions(positions)
         } else {
-          // Fallback to sample data
-          const sampleCompanies = [
-            {
-              id: 'company_1',
-              name: 'TechCorp Inc.',
-              industry: 'Technology',
-              size: 'Large (1000+ employees)',
-              location: 'San Francisco, CA',
-              description: 'Leading technology company specializing in cloud solutions and enterprise software.',
-              openPositions: 12,
-              hiringAuthorities: [
-                { name: 'Sarah Wilson', role: 'VP Engineering' },
-                { name: 'Mike Chen', role: 'Director of Product' }
-              ],
-              founded: '2010',
-              website: 'https://techcorp.com',
-              logo: '🏢'
-            },
-            {
-              id: 'company_2',
-              name: 'DataFlow Systems',
-              industry: 'Data Analytics',
-              size: 'Medium (100-999 employees)',
-              location: 'Austin, TX',
-              description: 'Data analytics platform helping businesses make data-driven decisions.',
-              openPositions: 8,
-              hiringAuthorities: [
-                { name: 'Jennifer Rodriguez', role: 'Head of Engineering' },
-                { name: 'David Park', role: 'CTO' }
-              ],
-              founded: '2015',
-              website: 'https://dataflow.com',
-              logo: '📊'
-            },
-            {
-              id: 'company_3',
-              name: 'Design Studio Pro',
-              industry: 'Design & Creative',
-              size: 'Small (10-99 employees)',
-              location: 'New York, NY',
-              description: 'Creative design studio specializing in user experience and brand design.',
-              openPositions: 5,
-              hiringAuthorities: [
-                { name: 'Alex Thompson', role: 'Creative Director' },
-                { name: 'Maria Garcia', role: 'Design Lead' }
-              ],
-              founded: '2018',
-              website: 'https://designstudiopro.com',
-              logo: '🎨'
-            },
-            {
-              id: 'company_4',
-              name: 'CloudTech Solutions',
-              industry: 'Cloud Infrastructure',
-              size: 'Medium (100-999 employees)',
-              location: 'Seattle, WA',
-              description: 'Cloud infrastructure and DevOps solutions for modern enterprises.',
-              openPositions: 15,
-              hiringAuthorities: [
-                { name: 'Robert Kim', role: 'VP of Engineering' },
-                { name: 'Lisa Chang', role: 'Director of Operations' }
-              ],
-              founded: '2012',
-              website: 'https://cloudtech.com',
-              logo: '☁️'
-            }
-          ]
-          setCompanies(sampleCompanies)
+          // No fallback data - ensure database is seeded
+          console.warn('No companies data found - database may need seeding')
+          setCompanies([])
           setHiringAuthorities([])
           setPositions([])
         }

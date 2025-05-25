@@ -41,97 +41,11 @@ export default function Positions() {
           setCompanies(companiesData.companies || companiesData)
           setSkills(skillsData.skills || skillsData)
         } else {
-          // Fallback to sample data
-          const samplePositions = [
-            {
-              id: 'pos_1',
-              title: 'Lead Frontend Engineer',
-              company: 'TechCorp Inc.',
-              companyLogo: '🏢',
-              level: 'Senior',
-              type: 'Full-time',
-              location: 'San Francisco, CA',
-              remote: true,
-              salary: '$140,000 - $180,000',
-              description: 'Lead a team of frontend engineers building next-generation web applications using React and TypeScript.',
-              requirements: ['React', 'TypeScript', 'Leadership', 'GraphQL', 'Node.js'],
-              benefits: ['Health Insurance', 'Stock Options', 'Remote Work', '401k'],
-              postedDate: new Date('2024-01-15'),
-              applicants: 23,
-              status: 'active'
-            },
-            {
-              id: 'pos_2',
-              title: 'Backend Engineer',
-              company: 'DataFlow Systems',
-              companyLogo: '📊',
-              level: 'Mid',
-              type: 'Full-time',
-              location: 'Austin, TX',
-              remote: false,
-              salary: '$100,000 - $130,000',
-              description: 'Build scalable backend systems for our data analytics platform using Python and Django.',
-              requirements: ['Python', 'Django', 'PostgreSQL', 'AWS', 'Docker'],
-              benefits: ['Health Insurance', 'Flexible Hours', 'Learning Budget'],
-              postedDate: new Date('2024-01-14'),
-              applicants: 18,
-              status: 'active'
-            },
-            {
-              id: 'pos_3',
-              title: 'Senior UX Designer',
-              company: 'Design Studio Pro',
-              companyLogo: '🎨',
-              level: 'Senior',
-              type: 'Contract',
-              location: 'New York, NY',
-              remote: true,
-              salary: '$80 - $120/hour',
-              description: 'Design intuitive user experiences for our client projects across various industries.',
-              requirements: ['Figma', 'User Research', 'Design Systems', 'Prototyping'],
-              benefits: ['Flexible Schedule', 'Creative Freedom', 'Portfolio Building'],
-              postedDate: new Date('2024-01-13'),
-              applicants: 31,
-              status: 'active'
-            },
-            {
-              id: 'pos_4',
-              title: 'Cloud Infrastructure Engineer',
-              company: 'CloudTech Solutions',
-              companyLogo: '☁️',
-              level: 'Senior',
-              type: 'Full-time',
-              location: 'Seattle, WA',
-              remote: true,
-              salary: '$130,000 - $160,000',
-              description: 'Design and maintain cloud infrastructure for enterprise clients using Kubernetes and Terraform.',
-              requirements: ['Kubernetes', 'Terraform', 'AWS', 'Docker', 'Monitoring'],
-              benefits: ['Health Insurance', 'Stock Options', 'Remote Work', 'Conference Budget'],
-              postedDate: new Date('2024-01-12'),
-              applicants: 15,
-              status: 'active'
-            },
-            {
-              id: 'pos_5',
-              title: 'Junior Frontend Developer',
-              company: 'TechCorp Inc.',
-              companyLogo: '🏢',
-              level: 'Junior',
-              type: 'Full-time',
-              location: 'San Francisco, CA',
-              remote: false,
-              salary: '$70,000 - $90,000',
-              description: 'Join our frontend team to build user interfaces and learn from experienced developers.',
-              requirements: ['JavaScript', 'React', 'CSS', 'Git'],
-              benefits: ['Health Insurance', 'Mentorship', 'Learning Budget'],
-              postedDate: new Date('2024-01-10'),
-              applicants: 42,
-              status: 'paused'
-            }
-          ]
-          setPositions(samplePositions)
-          setCompanies([]) // Sample companies would go here
-          setSkills([]) // Sample skills would go here
+          // No fallback data - ensure database is seeded
+          console.warn('No positions data found - database may need seeding')
+          setPositions([])
+          setCompanies([])
+          setSkills([])
         }
         setLoading(false)
       } catch (err) {

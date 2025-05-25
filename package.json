@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next export"
+    "export": "next export",
+    "ensure-dev-data": "node scripts/ensure-dev-data.js",
+    "dev:clean": "npm run ensure-dev-data && npm run dev"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.8",
@@ -17,6 +19,7 @@
     "arangojs": "^8.8.1",
     "d3": "^7.9.0",
     "next": "^15.0.0",
+    "node-fetch": "^3.3.2",
     "openai": "^4.103.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

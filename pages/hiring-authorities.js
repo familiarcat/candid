@@ -38,95 +38,9 @@ export default function HiringAuthorities() {
           setCompanies(companiesData.companies || companiesData)
           setSkills(skillsData.skills || skillsData)
         } else {
-          // Fallback to sample data
-          const sampleAuthorities = [
-            {
-              id: 'auth_1',
-              name: 'Sarah Wilson',
-              role: 'VP Engineering',
-              level: 'Executive',
-              company: 'TechCorp Inc.',
-              companySize: 'Enterprise (1000+)',
-              industry: 'Technology',
-              email: 'sarah.wilson@techcorp.com',
-              hiringPower: 'High',
-              activePositions: 5,
-              skillsLookingFor: ['React', 'Node.js', 'Python', 'AWS', 'Leadership'],
-              preferredExperience: '5-10 years',
-              decisionMaker: true,
-              avatar: '👩‍💼',
-              connectionStrength: 92
-            },
-            {
-              id: 'auth_2',
-              name: 'Mike Chen',
-              role: 'Director of Product',
-              level: 'Director',
-              company: 'TechCorp Inc.',
-              companySize: 'Enterprise (1000+)',
-              industry: 'Technology',
-              email: 'mike.chen@techcorp.com',
-              hiringPower: 'Medium',
-              activePositions: 3,
-              skillsLookingFor: ['Product Management', 'UX/UI', 'Analytics', 'Agile'],
-              preferredExperience: '3-7 years',
-              decisionMaker: false,
-              avatar: '👨‍💼',
-              connectionStrength: 87
-            },
-            {
-              id: 'auth_3',
-              name: 'Jennifer Rodriguez',
-              role: 'CEO',
-              level: 'C-Suite',
-              company: 'StartupFlow',
-              companySize: 'Startup (<100)',
-              industry: 'FinTech',
-              email: 'jen@startupflow.com',
-              hiringPower: 'Ultimate',
-              activePositions: 8,
-              skillsLookingFor: ['Full Stack', 'Blockchain', 'Finance', 'Startup Experience'],
-              preferredExperience: '2-8 years',
-              decisionMaker: true,
-              avatar: '👩‍💼',
-              connectionStrength: 95
-            },
-            {
-              id: 'auth_4',
-              name: 'David Park',
-              role: 'HR Director',
-              level: 'Director',
-              company: 'MegaCorp Industries',
-              companySize: 'Enterprise (1000+)',
-              industry: 'Manufacturing',
-              email: 'david.park@megacorp.com',
-              hiringPower: 'Medium',
-              activePositions: 12,
-              skillsLookingFor: ['Operations', 'Six Sigma', 'Project Management', 'Engineering'],
-              preferredExperience: '3-10 years',
-              decisionMaker: false,
-              avatar: '👨‍💼',
-              connectionStrength: 78
-            },
-            {
-              id: 'auth_5',
-              name: 'Lisa Thompson',
-              role: 'CTO',
-              level: 'C-Suite',
-              company: 'InnovateTech',
-              companySize: 'Mid-size (100-1000)',
-              industry: 'Technology',
-              email: 'lisa@innovatetech.com',
-              hiringPower: 'High',
-              activePositions: 6,
-              skillsLookingFor: ['Architecture', 'DevOps', 'Machine Learning', 'Team Leadership'],
-              preferredExperience: '7-15 years',
-              decisionMaker: true,
-              avatar: '👩‍💼',
-              connectionStrength: 89
-            }
-          ]
-          setAuthorities(sampleAuthorities)
+          // No fallback data - ensure database is seeded
+          console.warn('No hiring authorities data found - database may need seeding')
+          setAuthorities([])
           setCompanies([])
           setSkills([])
         }
