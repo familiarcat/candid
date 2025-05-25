@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Layout from '../components/Layout'
 import AuthorityNetworkGraph from '../components/visualizations/AuthorityNetworkGraph'
-import { transformToNetworkData, transformToHierarchyData, transformToMatchHeatmap, transformToSkillDemandData } from '../lib/visualizationData'
+import NetworkVisualization3D from '../components/visualizations/NetworkVisualization3D'
+import { generateNetworkData, generateFocusedNetworkData } from '../lib/graphDataGenerator'
 
 export default function Visualizations() {
   const [data, setData] = useState({
@@ -10,31 +11,35 @@ export default function Visualizations() {
     hiringAuthorities: [],
     jobSeekers: [],
     skills: [],
+    positions: [],
     matches: []
   })
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('network')
+  const [visualizationMode, setVisualizationMode] = useState('2d') // '2d' or '3d'
   const [networkData, setNetworkData] = useState({ nodes: [], links: [] })
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        
+
         // Fetch all data in parallel
-        const [companiesRes, authoritiesRes, jobSeekersRes, skillsRes, matchesRes] = await Promise.all([
+        const [companiesRes, authoritiesRes, jobSeekersRes, skillsRes, positionsRes, matchesRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/hiring-authorities'),
           fetch('/api/job-seekers'),
           fetch('/api/skills'),
+          fetch('/api/positions'),
           fetch('/api/matches')
         ])
 
-        const [companies, authoritiesData, jobSeekersData, skills, matchesData] = await Promise.all([
+        const [companies, authoritiesData, jobSeekersData, skills, positions, matchesData] = await Promise.all([
           companiesRes.json(),
           authoritiesRes.json(),
           jobSeekersRes.json(),
           skillsRes.json(),
+          positionsRes.json(),
           matchesRes.json()
         ])
 
@@ -43,17 +48,19 @@ export default function Visualizations() {
           hiringAuthorities: authoritiesData.authorities || authoritiesData,
           jobSeekers: jobSeekersData.jobSeekers || jobSeekersData,
           skills: skills.skills || skills,
+          positions: positions.positions || positions,
           matches: matchesData.matches || matchesData
         }
 
         setData(fetchedData)
 
-        // Transform data for network visualization
-        const networkData = transformToNetworkData(
+        // Generate enhanced network data with positions and proper edges
+        const networkData = generateNetworkData(
           fetchedData.companies,
           fetchedData.hiringAuthorities,
           fetchedData.jobSeekers,
           fetchedData.skills,
+          fetchedData.positions,
           fetchedData.matches
         )
         setNetworkData(networkData)
@@ -107,7 +114,7 @@ export default function Visualizations() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">{data.companies.length}</div>
             <div className="text-sm text-candid-gray-500">Companies</div>
@@ -123,6 +130,10 @@ export default function Visualizations() {
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">{data.skills.length}</div>
             <div className="text-sm text-candid-gray-500">Skills</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-600">{data.positions.length}</div>
+            <div className="text-sm text-candid-gray-500">Positions</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-accent-600">{data.matches.length}</div>
@@ -155,19 +166,80 @@ export default function Visualizations() {
           <div className="card-body">
             {activeTab === 'network' && (
               <div>
-                <h3 className="text-xl font-semibold text-secondary-800 mb-4">
-                  Authority Network Graph
-                </h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold text-secondary-800">
+                    Enhanced Network Visualization
+                  </h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setVisualizationMode('2d')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        visualizationMode === '2d'
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      2D Network
+                    </button>
+                    <button
+                      onClick={() => setVisualizationMode('3d')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        visualizationMode === '3d'
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      3D Network
+                    </button>
+                  </div>
+                </div>
+
                 <p className="text-candid-gray-600 mb-6">
-                  Interactive network showing connections between companies, hiring authorities, job seekers, and skills. 
-                  Drag nodes to explore relationships, hover for details, and click for more information.
+                  Interactive network showing connections between companies, hiring authorities, job seekers, skills, and positions.
+                  {visualizationMode === '2d'
+                    ? 'Drag nodes to explore relationships, hover for details, and click for more information.'
+                    : 'Click nodes to select, drag to rotate the 3D view, and explore the network in three dimensions.'
+                  }
                 </p>
+
+                {/* Network Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-blue-50 p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-blue-600">{networkData.nodes?.length || 0}</div>
+                    <div className="text-xs text-blue-600">Total Nodes</div>
+                  </div>
+                  <div className="bg-green-50 p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-green-600">{networkData.links?.length || 0}</div>
+                    <div className="text-xs text-green-600">Total Connections</div>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-purple-600">
+                      {networkData.stats?.linkTypes?.match || 0}
+                    </div>
+                    <div className="text-xs text-purple-600">Match Connections</div>
+                  </div>
+                  <div className="bg-orange-50 p-3 rounded-lg text-center">
+                    <div className="text-lg font-bold text-orange-600">
+                      {networkData.stats?.linkTypes?.skill || 0}
+                    </div>
+                    <div className="text-xs text-orange-600">Skill Connections</div>
+                  </div>
+                </div>
+
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <AuthorityNetworkGraph 
-                    data={networkData} 
-                    width={800} 
-                    height={600} 
-                  />
+                  {visualizationMode === '2d' ? (
+                    <AuthorityNetworkGraph
+                      data={networkData}
+                      width={800}
+                      height={600}
+                    />
+                  ) : (
+                    <NetworkVisualization3D
+                      data={networkData}
+                      width={800}
+                      height={600}
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -182,10 +254,10 @@ export default function Visualizations() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {data.companies.map((company) => {
-                    const companyAuthorities = data.hiringAuthorities.filter(auth => 
+                    const companyAuthorities = data.hiringAuthorities.filter(auth =>
                       auth.companyId === `companies/${company._key}`
                     )
-                    
+
                     return (
                       <div key={company._key} className="border rounded-lg p-4">
                         <div className="text-center mb-4">
@@ -194,12 +266,12 @@ export default function Visualizations() {
                             {company.employeeCount} employees • {company.industry}
                           </p>
                         </div>
-                        
+
                         <div className="space-y-3">
                           {['C-Suite', 'Executive', 'Director', 'Manager'].map(level => {
                             const authoritiesAtLevel = companyAuthorities.filter(auth => auth.level === level)
                             if (authoritiesAtLevel.length === 0) return null
-                            
+
                             return (
                               <div key={level} className="border-l-4 border-primary-500 pl-4">
                                 <h5 className="font-medium text-sm text-secondary-700">{level}</h5>
@@ -235,7 +307,7 @@ export default function Visualizations() {
                   Authority Match Heatmap
                 </h3>
                 <p className="text-candid-gray-600 mb-6">
-                  Heat map showing match strength between job seekers and hiring authorities. 
+                  Heat map showing match strength between job seekers and hiring authorities.
                   Darker colors indicate stronger matches.
                 </p>
                 <div className="text-center text-candid-gray-500 py-12">
@@ -254,24 +326,24 @@ export default function Visualizations() {
                 <p className="text-candid-gray-600 mb-6">
                   Analysis of skill supply and demand across job seekers and hiring authorities.
                 </p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Top Skills by Job Seekers */}
                   <div>
                     <h4 className="font-semibold mb-3">Most Common Skills (Job Seekers)</h4>
                     <div className="space-y-2">
                       {data.skills.slice(0, 10).map((skill, index) => {
-                        const jobSeekerCount = data.jobSeekers.filter(js => 
+                        const jobSeekerCount = data.jobSeekers.filter(js =>
                           js.skills?.includes(skill._key)
                         ).length
-                        
+
                         return (
                           <div key={skill._key} className="flex justify-between items-center">
                             <span className="text-sm">{skill.name}</span>
                             <div className="flex items-center space-x-2">
                               <div className="w-20 bg-gray-200 rounded-full h-2">
-                                <div 
-                                  className="bg-primary-500 h-2 rounded-full" 
+                                <div
+                                  className="bg-primary-500 h-2 rounded-full"
                                   style={{ width: `${(jobSeekerCount / data.jobSeekers.length) * 100}%` }}
                                 ></div>
                               </div>
@@ -288,17 +360,17 @@ export default function Visualizations() {
                     <h4 className="font-semibold mb-3">Most Demanded Skills (Authorities)</h4>
                     <div className="space-y-2">
                       {data.skills.slice(0, 10).map((skill, index) => {
-                        const authorityCount = data.hiringAuthorities.filter(auth => 
+                        const authorityCount = data.hiringAuthorities.filter(auth =>
                           auth.skillsLookingFor?.includes(skill.name)
                         ).length
-                        
+
                         return (
                           <div key={skill._key} className="flex justify-between items-center">
                             <span className="text-sm">{skill.name}</span>
                             <div className="flex items-center space-x-2">
                               <div className="w-20 bg-gray-200 rounded-full h-2">
-                                <div 
-                                  className="bg-accent-500 h-2 rounded-full" 
+                                <div
+                                  className="bg-accent-500 h-2 rounded-full"
                                   style={{ width: `${(authorityCount / data.hiringAuthorities.length) * 100}%` }}
                                 ></div>
                               </div>
@@ -326,7 +398,7 @@ export default function Visualizations() {
                 <div className="text-3xl mb-2">🎯</div>
                 <h4 className="font-semibold mb-2">Match Quality</h4>
                 <p className="text-sm text-candid-gray-600">
-                  {data.matches.filter(m => m.score >= 80).length} high-quality matches (80%+ score) 
+                  {data.matches.filter(m => m.score >= 80).length} high-quality matches (80%+ score)
                   out of {data.matches.length} total connections
                 </p>
               </div>
