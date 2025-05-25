@@ -115,6 +115,16 @@ async function handleGet(req, res, db, collections) {
             FILTER pos.companyId == company._id AND pos.status == 'active'
             RETURN 1
         )
+        LET hiringAuthorities = (
+          FOR auth IN hiringAuthorities
+            FILTER auth.companyId == company._id
+            RETURN {
+              id: auth._key,
+              name: auth.name,
+              role: auth.role,
+              email: auth.email
+            }
+        )
         SORT company.name ASC
         LIMIT @offset, @limit
         RETURN {
@@ -127,7 +137,8 @@ async function handleGet(req, res, db, collections) {
           founded: company.founded,
           website: company.website,
           logo: company.logo,
-          openPositions: openPositions
+          openPositions: openPositions,
+          hiringAuthorities: hiringAuthorities
         }
       `
 
@@ -143,20 +154,20 @@ async function handleGet(req, res, db, collections) {
 }
 
 async function handlePost(req, res, db, collections) {
-  const { 
-    name, 
-    industry, 
-    size, 
-    location, 
-    description, 
-    founded, 
-    website, 
-    logo 
+  const {
+    name,
+    industry,
+    size,
+    location,
+    description,
+    founded,
+    website,
+    logo
   } = req.body
 
   if (!name || !industry || !size || !location) {
-    return res.status(400).json({ 
-      error: 'Missing required fields: name, industry, size, location' 
+    return res.status(400).json({
+      error: 'Missing required fields: name, industry, size, location'
     })
   }
 
@@ -251,8 +262,8 @@ async function handleDelete(req, res, db, collections) {
     const activePositions = await positionsCursor.all()
 
     if (activePositions.length > 0) {
-      return res.status(400).json({ 
-        error: 'Cannot delete company with active positions. Please close all positions first.' 
+      return res.status(400).json({
+        error: 'Cannot delete company with active positions. Please close all positions first.'
       })
     }
 

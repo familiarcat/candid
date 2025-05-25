@@ -162,6 +162,7 @@ export default function Matches() {
   }
 
   const getCompanyByName = (companyName) => {
+    if (!companyName) return null
     return companies.find(c => c.name === companyName) || {
       name: companyName,
       _key: companyName.toLowerCase().replace(/\s+/g, '-'),
