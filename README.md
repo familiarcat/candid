@@ -95,6 +95,73 @@ hiringAuthority.level = "Manager" // HR Director, Department Head
 hiringAuthority.hiringPower = "Medium"
 ```
 
-## License
+## 🚀 Getting Started
 
-MIT
+### Prerequisites
+- Node.js 18+
+- Docker and Docker Compose
+- Git
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/familiarcat/candid.git
+   cd candid
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start ArangoDB with Docker**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Seed the database**
+   - Visit `http://localhost:3000/admin`
+   - Click "🌱 Seed Database" to populate with mock data
+
+### 🗄️ Database Setup
+
+The application uses ArangoDB running in Docker. The database will be automatically created and seeded with:
+- 5 Companies with different organizational structures
+- 8 Hiring Authorities across hierarchy levels
+- 20 Job Seekers with diverse skill sets
+- 20 Skills with market demand tracking
+- 147+ Generated authority matches
+
+## 📊 Live Demo
+
+Visit the following pages to explore the platform:
+- **`/`** - Homepage with hiring authority philosophy
+- **`/hiring-authorities`** - Browse decision makers by company hierarchy
+- **`/job-seekers`** - View candidates seeking the right authority
+- **`/matches`** - Explore authority-to-candidate connections
+- **`/companies`** - Company profiles with size-based routing logic
+- **`/admin`** - Database management and seeding tools
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🌟 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/) and [ArangoDB](https://arangodb.com/)
+- Styled with [Tailwind CSS](https://tailwindcss.com/)
+- Inspired by the philosophy of connecting job seekers directly to hiring authorities
