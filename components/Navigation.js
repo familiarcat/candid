@@ -14,6 +14,7 @@ export default function Navigation() {
     { name: 'Companies', path: '/companies', icon: '🏢' },
     { name: 'Positions', path: '/positions', icon: '📋' },
     { name: 'Skills', path: '/skills', icon: '🛠️' },
+    { name: 'Visualizations', path: '/visualizations', icon: '📊' },
     { name: 'Network View', path: '/global-view', icon: '🌐' }
   ]
 

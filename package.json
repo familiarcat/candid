@@ -11,12 +11,16 @@
     "export": "next export"
   },
   "dependencies": {
+    "@react-three/drei": "^10.0.8",
+    "@react-three/fiber": "^9.1.2",
+    "3d-force-graph": "^1.73.2",
+    "arangojs": "^8.8.1",
+    "d3": "^7.9.0",
     "next": "^15.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "arangojs": "^8.8.1",
-    "d3": "^7.8.5",
-    "3d-force-graph": "^1.73.2",
+    "react-force-graph-2d": "^1.27.1",
+    "react-force-graph-3d": "^1.26.1",
     "three": "^0.158.0"
   },
   "devDependencies": {
