@@ -56,9 +56,9 @@ export default function Navigation() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-secondary-800 group-hover:text-primary-500 transition-colors duration-200">
-                  Candid Connections
+                  Talent Network
                 </h1>
-                <p className="text-sm text-candid-gray-600 -mt-1">Katra Platform</p>
+                <p className="text-sm text-candid-gray-600 -mt-1">Connect • Match • Succeed</p>
               </div>
             </Link>
           </div>
