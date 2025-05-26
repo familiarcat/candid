@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Head from 'next/head'
 import Layout from '../components/Layout'
 import AuthorityNetworkGraph from '../components/visualizations/AuthorityNetworkGraph'
@@ -21,8 +21,41 @@ export default function Visualizations() {
 
   const [activeTab, setActiveTab] = useState('network')
   const [visualizationMode, setVisualizationMode] = useState('2d') // '2d' or '3d'
-  const [networkData, setNetworkData] = useState({ nodes: [], links: [] })
   const [loading, setLoading] = useState(true)
+
+  // Memoized network data generation - only recalculates when data actually changes
+  const networkData = useMemo(() => {
+    if (dataLoading || companies.length === 0) {
+      return { nodes: [], links: [], stats: {} }
+    }
+
+    console.log('🔄 Generating network data (memoized)...')
+    const startTime = performance.now()
+
+    try {
+      const data = generateNetworkData(
+        companies,
+        hiringAuthorities,
+        jobSeekers,
+        skills,
+        positions,
+        matches
+      )
+
+      const endTime = performance.now()
+      console.log('✅ Network data generated:', {
+        nodes: data.nodes.length,
+        links: data.links.length,
+        stats: data.stats,
+        generationTime: `${(endTime - startTime).toFixed(2)}ms`
+      })
+
+      return data
+    } catch (error) {
+      console.error('❌ Error generating visualization data:', error)
+      return { nodes: [], links: [], stats: {} }
+    }
+  }, [companies, hiringAuthorities, jobSeekers, skills, positions, matches, dataLoading])
 
   useEffect(() => {
     // Fetch all data using DataContext if not already loaded
@@ -31,33 +64,10 @@ export default function Visualizations() {
     }
   }, [dataLoading, companies.length, fetchAllData])
 
+  // Update loading state based on data availability
   useEffect(() => {
-    // Generate network data when DataContext data is available
-    if (!dataLoading && companies.length > 0) {
-      setLoading(true)
-      try {
-        // Generate enhanced network data with positions and proper edges
-        const networkData = generateNetworkData(
-          companies,
-          hiringAuthorities,
-          jobSeekers,
-          skills,
-          positions,
-          matches
-        )
-        setNetworkData(networkData)
-        console.log('Generated network data:', {
-          nodes: networkData.nodes.length,
-          links: networkData.links.length,
-          stats: networkData.stats
-        })
-      } catch (error) {
-        console.error('Error generating visualization data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-  }, [dataLoading, companies, hiringAuthorities, jobSeekers, skills, positions, matches])
+    setLoading(dataLoading || networkData.nodes.length === 0)
+  }, [dataLoading, networkData.nodes.length])
 
   const tabs = [
     { id: 'network', name: 'Authority Network', icon: '🌐' },

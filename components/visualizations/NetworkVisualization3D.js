@@ -14,7 +14,21 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
   useEffect(() => {
     if (!data || !data.nodes || !data.links || !mountRef.current) return
 
+    console.log('🎨 Initializing 3D visualization...', {
+      nodes: data.nodes.length,
+      links: data.links.length
+    })
+
     setIsLoading(true)
+
+    // Cleanup previous scene to prevent memory leaks
+    if (rendererRef.current) {
+      console.log('🧹 Cleaning up previous 3D scene...')
+      rendererRef.current.dispose()
+      if (mountRef.current) {
+        mountRef.current.innerHTML = ''
+      }
+    }
 
     // Scene setup
     const scene = new THREE.Scene()
@@ -285,11 +299,22 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
     renderer.domElement.addEventListener('wheel', onWheel)
     renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault()) // Disable right-click menu
 
-    // Animation loop
-    function animate() {
-      requestAnimationFrame(animate)
+    // Optimized animation loop with frame rate limiting
+    let lastFrameTime = 0
+    const targetFPS = 30 // Limit to 30 FPS for better performance
+    const frameInterval = 1000 / targetFPS
+    let animationId = null
 
-      // Optional auto-rotation
+    function animate(currentTime) {
+      animationId = requestAnimationFrame(animate)
+
+      // Frame rate limiting
+      if (currentTime - lastFrameTime < frameInterval) {
+        return
+      }
+      lastFrameTime = currentTime
+
+      // Optional auto-rotation (only when enabled)
       if (autoRotate) {
         scene.rotation.y += 0.002
       }
@@ -297,11 +322,23 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       renderer.render(scene, camera)
     }
 
-    animate()
+    animationId = requestAnimationFrame(animate)
+
+    // Performance logging
+    const endTime = performance.now()
+    console.log(`✅ 3D scene initialized in ${(endTime - performance.now()).toFixed(2)}ms`)
     setIsLoading(false)
 
-    // Cleanup
+    // Enhanced cleanup to prevent memory leaks
     return () => {
+      console.log('🧹 Cleaning up 3D visualization...')
+
+      // Cancel animation frame
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+      }
+
+      // Remove event listeners
       renderer.domElement.removeEventListener('click', onMouseClick)
       renderer.domElement.removeEventListener('mousedown', onMouseDown)
       renderer.domElement.removeEventListener('mouseup', onMouseUp)
@@ -309,10 +346,24 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       renderer.domElement.removeEventListener('wheel', onWheel)
       renderer.domElement.removeEventListener('contextmenu', (e) => e.preventDefault())
 
+      // Clean up Three.js objects
+      scene.traverse((object) => {
+        if (object.geometry) object.geometry.dispose()
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach(material => material.dispose())
+          } else {
+            object.material.dispose()
+          }
+        }
+      })
+
+      // Remove renderer from DOM
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement)
       }
 
+      // Dispose renderer
       renderer.dispose()
     }
 
