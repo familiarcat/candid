@@ -2,14 +2,21 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { NODE_COLORS, LINK_COLORS, getThreeJSGeometry, LEGEND_CONFIG } from '../../lib/visualizationConstants'
 
-export default function NetworkVisualization3D({ data, width = 800, height = 600 }) {
+export default function NetworkVisualization3D({
+  data,
+  width = 800,
+  height = 600,
+  onNodeClick = () => {},
+  rootNodeId = null,
+  autoRotate = false
+}) {
   const mountRef = useRef()
   const sceneRef = useRef()
   const rendererRef = useRef()
   const cameraRef = useRef()
   const [selectedNode, setSelectedNode] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [autoRotate, setAutoRotate] = useState(false)
+  const [autoRotateEnabled, setAutoRotateEnabled] = useState(autoRotate)
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -111,11 +118,20 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
           z: Math.sin(angle) * radius
         }
 
-        // Create node geometry based on type
-        const nodeColor = NODE_COLORS[node.type]?.hex || NODE_COLORS.skill?.hex || '#6366f1'
-        const geometry = new THREE.SphereGeometry(2.5, 12, 12) // Slightly larger and smoother
+        // Create node geometry based on type with root node emphasis
+        const isRoot = node.id === rootNodeId
+        const nodeColor = node.color ?
+          (typeof node.color === 'string' ? parseInt(node.color.replace('#', '0x')) : node.color) :
+          (NODE_COLORS[node.type]?.hex || NODE_COLORS.skill?.hex || 0x6366f1)
+
+        const nodeSize = node.size ? node.size / 4 : (isRoot ? 4 : 2.5) // Scale down for 3D
+        const geometry = new THREE.SphereGeometry(nodeSize, 12, 12)
+
         const material = new THREE.MeshLambertMaterial({
-          color: nodeColor
+          color: nodeColor,
+          opacity: node.opacity || 1,
+          transparent: node.opacity !== undefined && node.opacity < 1,
+          emissive: isRoot ? 0x333300 : 0x000000 // Slight glow for root node
         })
         const mesh = new THREE.Mesh(geometry, material)
 
@@ -209,7 +225,7 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       function animate() {
         animationId = requestAnimationFrame(animate)
 
-        if (autoRotate) {
+        if (autoRotateEnabled) {
           scene.rotation.y += 0.002
         }
 
@@ -256,7 +272,7 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       }
     }
 
-  }, [data, width, height, autoRotate])
+  }, [data, width, height, autoRotateEnabled])
 
   if (error) {
     return (
@@ -295,14 +311,14 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg border">
         <h4 className="font-semibold text-sm mb-2">3D Controls</h4>
         <button
-          onClick={() => setAutoRotate(!autoRotate)}
+          onClick={() => setAutoRotateEnabled(!autoRotateEnabled)}
           className={`text-xs px-2 py-1 rounded ${
-            autoRotate
+            autoRotateEnabled
               ? 'bg-primary-500 text-white'
               : 'bg-gray-200 text-gray-700'
           }`}
         >
-          {autoRotate ? '⏸️ Stop Rotation' : '▶️ Auto Rotate'}
+          {autoRotateEnabled ? '⏸️ Stop Rotation' : '▶️ Auto Rotate'}
         </button>
       </div>
 

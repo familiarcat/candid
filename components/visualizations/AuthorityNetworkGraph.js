@@ -2,7 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { getNodeColor, getLinkColor } from '../../lib/visualizationConstants'
 
-export default function AuthorityNetworkGraph({ data, width = 800, height = 600 }) {
+export default function AuthorityNetworkGraph({
+  data,
+  width = 800,
+  height = 600,
+  onNodeClick = () => {},
+  rootNodeId = null,
+  interactive = true
+}) {
   const svgRef = useRef()
   const [selectedNode, setSelectedNode] = useState(null)
 
@@ -80,9 +87,11 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
         .on("drag", dragged)
         .on("end", dragended))
 
-    // Add circles for nodes
+    // Add circles for nodes with root node emphasis
     node.append("circle")
       .attr("r", d => {
+        // Use enhanced size if available, otherwise default sizing
+        if (d.size) return d.size
         switch(d.type) {
           case "company": return 25
           case "authority": return 20
@@ -91,9 +100,11 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
           default: return 12
         }
       })
-      .attr("fill", d => getNodeColor(d.type, 'css'))
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 2)
+      .attr("fill", d => d.color || getNodeColor(d.type, 'css'))
+      .attr("stroke", d => d.isRoot ? "#fbbf24" : "#fff") // Gold stroke for root node
+      .attr("stroke-width", d => d.isRoot ? 4 : 2)
+      .style("opacity", d => d.opacity || 1)
+      .style("filter", d => d.isRoot ? "drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))" : "none")
 
     // Add labels
     node.append("text")
@@ -189,6 +200,10 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
       })
       .on("click", function(event, d) {
         setSelectedNode(d)
+        // Call the onNodeClick callback for context switching
+        if (interactive && onNodeClick) {
+          onNodeClick(d)
+        }
       })
 
     // Update positions on simulation tick
