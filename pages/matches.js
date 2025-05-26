@@ -2,46 +2,20 @@ import { useState } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
-import { SkillLink, CompanyLink } from '../components/ui/LinkButton'
-import { getMatchColor, formatDate } from '../lib/utils'
+
 import { useData } from '../contexts/DataContext'
+import EnhancedMatchCard from '../components/ui/EnhancedMatchCard'
 
 export default function Matches() {
   const router = useRouter()
-  const { matches, companies, skills, loading, errors } = useData()
+  const { matches, loading, errors } = useData()
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('score')
   const [actionLoading, setActionLoading] = useState({})
 
   // Data comes from DataContext - no need for useEffect
 
-  // Helper functions
-  const getSkillByName = (skillName) => {
-    if (!skillName || typeof skillName !== 'string') {
-      return {
-        name: 'Unknown Skill',
-        _key: 'unknown-skill',
-        category: 'Technology',
-        demand: 'High'
-      }
-    }
-    return skills.find(s => s.name === skillName) || {
-      name: skillName,
-      _key: skillName.toLowerCase().replace(/\s+/g, '-'),
-      category: 'Technology',
-      demand: 'High'
-    }
-  }
 
-  const getCompanyByName = (companyName) => {
-    if (!companyName || typeof companyName !== 'string') return null
-    return companies.find(c => c.name === companyName) || {
-      name: companyName,
-      _key: companyName.toLowerCase().replace(/\s+/g, '-'),
-      industry: 'Technology',
-      employeeCount: 100
-    }
-  }
 
   const filteredMatches = (matches || []).filter(match => {
     if (filterStatus === 'all') return true
@@ -61,16 +35,9 @@ export default function Matches() {
     }
   })
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800'
-    }
-    return badges[status] || 'bg-gray-100 text-gray-800'
-  }
 
-  const handleMatchAction = async (matchId, action) => {
+
+  const handleAction = async (matchId, action) => {
     setActionLoading(prev => ({ ...prev, [matchId]: true }))
 
     try {
@@ -251,163 +218,87 @@ export default function Matches() {
           </div>
         </div>
 
-        {/* Matches Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {sortedMatches.map((match) => (
-            <div key={match.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              {/* Match Score Header */}
-              <div className="flex justify-between items-start mb-4">
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getMatchColor(match.matchScore || match.score || 0)}`}>
-                  {Math.round(match.matchScore || match.score || 0)}% Match
-                </div>
-                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(match.status)}`}>
-                  {match.status.charAt(0).toUpperCase() + match.status.slice(1)}
+        {/* Enhanced Matches Grid with Quality Tiers */}
+        <div className="space-y-8">
+          {/* Excellent Matches (90%+) */}
+          {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 90).length > 0 && (
+            <div>
+              <div className="flex items-center mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                  <h3 className="text-xl font-semibold text-gray-900">Excellent Matches</h3>
+                  <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 90).length} matches
+                  </span>
                 </div>
               </div>
-
-              {/* Job Seeker Info */}
-              <div className="mb-4">
-                <div className="flex items-center mb-2">
-                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-orange-600 font-semibold">
-                      {match.jobSeeker?.name?.charAt(0) || '?'}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{match.jobSeeker?.name || 'Unknown'}</h3>
-                    <p className="text-gray-600 text-sm">{match.jobSeeker?.title || 'No title'}</p>
-                  </div>
-                </div>
-                {match.jobSeeker?.skills && match.jobSeeker.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {match.jobSeeker.skills.slice(0, 3).map((skill, index) => (
-                      <SkillLink key={index} skill={getSkillByName(skill)} size="xs" />
-                    ))}
-                    {match.jobSeeker.skills.length > 3 && (
-                      <span className="badge badge-secondary text-xs">
-                        +{match.jobSeeker.skills.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Hiring Authority Info */}
-              {match.hiringAuthority && (
-                <div className="mb-4 pb-4 border-b border-gray-100">
-                  <h4 className="font-medium text-gray-900">{match.hiringAuthority.name}</h4>
-                  <p className="text-sm text-gray-600 mb-2">{match.hiringAuthority.role}</p>
-                  <div className="mb-2">
-                    <CompanyLink company={getCompanyByName(match.hiringAuthority.company)} size="sm" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
-                      {match.hiringAuthority.skillsLookingFor && match.hiringAuthority.skillsLookingFor.slice(0, 3).map((skill, index) => (
-                        <SkillLink key={index} skill={getSkillByName(skill)} size="xs" />
-                      ))}
-                      {match.hiringAuthority.skillsLookingFor && match.hiringAuthority.skillsLookingFor.length > 3 && (
-                        <span className="badge badge-secondary text-xs">
-                          +{match.hiringAuthority.skillsLookingFor.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <span className={`badge ${
-                        match.hiringAuthority.hiringPower === 'High' ? 'bg-red-100 text-red-800' :
-                        match.hiringAuthority.hiringPower === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      } text-xs`}>
-                        {match.hiringAuthority.hiringPower} Power
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Match Reasons */}
-              {match.matchReasons && match.matchReasons.length > 0 && (
-                <div className="mb-4">
-                  <h5 className="text-sm font-medium text-gray-700 mb-2">Why this is a good match:</h5>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    {match.matchReasons.map((reason, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-emerald-500 mr-2">•</span>
-                        {reason}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Admin Note */}
-              {match.adminNote && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Admin Note:</strong> {match.adminNote}
-                  </p>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex justify-between items-center">
-                <div className="text-xs text-gray-500">
-                  <div>Created {formatDate(match.createdAt)}</div>
-                  {match.updatedAt && (
-                    <div>Updated {formatDate(match.updatedAt)}</div>
-                  )}
-                </div>
-
-                {match.status === 'pending' && (
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleMatchAction(match.id, 'approved')}
-                      disabled={actionLoading[match.id]}
-                      className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                    >
-                      {actionLoading[match.id] ? (
-                        <>
-                          <div className="loading-spinner w-3 h-3"></div>
-                          <span>Approving...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>✓</span>
-                          <span>Approve</span>
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleMatchAction(match.id, 'rejected')}
-                      disabled={actionLoading[match.id]}
-                      className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                    >
-                      {actionLoading[match.id] ? (
-                        <>
-                          <div className="loading-spinner w-3 h-3"></div>
-                          <span>Rejecting...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>✗</span>
-                          <span>Reject</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {match.status !== 'pending' && (
-                  <div className="text-sm">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                      match.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {match.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
-                    </span>
-                  </div>
-                )}
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 90).map((match) => (
+                  <EnhancedMatchCard key={match.id} match={match} tier="excellent" onAction={handleAction} actionLoading={actionLoading} />
+                ))}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* High Quality Matches (80-89%) */}
+          {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 80 && (m.matchScore || m.score || 0) < 90).length > 0 && (
+            <div>
+              <div className="flex items-center mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full"></div>
+                  <h3 className="text-xl font-semibold text-gray-900">High Quality Matches</h3>
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 80 && (m.matchScore || m.score || 0) < 90).length} matches
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 80 && (m.matchScore || m.score || 0) < 90).map((match) => (
+                  <EnhancedMatchCard key={match.id} match={match} tier="high" onAction={handleAction} actionLoading={actionLoading} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Good Matches (60-79%) */}
+          {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 60 && (m.matchScore || m.score || 0) < 80).length > 0 && (
+            <div>
+              <div className="flex items-center mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"></div>
+                  <h3 className="text-xl font-semibold text-gray-900">Good Matches</h3>
+                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 60 && (m.matchScore || m.score || 0) < 80).length} matches
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 60 && (m.matchScore || m.score || 0) < 80).map((match) => (
+                  <EnhancedMatchCard key={match.id} match={match} tier="good" onAction={handleAction} actionLoading={actionLoading} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Lower Quality Matches (<60%) */}
+          {sortedMatches.filter(m => (m.matchScore || m.score || 0) < 60).length > 0 && (
+            <div>
+              <div className="flex items-center mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full"></div>
+                  <h3 className="text-xl font-semibold text-gray-900">Potential Matches</h3>
+                  <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {sortedMatches.filter(m => (m.matchScore || m.score || 0) < 60).length} matches
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {sortedMatches.filter(m => (m.matchScore || m.score || 0) < 60).map((match) => (
+                  <EnhancedMatchCard key={match.id} match={match} tier="potential" onAction={handleAction} actionLoading={actionLoading} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Empty State */}
