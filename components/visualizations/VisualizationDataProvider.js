@@ -16,9 +16,9 @@ export const useVisualizationData = () => {
 // Entity-specific data generators for focused views
 const generateEntityFocusedData = (entityType, entityId, allData) => {
   const { companies, hiringAuthorities, jobSeekers, skills, positions, matches } = allData
-  
+
   console.log(`🎯 Generating ${entityType} focused data for ID: ${entityId}`)
-  
+
   switch (entityType) {
     case 'company':
       return generateCompanyFocusedData(entityId, allData)
@@ -66,7 +66,7 @@ const generateCompanyFocusedData = (companyId, allData) => {
       size: 15,
       color: '#10b981'
     })
-    
+
     links.push({
       source: company.id,
       target: auth.id,
@@ -86,7 +86,7 @@ const generateCompanyFocusedData = (companyId, allData) => {
       size: 12,
       color: '#f59e0b'
     })
-    
+
     links.push({
       source: company.id,
       target: pos.id,
@@ -97,10 +97,10 @@ const generateCompanyFocusedData = (companyId, allData) => {
   })
 
   // Add matches involving this company
-  const companyMatches = matches.filter(match => 
+  const companyMatches = matches.filter(match =>
     companyAuthorities.some(auth => auth.id === match.hiring_authority_id)
   )
-  
+
   companyMatches.forEach(match => {
     const jobSeeker = jobSeekers.find(js => js.id === match.job_seeker_id)
     if (jobSeeker) {
@@ -114,7 +114,7 @@ const generateCompanyFocusedData = (companyId, allData) => {
           color: '#8b5cf6'
         })
       }
-      
+
       // Link to hiring authority
       const authority = hiringAuthorities.find(auth => auth.id === match.hiring_authority_id)
       if (authority) {
@@ -171,7 +171,7 @@ const generateAuthorityFocusedData = (authorityId, allData) => {
       size: 16,
       color: '#3b82f6'
     })
-    
+
     links.push({
       source: company.id,
       target: authority.id,
@@ -193,7 +193,7 @@ const generateAuthorityFocusedData = (authorityId, allData) => {
         size: 12,
         color: '#8b5cf6'
       })
-      
+
       links.push({
         source: authority.id,
         target: jobSeeker.id,
@@ -216,7 +216,7 @@ const generateAuthorityFocusedData = (authorityId, allData) => {
           size: 8,
           color: '#ef4444'
         })
-        
+
         links.push({
           source: authority.id,
           target: skill.id,
@@ -271,7 +271,7 @@ const generateJobSeekerFocusedData = (jobSeekerId, allData) => {
           size: 10,
           color: '#ef4444'
         })
-        
+
         links.push({
           source: jobSeeker.id,
           target: skill.id,
@@ -295,7 +295,7 @@ const generateJobSeekerFocusedData = (jobSeekerId, allData) => {
         size: 14,
         color: '#10b981'
       })
-      
+
       links.push({
         source: jobSeeker.id,
         target: authority.id,
@@ -314,7 +314,7 @@ const generateJobSeekerFocusedData = (jobSeekerId, allData) => {
           size: 12,
           color: '#3b82f6'
         })
-        
+
         links.push({
           source: company.id,
           target: authority.id,
@@ -375,8 +375,8 @@ export default function VisualizationDataProvider({ children }) {
     try {
       const endpoints = ['companies', 'hiring-authorities', 'job-seekers', 'skills', 'positions', 'matches']
       const timestamp = Date.now()
-      
-      const promises = endpoints.map(endpoint => 
+
+      const promises = endpoints.map(endpoint =>
         fetch(`/api/${endpoint}?_t=${timestamp}`)
           .then(res => {
             console.log(`📡 ${endpoint} response:`, res.status)
@@ -395,10 +395,19 @@ export default function VisualizationDataProvider({ children }) {
         if (error) {
           fetchErrors.push(`${endpoint}: ${error}`)
         } else {
-          const key = endpoint === 'hiring-authorities' ? 'hiringAuthorities' : 
+          const key = endpoint === 'hiring-authorities' ? 'hiringAuthorities' :
                      endpoint === 'job-seekers' ? 'jobSeekers' : endpoint
-          newData[key] = data || []
-          console.log(`✅ Fetched ${endpoint}:`, data?.length || 0, 'items')
+
+          // Handle different API response formats
+          let extractedData = data || []
+          if (endpoint === 'hiring-authorities' && data?.authorities) {
+            extractedData = data.authorities
+          } else if (endpoint === 'matches' && data?.matches) {
+            extractedData = data.matches
+          }
+
+          newData[key] = extractedData
+          console.log(`✅ Fetched ${endpoint}:`, extractedData?.length || 0, 'items')
         }
       })
 
@@ -451,17 +460,17 @@ export default function VisualizationDataProvider({ children }) {
     rawData,
     loading,
     errors,
-    
+
     // Global network data
     globalNetworkData,
-    
+
     // Data fetching
     fetchAllData,
-    
+
     // Entity-focused data generation
-    generateEntityFocusedData: (entityType, entityId) => 
+    generateEntityFocusedData: (entityType, entityId) =>
       generateEntityFocusedData(entityType, entityId, rawData),
-    
+
     // Entity lists for exploration
     entities: {
       companies: rawData.companies,
