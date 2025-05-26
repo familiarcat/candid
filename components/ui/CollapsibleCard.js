@@ -237,3 +237,145 @@ export function CompanyCard({ company, onViewDetails }) {
     />
   )
 }
+
+// Position Card Component
+export function PositionCard({ position, onViewDetails, onFindMatches, onNetworkView }) {
+  const primaryMetrics = [
+    {
+      label: 'Level',
+      value: position.level || 'Mid',
+      color: position.level === 'Senior' ? 'purple' : position.level === 'Junior' ? 'green' : 'blue'
+    },
+    {
+      label: 'Type',
+      value: position.type || 'Full-time',
+      color: position.type === 'Contract' ? 'orange' : position.type === 'Part-time' ? 'yellow' : 'emerald'
+    },
+    {
+      label: 'Applicants',
+      value: position.applicants || 0,
+      color: 'gray'
+    },
+    {
+      label: 'Status',
+      value: position.status || 'active',
+      color: position.status === 'active' ? 'green' : position.status === 'paused' ? 'yellow' : 'red'
+    }
+  ]
+
+  const expandedContent = (
+    <div className="space-y-4">
+      {/* Position Details */}
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <label className="text-sm font-medium text-gray-700">Company</label>
+          <p className="text-sm text-gray-900">{position.company}</p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Location</label>
+          <p className="text-sm text-gray-900">
+            {position.location} {position.remote && '(Remote OK)'}
+          </p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Salary</label>
+          <p className="text-sm text-gray-900">{position.salary || 'Competitive'}</p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Posted</label>
+          <p className="text-sm text-gray-900">
+            {position.postedDate ? new Date(position.postedDate).toLocaleDateString() : 'Recently'}
+          </p>
+        </div>
+      </div>
+
+      {/* Description */}
+      {position.description && (
+        <div>
+          <label className="text-sm font-medium text-gray-700">Description</label>
+          <p className="text-sm text-gray-900 leading-relaxed">{position.description}</p>
+        </div>
+      )}
+
+      {/* Required Skills */}
+      {position.requirements && position.requirements.length > 0 && (
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">Required Skills</label>
+          <div className="flex flex-wrap gap-1">
+            {position.requirements.map((skill, index) => (
+              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Benefits */}
+      {position.benefits && position.benefits.length > 0 && (
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">Benefits</label>
+          <div className="flex flex-wrap gap-1">
+            {position.benefits.map((benefit, index) => (
+              <span key={index} className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded">
+                {benefit}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Additional Details */}
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        {position.department && (
+          <div>
+            <label className="text-sm font-medium text-gray-700">Department</label>
+            <p className="text-sm text-gray-900">{position.department}</p>
+          </div>
+        )}
+        {position.experienceRequired && (
+          <div>
+            <label className="text-sm font-medium text-gray-700">Experience Required</label>
+            <p className="text-sm text-gray-900">{position.experienceRequired}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const actions = [
+    <button
+      key="details"
+      onClick={() => onViewDetails(position)}
+      className="btn-primary text-sm px-4 py-2 flex-1"
+    >
+      View Details
+    </button>,
+    <button
+      key="network"
+      onClick={() => onNetworkView(position)}
+      className="bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 transition-colors"
+    >
+      🌐 Network
+    </button>,
+    <button
+      key="matches"
+      onClick={() => onFindMatches(position)}
+      className="btn-outline text-sm px-3 py-2"
+    >
+      Find Matches
+    </button>
+  ]
+
+  return (
+    <CollapsibleCard
+      title={position.title}
+      subtitle={`${position.company} • ${position.location}`}
+      icon="📋"
+      primaryMetrics={primaryMetrics}
+      expandedContent={expandedContent}
+      actions={actions}
+      variant="position"
+    />
+  )
+}
