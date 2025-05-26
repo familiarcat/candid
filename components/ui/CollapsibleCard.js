@@ -170,73 +170,7 @@ export function SkillCard({ skill, onViewDetails, onFindTalent }) {
   )
 }
 
-export function CompanyCard({ company, onViewDetails }) {
-  const primaryMetrics = (
-    <>
-      <div className="text-center">
-        <div className="text-lg font-bold text-purple-600">{company.employeeCount}</div>
-        <div className="text-xs text-gray-500">Employees</div>
-      </div>
-      <div className="text-center">
-        <div className="text-lg font-bold text-orange-600">{company.openPositions || Math.floor(Math.random() * 20) + 5}</div>
-        <div className="text-xs text-gray-500">Open Roles</div>
-      </div>
-    </>
-  )
-
-  const expandedContent = (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium text-gray-700">Industry</label>
-          <p className="text-sm text-gray-900">{company.industry}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700">Founded</label>
-          <p className="text-sm text-gray-900">{company.founded || 'N/A'}</p>
-        </div>
-      </div>
-
-      {company.description && (
-        <div>
-          <label className="text-sm font-medium text-gray-700">Description</label>
-          <p className="text-sm text-gray-900">{company.description}</p>
-        </div>
-      )}
-
-      {company.website && (
-        <div>
-          <label className="text-sm font-medium text-gray-700">Website</label>
-          <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary-600 hover:text-primary-700">
-            {company.website}
-          </a>
-        </div>
-      )}
-    </div>
-  )
-
-  const actions = [
-    <button
-      key="details"
-      onClick={() => onViewDetails(company)}
-      className="btn-primary text-sm px-4 py-2"
-    >
-      View Details
-    </button>
-  ]
-
-  return (
-    <CollapsibleCard
-      title={company.name}
-      subtitle={`${company.industry} • ${company.size}`}
-      icon="🏢"
-      primaryMetrics={primaryMetrics}
-      expandedContent={expandedContent}
-      actions={actions}
-      variant="company"
-    />
-  )
-}
+// Removed duplicate CompanyCard - using the enhanced version below
 
 // Position Card Component
 export function PositionCard({ position, onViewDetails, onFindMatches, onNetworkView }) {
@@ -376,6 +310,139 @@ export function PositionCard({ position, onViewDetails, onFindMatches, onNetwork
       expandedContent={expandedContent}
       actions={actions}
       variant="position"
+    />
+  )
+}
+
+// Company Card Component
+export function CompanyCard({ company, onViewDetails, onFindMatches, onNetworkView }) {
+  const primaryMetrics = [
+    {
+      label: 'Industry',
+      value: company.industry || 'Technology',
+      color: 'blue'
+    },
+    {
+      label: 'Size',
+      value: company.size || `${company.employeeCount || 100} employees`,
+      color: company.size === 'Large' ? 'purple' : company.size === 'Medium' ? 'blue' : 'green'
+    },
+    {
+      label: 'Open Positions',
+      value: company.openPositions || 0,
+      color: 'emerald'
+    },
+    {
+      label: 'Authorities',
+      value: company.authorityCount || 0,
+      color: 'orange'
+    }
+  ]
+
+  const expandedContent = (
+    <div className="space-y-4">
+      {/* Company Details */}
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <label className="text-sm font-medium text-gray-700">Location</label>
+          <p className="text-sm text-gray-900">{company.location || 'Location not specified'}</p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Founded</label>
+          <p className="text-sm text-gray-900">{company.founded || 'N/A'}</p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Employee Count</label>
+          <p className="text-sm text-gray-900">{company.employeeCount || 'Not specified'}</p>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-gray-700">Potential Matches</label>
+          <p className="text-sm text-gray-900">{company.potentialMatches || 0} candidates</p>
+        </div>
+      </div>
+
+      {/* Description */}
+      {company.description && (
+        <div>
+          <label className="text-sm font-medium text-gray-700">Description</label>
+          <p className="text-sm text-gray-900 leading-relaxed">{company.description}</p>
+        </div>
+      )}
+
+      {/* Website */}
+      {company.website && (
+        <div>
+          <label className="text-sm font-medium text-gray-700">Website</label>
+          <a
+            href={company.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary-600 hover:text-primary-700 transition-colors"
+          >
+            {company.website} →
+          </a>
+        </div>
+      )}
+
+      {/* Key Contacts */}
+      {company.hiringAuthorities && company.hiringAuthorities.length > 0 && (
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">Key Contacts</label>
+          <div className="space-y-2">
+            {company.hiringAuthorities.slice(0, 3).map((authority, index) => (
+              <div key={authority.id || index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                <div className="flex items-center text-sm">
+                  <span className="mr-2">👤</span>
+                  <span className="font-medium">{authority.name}</span>
+                  <span className="mx-2 text-gray-400">•</span>
+                  <span className="text-gray-600">{authority.role || authority.level}</span>
+                </div>
+              </div>
+            ))}
+            {company.hiringAuthorities.length > 3 && (
+              <p className="text-xs text-gray-500">
+                +{company.hiringAuthorities.length - 3} more contacts
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const actions = [
+    <button
+      key="details"
+      onClick={() => onViewDetails(company)}
+      className="btn-primary text-sm px-4 py-2 flex-1"
+    >
+      View Details
+    </button>,
+    <button
+      key="network"
+      onClick={() => onNetworkView(company)}
+      className="bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 transition-colors"
+    >
+      🌐 Network
+    </button>,
+    <button
+      key="matches"
+      onClick={() => onFindMatches(company)}
+      className="btn-outline text-sm px-3 py-2"
+    >
+      Find Matches
+    </button>
+  ]
+
+  return (
+    <CollapsibleCard
+      title={company.name}
+      subtitle={`${company.industry || 'Technology'} • ${company.location || 'Global'}`}
+      icon="🏢"
+      primaryMetrics={primaryMetrics}
+      expandedContent={expandedContent}
+      actions={actions}
+      variant="company"
     />
   )
 }

@@ -20,9 +20,20 @@ function CompaniesContent() {
     companies,
     hiringAuthorities,
     positions,
+    jobSeekers,
     loading,
     errors
   } = useData()
+
+  // Debug: Check if data is actually loaded
+  console.log('DataContext state:', {
+    companies: companies?.length || 0,
+    hiringAuthorities: hiringAuthorities?.length || 0,
+    positions: positions?.length || 0,
+    jobSeekers: jobSeekers?.length || 0,
+    loading,
+    errors
+  })
 
   // Component-specific visualization
   const visualization = usePageVisualization('company', {
@@ -109,7 +120,7 @@ function CompaniesContent() {
   }
 
   // Enhance companies with real database calculations
-  const enhancedCompanies = companies.map(company => {
+  const enhancedCompanies = (companies || []).map(company => {
     const metrics = calculateCompanyMetrics(company)
 
     return {
