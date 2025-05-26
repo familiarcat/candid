@@ -96,34 +96,68 @@ export default function Visualizations() {
             </p>
           </div>
 
-          {/* Tab Navigation */}
+          {/* Enhanced Tab Navigation - Bento/Brockman Design */}
           <div className="mb-8">
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span>{tab.icon}</span>
-                      <span>{tab.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </nav>
-            </div>
+            {/* Responsive Tab Container */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              {/* Desktop Navigation */}
+              <div className="hidden md:block border-b border-gray-200">
+                <nav className="flex">
+                  {tabs.map((tab, index) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex-1 py-4 px-6 text-center border-r border-gray-200 last:border-r-0 transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-500'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center space-y-1">
+                        <span className="text-xl">{tab.icon}</span>
+                        <span className="text-sm font-medium">{tab.name}</span>
+                      </div>
+                    </button>
+                  ))}
+                </nav>
+              </div>
 
-            {/* Tab description */}
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">
-                {tabs.find(tab => tab.id === activeTab)?.description}
-              </p>
+              {/* Mobile Navigation - Dropdown */}
+              <div className="md:hidden border-b border-gray-200">
+                <div className="relative">
+                  <select
+                    value={activeTab}
+                    onChange={(e) => setActiveTab(e.target.value)}
+                    className="w-full py-4 px-6 text-center bg-white border-none focus:ring-0 focus:outline-none appearance-none text-gray-900 font-medium"
+                  >
+                    {tabs.map((tab) => (
+                      <option key={tab.id} value={tab.id}>
+                        {tab.icon} {tab.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Tab Description */}
+              <div className="px-6 py-4 bg-gray-50">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">{tabs.find(tab => tab.id === activeTab)?.icon}</span>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      {tabs.find(tab => tab.id === activeTab)?.name}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {tabs.find(tab => tab.id === activeTab)?.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
