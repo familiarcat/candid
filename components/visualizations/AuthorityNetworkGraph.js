@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import { getNodeColor, getLinkColor } from '../../lib/visualizationConstants'
 
 export default function AuthorityNetworkGraph({ data, width = 800, height = 600 }) {
   const svgRef = useRef()
@@ -62,14 +63,7 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
       .selectAll("line")
       .data(data.links)
       .join("line")
-      .attr("stroke", d => {
-        switch(d.type) {
-          case "hiring": return "#00d4ff"
-          case "skill": return "#f97316"
-          case "company": return "#8b5cf6"
-          default: return "#6b7280"
-        }
-      })
+      .attr("stroke", d => getLinkColor(d.type, 'css'))
       .attr("stroke-opacity", 0.6)
       .attr("stroke-width", d => Math.sqrt(d.strength || 1) * 2)
       .attr("marker-end", d => `url(#arrow-${d.type})`)
@@ -97,15 +91,7 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
           default: return 12
         }
       })
-      .attr("fill", d => {
-        switch(d.type) {
-          case "company": return "#8b5cf6"
-          case "authority": return "#00d4ff"
-          case "jobSeeker": return "#f97316"
-          case "skill": return "#10b981"
-          default: return "#6b7280"
-        }
-      })
+      .attr("fill", d => getNodeColor(d.type, 'css'))
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
 

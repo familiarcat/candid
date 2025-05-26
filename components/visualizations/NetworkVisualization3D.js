@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { NODE_COLORS, LINK_COLORS, getThreeJSGeometry, LEGEND_CONFIG } from '../../lib/visualizationConstants'
 
 export default function NetworkVisualization3D({ data, width = 800, height = 600 }) {
   const mountRef = useRef()
@@ -50,23 +51,38 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
     fillLight.position.set(-50, -50, -50)
     scene.add(fillLight)
 
-    // Materials for different node types
-    const materials = {
-      company: new THREE.MeshLambertMaterial({ color: 0x8b5cf6 }),
-      authority: new THREE.MeshLambertMaterial({ color: 0x00d4ff }),
-      jobSeeker: new THREE.MeshLambertMaterial({ color: 0xf97316 }),
-      skill: new THREE.MeshLambertMaterial({ color: 0x10b981 }),
-      position: new THREE.MeshLambertMaterial({ color: 0xef4444 })
-    }
+    // Materials for different node types (using consistent colors)
+    const materials = {}
+    Object.keys(NODE_COLORS).forEach(nodeType => {
+      materials[nodeType] = new THREE.MeshLambertMaterial({
+        color: NODE_COLORS[nodeType].hex
+      })
+    })
 
-    // Create node geometries
-    const geometries = {
-      company: new THREE.SphereGeometry(3, 16, 16),
-      authority: new THREE.ConeGeometry(2, 4, 8),
-      jobSeeker: new THREE.BoxGeometry(2.5, 2.5, 2.5),
-      skill: new THREE.OctahedronGeometry(1.5),
-      position: new THREE.CylinderGeometry(1.5, 1.5, 3, 8)
-    }
+    // Create node geometries (using consistent shapes)
+    const geometries = {}
+    Object.keys(NODE_COLORS).forEach(nodeType => {
+      const geomConfig = getThreeJSGeometry(nodeType, false) // false for full-size version
+      switch (geomConfig.type) {
+        case 'SphereGeometry':
+          geometries[nodeType] = new THREE.SphereGeometry(...geomConfig.params)
+          break
+        case 'ConeGeometry':
+          geometries[nodeType] = new THREE.ConeGeometry(...geomConfig.params)
+          break
+        case 'BoxGeometry':
+          geometries[nodeType] = new THREE.BoxGeometry(...geomConfig.params)
+          break
+        case 'OctahedronGeometry':
+          geometries[nodeType] = new THREE.OctahedronGeometry(...geomConfig.params)
+          break
+        case 'CylinderGeometry':
+          geometries[nodeType] = new THREE.CylinderGeometry(...geomConfig.params)
+          break
+        default:
+          geometries[nodeType] = new THREE.OctahedronGeometry(1.5) // fallback
+      }
+    })
 
     // Position nodes in 3D space using force-directed layout
     const nodePositions = new Map()
@@ -135,14 +151,7 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
           new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z)
         ])
 
-        const color = {
-          employment: 0x8b5cf6,
-          hiring: 0x00d4ff,
-          skill: 0xf97316,
-          company: 0x8b5cf6,
-          preference: 0x10b981,
-          match: 0xef4444
-        }[link.type] || 0x6b7280
+        const color = LINK_COLORS[link.type]?.hex || LINK_COLORS.default.hex
 
         const material = new THREE.LineBasicMaterial({
           color,
@@ -344,22 +353,18 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg border">
         <h4 className="font-semibold text-sm mb-2">3D Legend</h4>
         <div className="space-y-2 text-xs">
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-purple-500"></div>
-            <span>Companies (Spheres)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-primary-500" style={{clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'}}></div>
-            <span>Authorities (Cones)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-orange-500"></div>
-            <span>Job Seekers (Cubes)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-green-500" style={{clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'}}></div>
-            <span>Skills (Octahedrons)</span>
-          </div>
+          {LEGEND_CONFIG.map((item) => (
+            <div key={item.type} className="flex items-center space-x-2">
+              <div
+                className="w-4 h-4"
+                style={{
+                  backgroundColor: item.color,
+                  clipPath: item.shape
+                }}
+              ></div>
+              <span>{item.description}</span>
+            </div>
+          ))}
         </div>
       </div>
 
