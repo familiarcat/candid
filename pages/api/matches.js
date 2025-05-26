@@ -30,14 +30,14 @@ export default async function handler(req, res) {
 }
 
 async function handleGet(req, res, db, collections) {
-  const { status, jobSeekerId, positionId, limit = 50, offset = 0 } = req.query
+  const { status, jobSeekerId, hiringAuthorityId, limit = 50, offset = 0 } = req.query
 
   try {
     let query = `
       FOR match IN matches
         LET jobSeeker = DOCUMENT(match.jobSeekerId)
-        LET position = DOCUMENT(match.positionId)
-        LET company = DOCUMENT(position.companyId)
+        LET hiringAuthority = DOCUMENT(match.hiringAuthorityId)
+        LET company = DOCUMENT(match.companyId)
     `
 
     const bindVars = { limit: parseInt(limit), offset: parseInt(offset) }
@@ -52,9 +52,9 @@ async function handleGet(req, res, db, collections) {
       filters.push('match.jobSeekerId == @jobSeekerId')
       bindVars.jobSeekerId = jobSeekerId
     }
-    if (positionId) {
-      filters.push('match.positionId == @positionId')
-      bindVars.positionId = positionId
+    if (hiringAuthorityId) {
+      filters.push('match.hiringAuthorityId == @hiringAuthorityId')
+      bindVars.hiringAuthorityId = hiringAuthorityId
     }
 
     if (filters.length > 0) {
@@ -69,26 +69,32 @@ async function handleGet(req, res, db, collections) {
           jobSeeker: {
             id: jobSeeker._key,
             name: jobSeeker.name,
-            title: jobSeeker.title,
-            skills: jobSeeker.skills || []
+            title: jobSeeker.currentTitle || jobSeeker.title,
+            skills: jobSeeker.skills || [],
+            experience: jobSeeker.experience
           },
-          position: {
-            id: position._key,
-            title: position.title,
+          hiringAuthority: {
+            id: hiringAuthority._key,
+            name: hiringAuthority.name,
+            role: hiringAuthority.role,
+            level: hiringAuthority.level,
             company: company.name,
-            requirements: position.requirements || []
+            hiringPower: hiringAuthority.hiringPower,
+            decisionMaker: hiringAuthority.decisionMaker
           },
-          score: match.score,
+          matchScore: match.score,
           status: match.status,
           createdAt: match.createdAt,
-          matchReasons: match.matchReasons || []
+          matchReasons: match.matchReasons || [],
+          hierarchyMatch: match.hierarchyMatch,
+          connectionStrength: match.connectionStrength
         }
     `
 
     const cursor = await db.query(query, bindVars)
     const matches = await cursor.all()
 
-    res.status(200).json(matches)
+    res.status(200).json({ matches })
   } catch (error) {
     console.error('Error fetching matches:', error)
     res.status(500).json({ error: 'Failed to fetch matches' })
@@ -191,7 +197,7 @@ async function handleDelete(req, res, db, collections) {
   try {
     // Get match details before deletion
     const match = await collections.matches.document(id)
-    
+
     // Delete the match
     await collections.matches.remove(id)
 
