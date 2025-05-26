@@ -22,6 +22,9 @@ export default function Navigation() {
     { name: 'Network View', path: '/global-view', icon: '🌐' }
   ]
 
+  // Debug: Log navigation items to ensure all 9 are present
+  console.log('Navigation items count:', navItems.length, navItems.map(item => item.name))
+
   const adminItems = [
     { name: 'Admin', path: '/admin', icon: '⚙️', type: 'outline' },
     { name: 'Visualize', path: '/visualizations', icon: '📊', type: 'outline' },

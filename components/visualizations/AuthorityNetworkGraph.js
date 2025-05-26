@@ -64,8 +64,8 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
       .data(data.links)
       .join("line")
       .attr("stroke", d => getLinkColor(d.type, 'css'))
-      .attr("stroke-opacity", 0.6)
-      .attr("stroke-width", d => Math.sqrt(d.strength || 1) * 2)
+      .attr("stroke-opacity", 0.8) // Increased opacity for better visibility
+      .attr("stroke-width", d => Math.max(2, Math.sqrt(d.strength || 1) * 3)) // Thicker lines
       .attr("marker-end", d => `url(#arrow-${d.type})`)
 
     // Create node groups

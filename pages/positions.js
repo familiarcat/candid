@@ -5,14 +5,21 @@ import Layout from '../components/Layout'
 import DetailModal from '../components/ui/DetailModal'
 import { CompanyLink, SkillLink } from '../components/ui/LinkButton'
 import { formatDate, getEntityIcon } from '../lib/utils'
+import { useData } from '../contexts/DataContext'
 
 export default function Positions() {
   const router = useRouter()
-  const [positions, setPositions] = useState([])
-  const [companies, setCompanies] = useState([])
-  const [skills, setSkills] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+
+  // Use DataContext for data management
+  const {
+    positions,
+    companies,
+    skills,
+    loading,
+    errors
+  } = useData()
+
+  // Local UI state
   const [selectedPosition, setSelectedPosition] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -20,128 +27,7 @@ export default function Positions() {
   const [filterType, setFilterType] = useState('all')
   const [sortBy, setSortBy] = useState('posted')
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch positions, companies, and skills in parallel
-        const [positionsRes, companiesRes, skillsRes] = await Promise.all([
-          fetch('/api/positions'),
-          fetch('/api/companies'),
-          fetch('/api/skills')
-        ])
-
-        if (positionsRes.ok && companiesRes.ok && skillsRes.ok) {
-          const [positionsData, companiesData, skillsData] = await Promise.all([
-            positionsRes.json(),
-            companiesRes.json(),
-            skillsRes.json()
-          ])
-
-          setPositions(positionsData.positions || positionsData)
-          setCompanies(companiesData.companies || companiesData)
-          setSkills(skillsData.skills || skillsData)
-        } else {
-          // Fallback to sample data
-          const samplePositions = [
-            {
-              id: 'pos_1',
-              title: 'Lead Frontend Engineer',
-              company: 'TechCorp Inc.',
-              companyLogo: '🏢',
-              level: 'Senior',
-              type: 'Full-time',
-              location: 'San Francisco, CA',
-              remote: true,
-              salary: '$140,000 - $180,000',
-              description: 'Lead a team of frontend engineers building next-generation web applications using React and TypeScript.',
-              requirements: ['React', 'TypeScript', 'Leadership', 'GraphQL', 'Node.js'],
-              benefits: ['Health Insurance', 'Stock Options', 'Remote Work', '401k'],
-              postedDate: new Date('2024-01-15'),
-              applicants: 23,
-              status: 'active'
-            },
-            {
-              id: 'pos_2',
-              title: 'Backend Engineer',
-              company: 'DataFlow Systems',
-              companyLogo: '📊',
-              level: 'Mid',
-              type: 'Full-time',
-              location: 'Austin, TX',
-              remote: false,
-              salary: '$100,000 - $130,000',
-              description: 'Build scalable backend systems for our data analytics platform using Python and Django.',
-              requirements: ['Python', 'Django', 'PostgreSQL', 'AWS', 'Docker'],
-              benefits: ['Health Insurance', 'Flexible Hours', 'Learning Budget'],
-              postedDate: new Date('2024-01-14'),
-              applicants: 18,
-              status: 'active'
-            },
-            {
-              id: 'pos_3',
-              title: 'Senior UX Designer',
-              company: 'Design Studio Pro',
-              companyLogo: '🎨',
-              level: 'Senior',
-              type: 'Contract',
-              location: 'New York, NY',
-              remote: true,
-              salary: '$80 - $120/hour',
-              description: 'Design intuitive user experiences for our client projects across various industries.',
-              requirements: ['Figma', 'User Research', 'Design Systems', 'Prototyping'],
-              benefits: ['Flexible Schedule', 'Creative Freedom', 'Portfolio Building'],
-              postedDate: new Date('2024-01-13'),
-              applicants: 31,
-              status: 'active'
-            },
-            {
-              id: 'pos_4',
-              title: 'Cloud Infrastructure Engineer',
-              company: 'CloudTech Solutions',
-              companyLogo: '☁️',
-              level: 'Senior',
-              type: 'Full-time',
-              location: 'Seattle, WA',
-              remote: true,
-              salary: '$130,000 - $160,000',
-              description: 'Design and maintain cloud infrastructure for enterprise clients using Kubernetes and Terraform.',
-              requirements: ['Kubernetes', 'Terraform', 'AWS', 'Docker', 'Monitoring'],
-              benefits: ['Health Insurance', 'Stock Options', 'Remote Work', 'Conference Budget'],
-              postedDate: new Date('2024-01-12'),
-              applicants: 15,
-              status: 'active'
-            },
-            {
-              id: 'pos_5',
-              title: 'Junior Frontend Developer',
-              company: 'TechCorp Inc.',
-              companyLogo: '🏢',
-              level: 'Junior',
-              type: 'Full-time',
-              location: 'San Francisco, CA',
-              remote: false,
-              salary: '$70,000 - $90,000',
-              description: 'Join our frontend team to build user interfaces and learn from experienced developers.',
-              requirements: ['JavaScript', 'React', 'CSS', 'Git'],
-              benefits: ['Health Insurance', 'Mentorship', 'Learning Budget'],
-              postedDate: new Date('2024-01-10'),
-              applicants: 42,
-              status: 'paused'
-            }
-          ]
-          setPositions(samplePositions)
-          setCompanies([]) // Sample companies would go here
-          setSkills([]) // Sample skills would go here
-        }
-        setLoading(false)
-      } catch (err) {
-        setError(err.message)
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
+  // Data comes from DataContext - no need for useEffect data fetching
 
   // Helper functions
   const handleViewDetails = (position) => {
@@ -154,6 +40,14 @@ export default function Positions() {
   }
 
   const getCompanyByName = (companyName) => {
+    if (!companyName || typeof companyName !== 'string') {
+      return {
+        name: 'Unknown Company',
+        _key: 'unknown-company',
+        industry: 'Technology',
+        employeeCount: 100
+      }
+    }
     return companies.find(c => c.name === companyName) || {
       name: companyName,
       _key: companyName.toLowerCase().replace(/\s+/g, '-'),
@@ -163,6 +57,14 @@ export default function Positions() {
   }
 
   const getSkillByName = (skillName) => {
+    if (!skillName || typeof skillName !== 'string') {
+      return {
+        name: 'Unknown Skill',
+        _key: 'unknown-skill',
+        category: 'Technology',
+        demand: 'High'
+      }
+    }
     return skills.find(s => s.name === skillName) || {
       name: skillName,
       _key: skillName.toLowerCase().replace(/\s+/g, '-'),
@@ -172,10 +74,10 @@ export default function Positions() {
   }
 
   const filteredPositions = positions.filter(position => {
-    const matchesSearch = position.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         position.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         position.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         position.requirements.some(req => req.toLowerCase().includes(searchTerm.toLowerCase()))
+    const matchesSearch = (position.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (position.company || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (position.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (position.requirements || []).some(req => (req || '').toLowerCase().includes(searchTerm.toLowerCase()))
 
     const matchesLevel = filterLevel === 'all' || position.level === filterLevel
     const matchesType = filterType === 'all' || position.type === filterType
@@ -225,24 +127,24 @@ export default function Positions() {
     }
   }
 
-  if (loading) {
+  if (loading.positions || loading.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         </div>
       </Layout>
     )
   }
 
-  if (error) {
+  if (errors.positions || errors.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            Error: {error}
+            Error: {errors.positions || errors.global}
           </div>
         </div>
       </Layout>

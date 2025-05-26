@@ -25,14 +25,22 @@ export default function GraphVisualization2D({ data }) {
       .force('charge', d3.forceManyBody().strength(-400))
       .force('center', d3.forceCenter(width / 2, height / 2))
 
-    // Create links
+    // Create links with enhanced visibility
     const link = svg.append('g')
       .selectAll('line')
       .data(data.links)
       .join('line')
-      .attr('stroke', '#999')
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', d => Math.sqrt(d.value || 1))
+      .attr('stroke', d => {
+        // Use consistent colors from visualization constants
+        switch(d.type) {
+          case 'hiring': return '#00d4ff' // Cyan for hiring connections
+          case 'company': return '#8b5cf6' // Purple for company connections
+          case 'skill': return '#f97316' // Orange for skill connections
+          default: return '#6b7280' // Gray for other connections
+        }
+      })
+      .attr('stroke-opacity', 0.8) // Increased opacity
+      .attr('stroke-width', d => Math.max(2, Math.sqrt(d.value || d.strength || 1) * 2)) // Thicker lines
 
     // Create nodes
     const node = svg.append('g')
