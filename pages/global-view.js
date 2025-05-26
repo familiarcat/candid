@@ -337,24 +337,41 @@ function GlobalViewContent() {
           </div>
         </div>
 
-        {/* Real Network Insights */}
+        {/* Real Network Insights - Fixed Alignment */}
         {networkInsights && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold mb-6">🔍 Real-Time Network Insights</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold">🔍 Real-Time Network Insights</h2>
+              {/* Filter by Entity Type Status */}
+              <div className="text-sm text-gray-600">
+                Showing: <span className="font-medium">
+                  {entityTypes.find(et => et.value === selectedEntityType)?.label || 'All Entities'}
+                </span>
+                {selectedEntityType !== 'all' && (
+                  <span className="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
+                    {filteredData.nodes.length} nodes
+                  </span>
+                )}
+              </div>
+            </div>
 
+            {/* Enhanced Grid with Proper Alignment */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               {/* High Match Potential */}
-              <div className={`p-4 rounded-lg ${getTrendDisplay(networkInsights.highMatchPotential.trend).bg}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-800">🎯 High Match Potential</h3>
-                  <span className={`text-lg ${getTrendDisplay(networkInsights.highMatchPotential.trend).color}`}>
+              <div className={`p-6 rounded-lg border-2 ${getTrendDisplay(networkInsights.highMatchPotential.trend).bg} ${
+                getTrendDisplay(networkInsights.highMatchPotential.trend).trend === 'up' ? 'border-green-200' :
+                getTrendDisplay(networkInsights.highMatchPotential.trend).trend === 'down' ? 'border-red-200' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-800 text-sm">🎯 High Match Potential</h3>
+                  <span className={`text-xl ${getTrendDisplay(networkInsights.highMatchPotential.trend).color}`}>
                     {getTrendDisplay(networkInsights.highMatchPotential.trend).icon}
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900 mb-2">
+                <div className="text-3xl font-bold text-gray-900 mb-2">
                   {networkInsights.highMatchPotential.value}
                 </div>
-                <div className="text-sm text-gray-600 mb-3">
+                <div className="text-sm text-gray-600 mb-2">
                   {networkInsights.highMatchPotential.percentage}% high-quality matches
                 </div>
                 <div className="text-xs text-gray-500">
@@ -363,17 +380,20 @@ function GlobalViewContent() {
               </div>
 
               {/* Growing Connections */}
-              <div className={`p-4 rounded-lg ${getTrendDisplay(networkInsights.growingConnections.trend).bg}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-800">📈 Growing Connections</h3>
-                  <span className={`text-lg ${getTrendDisplay(networkInsights.growingConnections.trend).color}`}>
+              <div className={`p-6 rounded-lg border-2 ${getTrendDisplay(networkInsights.growingConnections.trend).bg} ${
+                getTrendDisplay(networkInsights.growingConnections.trend).trend === 'up' ? 'border-green-200' :
+                getTrendDisplay(networkInsights.growingConnections.trend).trend === 'down' ? 'border-red-200' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-800 text-sm">📈 Growing Connections</h3>
+                  <span className={`text-xl ${getTrendDisplay(networkInsights.growingConnections.trend).color}`}>
                     {getTrendDisplay(networkInsights.growingConnections.trend).icon}
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900 mb-2">
+                <div className="text-3xl font-bold text-gray-900 mb-2">
                   {networkInsights.growingConnections.value}
                 </div>
-                <div className="text-sm text-gray-600 mb-3">
+                <div className="text-sm text-gray-600 mb-2">
                   {networkInsights.growingConnections.density}% network density
                 </div>
                 <div className="text-xs text-gray-500">
@@ -382,17 +402,20 @@ function GlobalViewContent() {
               </div>
 
               {/* Skill Gaps */}
-              <div className={`p-4 rounded-lg ${getTrendDisplay(networkInsights.skillGaps.trend).bg}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-800">🔍 Skill Gaps Identified</h3>
-                  <span className={`text-lg ${getTrendDisplay(networkInsights.skillGaps.trend).color}`}>
+              <div className={`p-6 rounded-lg border-2 ${getTrendDisplay(networkInsights.skillGaps.trend).bg} ${
+                getTrendDisplay(networkInsights.skillGaps.trend).trend === 'up' ? 'border-red-200' :
+                getTrendDisplay(networkInsights.skillGaps.trend).trend === 'down' ? 'border-green-200' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-800 text-sm">🔍 Skill Gaps Identified</h3>
+                  <span className={`text-xl ${getTrendDisplay(networkInsights.skillGaps.trend).color}`}>
                     {getTrendDisplay(networkInsights.skillGaps.trend).icon}
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900 mb-2">
+                <div className="text-3xl font-bold text-gray-900 mb-2">
                   {networkInsights.skillGaps.value}
                 </div>
-                <div className="text-sm text-gray-600 mb-3">
+                <div className="text-sm text-gray-600 mb-2">
                   {networkInsights.skillGaps.criticalGaps} critical shortages
                 </div>
                 <div className="text-xs text-gray-500">
