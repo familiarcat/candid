@@ -23,7 +23,7 @@ const initialState = {
   skills: [],
   positions: [],
   matches: [],
-  
+
   // Loading states
   loading: {
     companies: false,
@@ -34,7 +34,7 @@ const initialState = {
     matches: false,
     global: false
   },
-  
+
   // Error states
   errors: {
     companies: null,
@@ -45,7 +45,7 @@ const initialState = {
     matches: null,
     global: null
   },
-  
+
   // Metadata
   lastUpdated: {},
   stats: {
@@ -71,7 +71,7 @@ function dataReducer(state, action) {
           global: action.entity === 'global' ? action.loading : state.loading.global
         }
       }
-      
+
     case DATA_ACTIONS.SET_ERROR:
       return {
         ...state,
@@ -84,13 +84,13 @@ function dataReducer(state, action) {
           [action.entity]: false
         }
       }
-      
+
     case DATA_ACTIONS.SET_DATA:
       const newStats = calculateStats({
         ...state,
         [action.entity]: action.data
       })
-      
+
       return {
         ...state,
         [action.entity]: action.data,
@@ -108,12 +108,12 @@ function dataReducer(state, action) {
         },
         stats: newStats
       }
-      
+
     case DATA_ACTIONS.UPDATE_ENTITY:
       const updatedData = state[action.entity].map(item =>
         item.id === action.id || item._key === action.id ? { ...item, ...action.updates } : item
       )
-      
+
       return {
         ...state,
         [action.entity]: updatedData,
@@ -122,10 +122,10 @@ function dataReducer(state, action) {
           [action.entity]: updatedData
         })
       }
-      
+
     case DATA_ACTIONS.ADD_ENTITY:
       const newData = [...state[action.entity], action.data]
-      
+
       return {
         ...state,
         [action.entity]: newData,
@@ -134,12 +134,12 @@ function dataReducer(state, action) {
           [action.entity]: newData
         })
       }
-      
+
     case DATA_ACTIONS.DELETE_ENTITY:
       const filteredData = state[action.entity].filter(item =>
         item.id !== action.id && item._key !== action.id
       )
-      
+
       return {
         ...state,
         [action.entity]: filteredData,
@@ -148,7 +148,7 @@ function dataReducer(state, action) {
           [action.entity]: filteredData
         })
       }
-      
+
     case DATA_ACTIONS.CLEAR_ERROR:
       return {
         ...state,
@@ -157,7 +157,7 @@ function dataReducer(state, action) {
           [action.entity]: null
         }
       }
-      
+
     default:
       return state
   }
@@ -168,7 +168,7 @@ function calculateStats(state) {
   const jobSeekerSkills = state.jobSeekers.reduce((total, js) => total + (js.skills?.length || 0), 0)
   const authorityPreferences = state.hiringAuthorities.reduce((total, auth) => total + (auth.skillsLookingFor?.length || 0), 0)
   const positionRequirements = state.positions.reduce((total, pos) => total + (pos.requirements?.length || 0), 0)
-  
+
   return {
     totalCompanies: state.companies.length,
     totalAuthorities: state.hiringAuthorities.length,
@@ -183,10 +183,10 @@ function calculateStats(state) {
 // Normalize data structure from API responses
 function normalizeData(data, entity) {
   if (!data) return []
-  
+
   // Handle different API response structures
   let normalizedData = Array.isArray(data) ? data : []
-  
+
   // Ensure consistent ID field (use _key as id if available)
   return normalizedData.map(item => ({
     ...item,
@@ -198,64 +198,85 @@ function normalizeData(data, entity) {
 // Data Provider Component
 export function DataProvider({ children }) {
   const [state, dispatch] = useReducer(dataReducer, initialState)
-  
+
   // Fetch data for a specific entity
   const fetchEntity = useCallback(async (entity) => {
     dispatch({ type: DATA_ACTIONS.SET_LOADING, entity, loading: true })
-    
+
     try {
       const response = await fetch(`/api/${entity}`)
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch ${entity}: ${response.statusText}`)
       }
-      
+
       const data = await response.json()
-      const normalizedData = normalizeData(data, entity)
-      
-      dispatch({ 
-        type: DATA_ACTIONS.SET_DATA, 
-        entity: entity.replace('-', '').replace(/s$/, '') + 's', // Normalize entity name
-        data: normalizedData 
+
+      // Handle different API response structures
+      let entityData = data
+      if (data.companies) entityData = data.companies
+      if (data.authorities) entityData = data.authorities
+      if (data.jobSeekers) entityData = data.jobSeekers
+      if (data.skills) entityData = data.skills
+      if (data.positions) entityData = data.positions
+      if (data.matches) entityData = data.matches
+
+      const normalizedData = normalizeData(entityData, entity)
+
+      // Normalize entity name for state
+      let stateKey = entity
+      if (entity === 'hiring-authorities') stateKey = 'hiringAuthorities'
+      if (entity === 'job-seekers') stateKey = 'jobSeekers'
+
+      dispatch({
+        type: DATA_ACTIONS.SET_DATA,
+        entity: stateKey,
+        data: normalizedData
       })
-      
+
     } catch (error) {
       console.error(`Error fetching ${entity}:`, error)
-      dispatch({ 
-        type: DATA_ACTIONS.SET_ERROR, 
-        entity: entity.replace('-', '').replace(/s$/, '') + 's',
-        error: error.message 
+
+      // Normalize entity name for state
+      let stateKey = entity
+      if (entity === 'hiring-authorities') stateKey = 'hiringAuthorities'
+      if (entity === 'job-seekers') stateKey = 'jobSeekers'
+
+      dispatch({
+        type: DATA_ACTIONS.SET_ERROR,
+        entity: stateKey,
+        error: error.message
       })
     }
   }, [])
-  
+
   // Fetch all data
   const fetchAllData = useCallback(async () => {
     dispatch({ type: DATA_ACTIONS.SET_LOADING, entity: 'global', loading: true })
-    
+
     try {
       const entities = ['companies', 'hiring-authorities', 'job-seekers', 'skills', 'positions', 'matches']
-      
+
       // Fetch all entities in parallel
       await Promise.all(entities.map(entity => fetchEntity(entity)))
-      
+
       dispatch({ type: DATA_ACTIONS.SET_LOADING, entity: 'global', loading: false })
-      
+
     } catch (error) {
       console.error('Error fetching all data:', error)
-      dispatch({ 
-        type: DATA_ACTIONS.SET_ERROR, 
-        entity: 'global', 
-        error: 'Failed to fetch application data' 
+      dispatch({
+        type: DATA_ACTIONS.SET_ERROR,
+        entity: 'global',
+        error: 'Failed to fetch application data'
       })
     }
   }, [fetchEntity])
-  
+
   // Refresh specific entity
   const refreshEntity = useCallback((entity) => {
     return fetchEntity(entity)
   }, [fetchEntity])
-  
+
   // Update entity
   const updateEntity = useCallback(async (entity, id, updates) => {
     try {
@@ -264,28 +285,28 @@ export function DataProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       })
-      
+
       if (!response.ok) {
         throw new Error(`Failed to update ${entity}`)
       }
-      
+
       const updatedData = await response.json()
-      
+
       dispatch({
         type: DATA_ACTIONS.UPDATE_ENTITY,
         entity: entity.replace('-', '').replace(/s$/, '') + 's',
         id,
         updates: updatedData
       })
-      
+
       return updatedData
-      
+
     } catch (error) {
       console.error(`Error updating ${entity}:`, error)
       throw error
     }
   }, [])
-  
+
   // Add entity
   const addEntity = useCallback(async (entity, data) => {
     try {
@@ -294,64 +315,64 @@ export function DataProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       })
-      
+
       if (!response.ok) {
         throw new Error(`Failed to create ${entity}`)
       }
-      
+
       const newData = await response.json()
-      
+
       dispatch({
         type: DATA_ACTIONS.ADD_ENTITY,
         entity: entity.replace('-', '').replace(/s$/, '') + 's',
         data: { ...newData, id: newData.id || newData._key, _key: newData._key || newData.id }
       })
-      
+
       return newData
-      
+
     } catch (error) {
       console.error(`Error creating ${entity}:`, error)
       throw error
     }
   }, [])
-  
+
   // Delete entity
   const deleteEntity = useCallback(async (entity, id) => {
     try {
       const response = await fetch(`/api/${entity}?id=${id}`, {
         method: 'DELETE'
       })
-      
+
       if (!response.ok) {
         throw new Error(`Failed to delete ${entity}`)
       }
-      
+
       dispatch({
         type: DATA_ACTIONS.DELETE_ENTITY,
         entity: entity.replace('-', '').replace(/s$/, '') + 's',
         id
       })
-      
+
     } catch (error) {
       console.error(`Error deleting ${entity}:`, error)
       throw error
     }
   }, [])
-  
+
   // Clear error
   const clearError = useCallback((entity) => {
     dispatch({ type: DATA_ACTIONS.CLEAR_ERROR, entity })
   }, [])
-  
+
   // Initial data fetch
   useEffect(() => {
     fetchAllData()
   }, [fetchAllData])
-  
+
   const value = {
     // State
     ...state,
-    
+
     // Actions
     fetchEntity,
     fetchAllData,
@@ -360,12 +381,12 @@ export function DataProvider({ children }) {
     addEntity,
     deleteEntity,
     clearError,
-    
+
     // Computed values
     isLoading: Object.values(state.loading).some(loading => loading),
     hasErrors: Object.values(state.errors).some(error => error !== null)
   }
-  
+
   return (
     <DataContext.Provider value={value}>
       {children}
@@ -376,18 +397,18 @@ export function DataProvider({ children }) {
 // Custom hook to use data context
 export function useData() {
   const context = useContext(DataContext)
-  
+
   if (!context) {
     throw new Error('useData must be used within a DataProvider')
   }
-  
+
   return context
 }
 
 // Hook for specific entity data
 export function useEntityData(entity) {
   const { [entity]: data, loading, errors, refreshEntity } = useData()
-  
+
   return {
     data: data || [],
     loading: loading[entity] || false,
