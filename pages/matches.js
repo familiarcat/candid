@@ -17,6 +17,14 @@ export default function Matches() {
 
   // Helper functions
   const getSkillByName = (skillName) => {
+    if (!skillName || typeof skillName !== 'string') {
+      return {
+        name: 'Unknown Skill',
+        _key: 'unknown-skill',
+        category: 'Technology',
+        demand: 'High'
+      }
+    }
     return skills.find(s => s.name === skillName) || {
       name: skillName,
       _key: skillName.toLowerCase().replace(/\s+/g, '-'),
@@ -26,7 +34,7 @@ export default function Matches() {
   }
 
   const getCompanyByName = (companyName) => {
-    if (!companyName) return null
+    if (!companyName || typeof companyName !== 'string') return null
     return companies.find(c => c.name === companyName) || {
       name: companyName,
       _key: companyName.toLowerCase().replace(/\s+/g, '-'),

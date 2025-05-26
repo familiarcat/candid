@@ -6,15 +6,23 @@ import { SkillLink, CompanyLink } from '../components/ui/LinkButton'
 import { CollapsibleCard } from '../components/ui/CollapsibleCard'
 import AuthorityNetworkGraph from '../components/visualizations/AuthorityNetworkGraph'
 import { transformToNetworkData } from '../lib/visualizationData'
+import { useData } from '../contexts/DataContext'
 
 export default function JobSeekers() {
   const router = useRouter()
-  const [jobSeekers, setJobSeekers] = useState([])
-  const [companies, setCompanies] = useState([])
-  const [skills, setSkills] = useState([])
-  const [hiringAuthorities, setHiringAuthorities] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+
+  // Use DataContext for data management
+  const {
+    jobSeekers,
+    companies,
+    skills,
+    hiringAuthorities,
+    matches,
+    loading,
+    errors
+  } = useData()
+
+  // Local UI state
   const [networkData, setNetworkData] = useState({ nodes: [], links: [] })
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null)
   const [showNetworkFocus, setShowNetworkFocus] = useState(false)
@@ -25,50 +33,13 @@ export default function JobSeekers() {
   const [experienceFilter, setExperienceFilter] = useState('')
   const [locationFilter, setLocationFilter] = useState('')
 
+  // Update network data when data changes
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch all data in parallel
-        const [jobSeekersRes, companiesRes, skillsRes, authoritiesRes] = await Promise.all([
-          fetch('/api/job-seekers'),
-          fetch('/api/companies'),
-          fetch('/api/skills'),
-          fetch('/api/hiring-authorities')
-        ])
-
-        if (jobSeekersRes.ok && companiesRes.ok && skillsRes.ok && authoritiesRes.ok) {
-          const [jobSeekersData, companiesData, skillsData, authoritiesData] = await Promise.all([
-            jobSeekersRes.json(),
-            companiesRes.json(),
-            skillsRes.json(),
-            authoritiesRes.json()
-          ])
-
-          const jobSeekers = jobSeekersData.jobSeekers || jobSeekersData
-          const companies = companiesData.companies || companiesData
-          const skills = skillsData.skills || skillsData
-          const authorities = authoritiesData.authorities || authoritiesData
-
-          setJobSeekers(jobSeekers)
-          setCompanies(companies)
-          setSkills(skills)
-          setHiringAuthorities(authorities)
-
-          // Create network data for visualization
-          const networkData = transformToNetworkData(companies, authorities, jobSeekers, skills, [])
-          setNetworkData(networkData)
-        } else {
-          throw new Error('Failed to fetch data')
-        }
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
+    if (companies.length > 0 && hiringAuthorities.length > 0 && jobSeekers.length > 0 && skills.length > 0) {
+      const networkData = transformToNetworkData(companies, hiringAuthorities, jobSeekers, skills, matches)
+      setNetworkData(networkData)
     }
-
-    fetchData()
-  }, [])
+  }, [companies, hiringAuthorities, jobSeekers, skills, matches])
 
   // Check for skill filter from URL params
   useEffect(() => {
@@ -81,6 +52,14 @@ export default function JobSeekers() {
 
   // Helper functions
   const getSkillByName = (skillName) => {
+    if (!skillName || typeof skillName !== 'string') {
+      return {
+        name: 'Unknown Skill',
+        _key: 'unknown-skill',
+        category: 'Technology',
+        demand: 'High'
+      }
+    }
     return skills.find(s => s.name === skillName) || {
       name: skillName,
       _key: skillName.toLowerCase().replace(/\s+/g, '-'),
@@ -107,12 +86,12 @@ export default function JobSeekers() {
   // Filtering logic
   const filteredJobSeekers = jobSeekers.filter(jobSeeker => {
     const matchesSearch = !searchTerm ||
-      jobSeeker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      jobSeeker.title.toLowerCase().includes(searchTerm.toLowerCase())
+      (jobSeeker.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (jobSeeker.title || '').toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesSkill = !skillFilter ||
       (jobSeeker.skills && jobSeeker.skills.some(skill =>
-        skill.toLowerCase().includes(skillFilter.toLowerCase())
+        (skill || '').toLowerCase().includes(skillFilter.toLowerCase())
       ))
 
     const matchesExperience = !experienceFilter ||
@@ -247,22 +226,22 @@ export default function JobSeekers() {
         </div>
 
         {/* Loading and Error States */}
-        {loading && (
+        {(loading.jobSeekers || loading.global) && (
           <div className="text-center py-12">
             <div className="loading-spinner w-12 h-12 mx-auto mb-4"></div>
             <p className="text-candid-gray-600">Loading job seekers...</p>
           </div>
         )}
 
-        {error && (
+        {(errors.jobSeekers || errors.global) && (
           <div className="text-center py-12">
             <div className="text-red-500 mb-4">⚠️</div>
-            <p className="text-red-600">Error: {error}</p>
+            <p className="text-red-600">Error: {errors.jobSeekers || errors.global}</p>
           </div>
         )}
 
         {/* Job Seekers Grid */}
-        {!loading && !error && (
+        {!loading.jobSeekers && !loading.global && !errors.jobSeekers && !errors.global && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredJobSeekers.map((jobSeeker) => (
               <div key={jobSeeker._key} className="card hover:shadow-lg transition-shadow duration-300">
@@ -379,7 +358,7 @@ export default function JobSeekers() {
         )}
 
         {/* Empty State */}
-        {!loading && !error && filteredJobSeekers.length === 0 && (
+        {!loading.jobSeekers && !loading.global && !errors.jobSeekers && !errors.global && filteredJobSeekers.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No job seekers found</h3>

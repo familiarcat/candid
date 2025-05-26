@@ -155,9 +155,9 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
 
         const material = new THREE.LineBasicMaterial({
           color,
-          opacity: 0.6,
+          opacity: 0.8, // Increased opacity for better visibility
           transparent: true,
-          linewidth: Math.max(1, (link.strength || 1) * 2) // Make stronger connections more visible
+          linewidth: Math.max(2, (link.strength || 1) * 3) // Thicker lines for better visibility
         })
 
         const line = new THREE.Line(geometry, material)

@@ -4,170 +4,30 @@ import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
 import DetailModal from '../components/ui/DetailModal'
 import { SkillCard } from '../components/ui/CollapsibleCard'
+import { useData } from '../contexts/DataContext'
 
 export default function Skills() {
   const router = useRouter()
-  const [skills, setSkills] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+
+  // Use DataContext for data management
+  const {
+    skills,
+    loading,
+    errors
+  } = useData()
+
+  // Local UI state
   const [selectedSkill, setSelectedSkill] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
   const [sortBy, setSortBy] = useState('demand')
+  const [enhancedSalaryData, setEnhancedSalaryData] = useState({})
+  const [loadingEnhancement, setLoadingEnhancement] = useState(false)
 
-  useEffect(() => {
-    const fetchSkills = async () => {
-      try {
-        const response = await fetch('/api/skills')
-        if (response.ok) {
-          const data = await response.json()
-          const skillsData = data.skills || data
+  // Data comes from DataContext - no need for useEffect data fetching
 
-          // Enhance skills with calculated metrics
-          const enhancedSkills = skillsData.map(skill => ({
-            ...skill,
-            demand: skill.demand === 'Very High' ? 95 : skill.demand === 'High' ? 85 : skill.demand === 'Medium' ? 70 : 60,
-            supply: Math.floor(Math.random() * 40) + 60, // Simulated supply data
-            averageSalary: calculateAverageSalary(skill.category),
-            jobSeekers: Math.floor(Math.random() * 100) + 50,
-            openPositions: Math.floor(Math.random() * 50) + 20,
-            growth: `+${Math.floor(Math.random() * 25) + 5}%`,
-            description: getSkillDescription(skill.name),
-            relatedSkills: getRelatedSkills(skill.name),
-            icon: getSkillIcon(skill.category)
-          }))
-
-          setSkills(enhancedSkills)
-        } else {
-          // Fallback to sample data if API fails
-          const sampleSkills = [
-            {
-              id: 'skill_1',
-              name: 'React',
-              category: 'Frontend',
-              demand: 95,
-              supply: 78,
-              averageSalary: '$105,000',
-              jobSeekers: 156,
-              openPositions: 89,
-              growth: '+12%',
-              description: 'JavaScript library for building user interfaces',
-              relatedSkills: ['JavaScript', 'TypeScript', 'Redux', 'Next.js'],
-              icon: '⚛️'
-            },
-            {
-              id: 'skill_2',
-              name: 'Python',
-              category: 'Backend',
-              demand: 92,
-              supply: 85,
-              averageSalary: '$98,000',
-              jobSeekers: 203,
-              openPositions: 76,
-              growth: '+8%',
-              description: 'High-level programming language for web development, data science, and automation',
-              relatedSkills: ['Django', 'Flask', 'FastAPI', 'NumPy'],
-              icon: '🐍'
-            },
-            {
-              id: 'skill_3',
-              name: 'Kubernetes',
-              category: 'DevOps',
-              demand: 88,
-              supply: 45,
-              averageSalary: '$125,000',
-              jobSeekers: 67,
-              openPositions: 52,
-              growth: '+25%',
-              description: 'Container orchestration platform for automating deployment and scaling',
-              relatedSkills: ['Docker', 'Terraform', 'AWS', 'Jenkins'],
-              icon: '☸️'
-            },
-            {
-              id: 'skill_4',
-              name: 'Figma',
-              category: 'Design',
-              demand: 85,
-              supply: 72,
-              averageSalary: '$85,000',
-              jobSeekers: 134,
-              openPositions: 43,
-              growth: '+15%',
-              description: 'Collaborative design tool for creating user interfaces and prototypes',
-              relatedSkills: ['Sketch', 'Adobe XD', 'Prototyping', 'User Research'],
-              icon: '🎨'
-            },
-            {
-              id: 'skill_5',
-              name: 'TypeScript',
-              category: 'Frontend',
-              demand: 82,
-              supply: 65,
-              averageSalary: '$108,000',
-              jobSeekers: 98,
-              openPositions: 67,
-              growth: '+18%',
-              description: 'Typed superset of JavaScript that compiles to plain JavaScript',
-              relatedSkills: ['JavaScript', 'React', 'Angular', 'Node.js'],
-              icon: '📘'
-            },
-            {
-              id: 'skill_6',
-              name: 'AWS',
-              category: 'Cloud',
-              demand: 90,
-              supply: 58,
-              averageSalary: '$115,000',
-              jobSeekers: 89,
-              openPositions: 78,
-              growth: '+20%',
-              description: 'Amazon Web Services cloud computing platform',
-              relatedSkills: ['EC2', 'S3', 'Lambda', 'CloudFormation'],
-              icon: '☁️'
-            },
-            {
-              id: 'skill_7',
-              name: 'Machine Learning',
-              category: 'Data Science',
-              demand: 87,
-              supply: 42,
-              averageSalary: '$130,000',
-              jobSeekers: 45,
-              openPositions: 38,
-              growth: '+30%',
-              description: 'AI technique that enables computers to learn and improve from experience',
-              relatedSkills: ['Python', 'TensorFlow', 'PyTorch', 'Scikit-learn'],
-              icon: '🤖'
-            },
-            {
-              id: 'skill_8',
-              name: 'Node.js',
-              category: 'Backend',
-              demand: 78,
-              supply: 82,
-              averageSalary: '$95,000',
-              jobSeekers: 167,
-              openPositions: 54,
-              growth: '+5%',
-              description: 'JavaScript runtime for building server-side applications',
-              relatedSkills: ['Express.js', 'MongoDB', 'GraphQL', 'REST APIs'],
-              icon: '🟢'
-            }
-          ]
-          setSkills(sampleSkills)
-        }
-        setLoading(false)
-      } catch (err) {
-        setError(err.message)
-        setLoading(false)
-      }
-    }
-
-    fetchSkills()
-  }, [])
-
-  // Helper functions
+  // Helper functions - MOVED BEFORE USAGE
   const calculateAverageSalary = (category) => {
     const salaryRanges = {
       'Frontend': '$95,000',
@@ -246,6 +106,27 @@ export default function Skills() {
     return icons[category] || '🛠️'
   }
 
+  // 🤖 OpenAI-Enhanced Salary Data Fetching
+  const fetchEnhancedSalaryData = async (skill) => {
+    try {
+      const response = await fetch(`/api/salary-data?skillName=${encodeURIComponent(skill.name)}&category=${encodeURIComponent(skill.category)}&demandLevel=${skill.demand || 70}`)
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.data) {
+          return {
+            averageSalary: result.data.averageSalary,
+            salaryRange: result.data.salaryRange,
+            marketInsights: result.data.marketInsights,
+            enhanced: true
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching OpenAI salary data:', error)
+    }
+    return null
+  }
+
   const handleViewDetails = (skill) => {
     setSelectedSkill(skill)
     setShowDetailModal(true)
@@ -255,10 +136,70 @@ export default function Skills() {
     router.push(`/job-seekers?skill=${encodeURIComponent(skill.name)}`)
   }
 
-  const filteredSkills = skills.filter(skill => {
+  // 🤖 Enhance all skills with OpenAI salary data
+  const enhanceAllSkillsWithAI = async () => {
+    setLoadingEnhancement(true)
+    const enhanced = {}
+
+    try {
+      // Process skills in batches to avoid overwhelming the API
+      const skillBatches = []
+      for (let i = 0; i < skills.length; i += 3) {
+        skillBatches.push(skills.slice(i, i + 3))
+      }
+
+      for (const batch of skillBatches) {
+        const batchPromises = batch.map(async (skill) => {
+          const salaryData = await fetchEnhancedSalaryData(skill)
+          if (salaryData) {
+            enhanced[skill._key || skill.id] = salaryData
+          }
+        })
+
+        await Promise.all(batchPromises)
+        // Small delay between batches to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+
+      setEnhancedSalaryData(enhanced)
+      console.log(`🤖 Enhanced ${Object.keys(enhanced).length} skills with OpenAI salary data`)
+
+    } catch (error) {
+      console.error('Error enhancing skills with AI:', error)
+    } finally {
+      setLoadingEnhancement(false)
+    }
+  }
+
+  // Enhance skills with calculated metrics for display - MOVED AFTER HELPER FUNCTIONS
+  const enhancedSkills = skills.map(skill => {
+    const skillKey = skill._key || skill.id
+    const aiSalaryData = enhancedSalaryData[skillKey]
+
+    return {
+      ...skill,
+      demand: typeof skill.demand === 'string' ?
+        (skill.demand === 'Very High' ? 95 : skill.demand === 'High' ? 85 : skill.demand === 'Medium' ? 70 : 60) :
+        skill.demand || 70,
+      supply: skill.supply || Math.floor(Math.random() * 40) + 60,
+      // 🤖 Use OpenAI salary data if available, otherwise fallback
+      averageSalary: aiSalaryData?.averageSalary || skill.averageSalary || calculateAverageSalary(skill.category),
+      salaryRange: aiSalaryData?.salaryRange,
+      marketInsights: aiSalaryData?.marketInsights,
+      enhanced: aiSalaryData?.enhanced || false,
+      jobSeekers: skill.jobSeekers || Math.floor(Math.random() * 100) + 50,
+      openPositions: skill.openPositions || Math.floor(Math.random() * 50) + 20,
+      growth: aiSalaryData?.marketInsights?.growthProjection || skill.growth || `+${Math.floor(Math.random() * 25) + 5}%`,
+      description: skill.description || getSkillDescription(skill.name),
+      relatedSkills: skill.relatedSkills || getRelatedSkills(skill.name),
+      icon: skill.icon || getSkillIcon(skill.category)
+    }
+  })
+
+  const filteredSkills = enhancedSkills.filter(skill => {
     const matchesSearch = skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          skill.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         skill.description.toLowerCase().includes(searchTerm.toLowerCase())
+                         (skill.description || '').toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesCategory = filterCategory === 'all' || skill.category === filterCategory
 
@@ -304,26 +245,26 @@ export default function Skills() {
     return 'bg-gray-100 text-gray-800'
   }
 
-  const categories = ['all', ...new Set(skills.map(skill => skill.category))]
+  const categories = ['all', ...new Set(enhancedSkills.map(skill => skill.category))]
 
-  if (loading) {
+  if (loading.skills || loading.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         </div>
       </Layout>
     )
   }
 
-  if (error) {
+  if (errors.skills || errors.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            Error: {error}
+            Error: {errors.skills || errors.global}
           </div>
         </div>
       </Layout>
@@ -339,12 +280,32 @@ export default function Skills() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Skills Analysis</h1>
-          <button
-            onClick={() => router.push('/visualizations')}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            📊 Visualize
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={enhanceAllSkillsWithAI}
+              disabled={loadingEnhancement}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                loadingEnhancement
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-emerald-600 hover:bg-emerald-700'
+              } text-white`}
+            >
+              {loadingEnhancement ? (
+                <>
+                  <span className="animate-spin inline-block mr-2">⚡</span>
+                  Enhancing...
+                </>
+              ) : (
+                <>🤖 AI Enhance Salaries</>
+              )}
+            </button>
+            <button
+              onClick={() => router.push('/visualizations')}
+              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              📊 Visualize
+            </button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -392,6 +353,11 @@ export default function Skills() {
 
             <div className="text-sm text-gray-600">
               {sortedSkills.length} skills found
+              {Object.keys(enhancedSalaryData).length > 0 && (
+                <span className="ml-2 text-emerald-600">
+                  • {Object.keys(enhancedSalaryData).length} AI-enhanced 🤖
+                </span>
+              )}
             </div>
           </div>
         </div>

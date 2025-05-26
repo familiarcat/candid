@@ -6,135 +6,39 @@ import DetailModal from '../components/ui/DetailModal'
 import { AuthorityLink } from '../components/ui/LinkButton'
 import { CompanyCard } from '../components/ui/CollapsibleCard'
 import { formatDate, getEntityIcon } from '../lib/utils'
+import { useData } from '../contexts/DataContext'
 
 export default function Companies() {
   const router = useRouter()
-  const [companies, setCompanies] = useState([])
-  const [hiringAuthorities, setHiringAuthorities] = useState([])
-  const [positions, setPositions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+
+  // Use DataContext for data management
+  const {
+    companies,
+    hiringAuthorities,
+    positions,
+    loading,
+    errors
+  } = useData()
+
+  // Local UI state
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('name')
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch companies, authorities, and positions in parallel
-        const [companiesRes, authoritiesRes, positionsRes] = await Promise.all([
-          fetch('/api/companies'),
-          fetch('/api/hiring-authorities'),
-          fetch('/api/positions')
-        ])
+  // Data comes from DataContext - no need for useEffect data fetching
 
-        if (companiesRes.ok && authoritiesRes.ok && positionsRes.ok) {
-          const [companiesData, authoritiesData, positionsData] = await Promise.all([
-            companiesRes.json(),
-            authoritiesRes.json(),
-            positionsRes.json()
-          ])
-
-          const companies = companiesData.companies || companiesData
-          const authorities = authoritiesData.authorities || authoritiesData
-          const positions = positionsData.positions || positionsData
-
-          // Companies already come with hiringAuthorities and openPositions from API
-          const enhancedCompanies = companies.map(company => ({
-            ...company,
-            _key: company.id, // Ensure _key is available for AuthorityLink
-            // Use API data if available, otherwise calculate from local data
-            openPositions: company.openPositions !== undefined ? company.openPositions :
-              positions.filter(p => p.companyId === `companies/${company.id}`).length,
-            hiringAuthorities: company.hiringAuthorities ||
-              authorities.filter(a => a.companyId === `companies/${company.id}`)
-          }))
-
-          setCompanies(enhancedCompanies)
-          setHiringAuthorities(authorities)
-          setPositions(positions)
-        } else {
-          // Fallback to sample data
-          const sampleCompanies = [
-            {
-              id: 'company_1',
-              name: 'TechCorp Inc.',
-              industry: 'Technology',
-              size: 'Large (1000+ employees)',
-              location: 'San Francisco, CA',
-              description: 'Leading technology company specializing in cloud solutions and enterprise software.',
-              openPositions: 12,
-              hiringAuthorities: [
-                { name: 'Sarah Wilson', role: 'VP Engineering' },
-                { name: 'Mike Chen', role: 'Director of Product' }
-              ],
-              founded: '2010',
-              website: 'https://techcorp.com',
-              logo: '🏢'
-            },
-            {
-              id: 'company_2',
-              name: 'DataFlow Systems',
-              industry: 'Data Analytics',
-              size: 'Medium (100-999 employees)',
-              location: 'Austin, TX',
-              description: 'Data analytics platform helping businesses make data-driven decisions.',
-              openPositions: 8,
-              hiringAuthorities: [
-                { name: 'Jennifer Rodriguez', role: 'Head of Engineering' },
-                { name: 'David Park', role: 'CTO' }
-              ],
-              founded: '2015',
-              website: 'https://dataflow.com',
-              logo: '📊'
-            },
-            {
-              id: 'company_3',
-              name: 'Design Studio Pro',
-              industry: 'Design & Creative',
-              size: 'Small (10-99 employees)',
-              location: 'New York, NY',
-              description: 'Creative design studio specializing in user experience and brand design.',
-              openPositions: 5,
-              hiringAuthorities: [
-                { name: 'Alex Thompson', role: 'Creative Director' },
-                { name: 'Maria Garcia', role: 'Design Lead' }
-              ],
-              founded: '2018',
-              website: 'https://designstudiopro.com',
-              logo: '🎨'
-            },
-            {
-              id: 'company_4',
-              name: 'CloudTech Solutions',
-              industry: 'Cloud Infrastructure',
-              size: 'Medium (100-999 employees)',
-              location: 'Seattle, WA',
-              description: 'Cloud infrastructure and DevOps solutions for modern enterprises.',
-              openPositions: 15,
-              hiringAuthorities: [
-                { name: 'Robert Kim', role: 'VP of Engineering' },
-                { name: 'Lisa Chang', role: 'Director of Operations' }
-              ],
-              founded: '2012',
-              website: 'https://cloudtech.com',
-              logo: '☁️'
-            }
-          ]
-          setCompanies(sampleCompanies)
-          setHiringAuthorities([])
-          setPositions([])
-        }
-        setLoading(false)
-      } catch (err) {
-        setError(err.message)
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
+  // Enhance companies with calculated data
+  const enhancedCompanies = companies.map(company => ({
+    ...company,
+    _key: company.id || company._key, // Ensure _key is available for AuthorityLink
+    // Calculate open positions from positions data
+    openPositions: company.openPositions !== undefined ? company.openPositions :
+      positions.filter(p => p.companyId === `companies/${company._key || company.id}`).length,
+    // Calculate hiring authorities from authorities data
+    hiringAuthorities: company.hiringAuthorities ||
+      hiringAuthorities.filter(a => a.companyId === `companies/${company._key || company.id}`)
+  }))
 
   // Helper functions
   const handleViewDetails = (company) => {
@@ -143,6 +47,15 @@ export default function Companies() {
   }
 
   const getAuthorityByName = (authorityName, companyId) => {
+    if (!authorityName || typeof authorityName !== 'string') {
+      return {
+        name: 'Unknown Authority',
+        _key: 'unknown-authority',
+        role: 'Key Contact',
+        level: 'Manager',
+        hiringPower: 'Medium'
+      }
+    }
     return hiringAuthorities.find(a =>
       a.name === authorityName && a.companyId === companyId
     ) || {
@@ -154,10 +67,10 @@ export default function Companies() {
     }
   }
 
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.industry.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.location.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCompanies = enhancedCompanies.filter(company =>
+    (company.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company.industry || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company.location || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const sortedCompanies = [...filteredCompanies].sort((a, b) => {
@@ -181,24 +94,24 @@ export default function Companies() {
     return 'bg-green-100 text-green-800'
   }
 
-  if (loading) {
+  if (loading.companies || loading.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         </div>
       </Layout>
     )
   }
 
-  if (error) {
+  if (errors.companies || errors.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            Error: {error}
+            Error: {errors.companies || errors.global}
           </div>
         </div>
       </Layout>
