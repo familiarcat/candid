@@ -122,8 +122,12 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
     // Create links as lines
     const linkObjects = []
     data.links.forEach(link => {
-      const sourcePos = nodePositions.get(link.source)
-      const targetPos = nodePositions.get(link.target)
+      // Handle both string IDs and object references
+      const sourceId = typeof link.source === 'string' ? link.source : link.source.id
+      const targetId = typeof link.target === 'string' ? link.target : link.target.id
+
+      const sourcePos = nodePositions.get(sourceId)
+      const targetPos = nodePositions.get(targetId)
 
       if (sourcePos && targetPos) {
         const geometry = new THREE.BufferGeometry().setFromPoints([
@@ -143,11 +147,12 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
         const material = new THREE.LineBasicMaterial({
           color,
           opacity: 0.6,
-          transparent: true
+          transparent: true,
+          linewidth: Math.max(1, (link.strength || 1) * 2) // Make stronger connections more visible
         })
 
         const line = new THREE.Line(geometry, material)
-        line.userData = { link }
+        line.userData = { link, sourceId, targetId }
         scene.add(line)
         linkObjects.push(line)
       }
@@ -178,9 +183,9 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
 
         // Highlight connected links
         linkObjects.forEach(line => {
-          const link = line.userData.link
-          if (link.source === selectedMesh.userData.node.id ||
-              link.target === selectedMesh.userData.node.id) {
+          const { sourceId, targetId } = line.userData
+          if (sourceId === selectedMesh.userData.node.id ||
+              targetId === selectedMesh.userData.node.id) {
             line.material.opacity = 1
             line.material.color.setHex(0xffff00)
           } else {
