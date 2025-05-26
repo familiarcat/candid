@@ -3,12 +3,22 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
+import VisualizationModal from '../components/VisualizationModal'
 import { CompanyLink, SkillLink } from '../components/ui/LinkButton'
 import { useData } from '../contexts/DataContext'
+import { usePageVisualization } from '../hooks/useComponentVisualization'
+import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
 
-export default function HiringAuthorities() {
+function HiringAuthoritiesContent() {
   const router = useRouter()
   const { hiringAuthorities, companies, skills, loading } = useData()
+
+  // Component-specific visualization
+  const visualization = usePageVisualization('authority', {
+    maxDistance: 2,
+    layoutType: 'radial'
+  })
+
   const [filters, setFilters] = useState({
     role: '',
     companySize: '',
@@ -78,13 +88,30 @@ export default function HiringAuthorities() {
 
       <div className="space-y-8">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-secondary-800 mb-4">
-            Hiring Authorities
-          </h1>
-          <p className="text-xl text-candid-gray-600 max-w-3xl mx-auto">
-            Connect directly with decision makers. Our graph database maps company hierarchies to identify the right hiring authority for your skills and experience level.
-          </p>
+        <div className="flex justify-between items-start mb-6">
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-bold text-secondary-800 mb-4">
+              Hiring Authorities
+            </h1>
+            <p className="text-xl text-candid-gray-600 max-w-3xl mx-auto">
+              Connect directly with decision makers. Our graph database maps company hierarchies to identify the right hiring authority for your skills and experience level.
+            </p>
+          </div>
+          <div className="flex items-center space-x-3 ml-6">
+            {/* Authority-specific visualization selector */}
+            {visualization.hasData && (
+              <div className="flex items-center space-x-2">
+                {visualization.pageHelpers.renderEntitySelector('text-sm')}
+                {visualization.pageHelpers.renderVisualizationButton('text-sm px-3 py-2')}
+              </div>
+            )}
+            <button
+              onClick={() => router.push('/visualizations')}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              📊 Global View
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -210,6 +237,15 @@ export default function HiringAuthorities() {
                     >
                       View Profile
                     </Link>
+                    <button
+                      onClick={() => {
+                        visualization.controls.setSelectedEntity(authority.id || authority._key)
+                        visualization.controls.openVisualization()
+                      }}
+                      className="bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 transition-colors"
+                    >
+                      🌐 Network
+                    </button>
                   </div>
                 </div>
               </div>
@@ -222,7 +258,21 @@ export default function HiringAuthorities() {
             <p className="text-candid-gray-600">No hiring authorities match your current filters.</p>
           </div>
         )}
+
+        {/* Authority-Focused Visualization Modal */}
+        <VisualizationModal
+          {...visualization.pageHelpers.getModalProps()}
+        />
       </div>
     </Layout>
+  )
+}
+
+// Main component with VisualizationDataProvider wrapper
+export default function HiringAuthorities() {
+  return (
+    <VisualizationDataProvider>
+      <HiringAuthoritiesContent />
+    </VisualizationDataProvider>
   )
 }
