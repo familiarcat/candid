@@ -25,15 +25,7 @@ function CompaniesContent() {
     errors
   } = useData()
 
-  // Debug: Check if data is actually loaded
-  console.log('DataContext state:', {
-    companies: companies?.length || 0,
-    hiringAuthorities: hiringAuthorities?.length || 0,
-    positions: positions?.length || 0,
-    jobSeekers: jobSeekers?.length || 0,
-    loading,
-    errors
-  })
+  // DataContext provides all entity data
 
   // Component-specific visualization
   const visualization = usePageVisualization('company', {
