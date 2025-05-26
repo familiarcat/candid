@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { NODE_COLORS, LINK_COLORS, getThreeJSGeometry, LEGEND_CONFIG } from '../../lib/visualizationConstants'
 
 export default function NetworkVisualization3D({
@@ -8,16 +9,21 @@ export default function NetworkVisualization3D({
   height = 600,
   onNodeClick = () => {},
   rootNodeId = null,
-  autoRotate = false
+  autoRotate = false,
+  enableInteraction = true,
+  showMatchReasons = false
 }) {
   const mountRef = useRef()
   const sceneRef = useRef()
   const rendererRef = useRef()
   const cameraRef = useRef()
+  const controlsRef = useRef()
+  const nodeObjectsRef = useRef(new Map())
   const [selectedNode, setSelectedNode] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [autoRotateEnabled, setAutoRotateEnabled] = useState(autoRotate)
   const [error, setError] = useState(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     if (!data || !data.nodes || !data.links || !mountRef.current) {
@@ -83,6 +89,8 @@ export default function NetworkVisualization3D({
       // Renderer setup
       renderer = new THREE.WebGLRenderer({ antialias: true })
       renderer.setSize(width, height)
+      renderer.shadowMap.enabled = true
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap
       rendererRef.current = renderer
 
       if (!mountRef.current) {
@@ -95,13 +103,154 @@ export default function NetworkVisualization3D({
       mountRef.current.innerHTML = ''
       mountRef.current.appendChild(renderer.domElement)
 
-      // Basic lighting
-      const ambientLight = new THREE.AmbientLight(0x404040, 1.2)
+      // Enhanced OrbitControls setup for mouse interaction
+      const controls = new OrbitControls(camera, renderer.domElement)
+      controlsRef.current = controls
+
+      // Configure controls for intuitive interaction
+      controls.enableDamping = true // Smooth camera movements
+      controls.dampingFactor = 0.05
+      controls.screenSpacePanning = false
+
+      // Zoom settings
+      controls.minDistance = 20 // Minimum zoom distance
+      controls.maxDistance = 500 // Maximum zoom distance
+      controls.enableZoom = true
+
+      // Rotation settings
+      controls.enableRotate = true
+      controls.rotateSpeed = 0.5
+      controls.autoRotate = autoRotateEnabled
+      controls.autoRotateSpeed = 1.0
+
+      // Pan settings
+      controls.enablePan = true
+      controls.panSpeed = 0.8
+      controls.keyPanSpeed = 7.0
+
+      // Vertical rotation limits
+      controls.maxPolarAngle = Math.PI // Allow full vertical rotation
+      controls.minPolarAngle = 0
+
+      // Mouse button assignments
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN
+      }
+
+      // Touch controls for mobile (future enhancement)
+      controls.touches = {
+        ONE: THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN
+      }
+
+      console.log('✅ OrbitControls initialized with enhanced mouse interaction')
+
+      // Mouse interaction for node selection
+      const raycaster = new THREE.Raycaster()
+      const mouse = new THREE.Vector2()
+
+      function onMouseClick(event) {
+        if (!enableInteraction) return
+
+        // Calculate mouse position in normalized device coordinates
+        const rect = renderer.domElement.getBoundingClientRect()
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+
+        // Update raycaster
+        raycaster.setFromCamera(mouse, camera)
+
+        // Find intersected objects (nodes)
+        const nodeObjects = Array.from(nodeObjectsRef.current.values()).map(obj => obj.mesh)
+        const intersects = raycaster.intersectObjects(nodeObjects)
+
+        if (intersects.length > 0) {
+          const clickedObject = intersects[0].object
+          const nodeData = clickedObject.userData.node
+
+          // Handle node selection
+          handleNodeSelection(nodeData, clickedObject)
+
+          // Call external click handler
+          onNodeClick(nodeData)
+
+          console.log('🎯 Node clicked:', nodeData.name || nodeData.id)
+        }
+      }
+
+      function handleNodeSelection(nodeData, meshObject) {
+        // Reset previous selection
+        if (selectedNode) {
+          const prevObject = nodeObjectsRef.current.get(selectedNode.id)
+          if (prevObject && prevObject.mesh) {
+            prevObject.mesh.material.emissive.setHex(0x000000)
+            prevObject.mesh.scale.set(1, 1, 1)
+          }
+        }
+
+        // Highlight new selection
+        setSelectedNode(nodeData)
+        meshObject.material.emissive.setHex(0x444444) // Highlight color
+        meshObject.scale.set(1.2, 1.2, 1.2) // Slightly larger
+
+        // Optional: Focus camera on selected node
+        if (controlsRef.current) {
+          const targetPosition = meshObject.position.clone()
+          controlsRef.current.target.copy(targetPosition)
+          controlsRef.current.update()
+        }
+      }
+
+      // Add mouse event listener
+      renderer.domElement.addEventListener('click', onMouseClick, false)
+
+      // Mouse hover effects
+      function onMouseMove(event) {
+        if (!enableInteraction) return
+
+        const rect = renderer.domElement.getBoundingClientRect()
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+
+        raycaster.setFromCamera(mouse, camera)
+        const nodeObjects = Array.from(nodeObjectsRef.current.values()).map(obj => obj.mesh)
+        const intersects = raycaster.intersectObjects(nodeObjects)
+
+        // Change cursor on hover
+        renderer.domElement.style.cursor = intersects.length > 0 ? 'pointer' : 'default'
+      }
+
+      renderer.domElement.addEventListener('mousemove', onMouseMove, false)
+
+      // Enhanced lighting setup for better color visibility
+      const ambientLight = new THREE.AmbientLight(0x404040, 1.5) // Increased ambient light
       scene.add(ambientLight)
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+      // Primary directional light
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.8) // Increased intensity
       directionalLight.position.set(50, 50, 50)
+      directionalLight.castShadow = true
       scene.add(directionalLight)
+
+      // Secondary directional light from opposite side
+      const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1.2)
+      directionalLight2.position.set(-50, -50, -50)
+      scene.add(directionalLight2)
+
+      // Point lights for enhanced shape definition
+      const pointLight1 = new THREE.PointLight(0xffffff, 0.8, 200)
+      pointLight1.position.set(30, 30, 30)
+      scene.add(pointLight1)
+
+      const pointLight2 = new THREE.PointLight(0xffffff, 0.8, 200)
+      pointLight2.position.set(-30, 30, -30)
+      scene.add(pointLight2)
+
+      // Hemisphere light for natural lighting
+      const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6)
+      scene.add(hemisphereLight)
 
       // Create nodes with labels
       const nodeObjects = new Map()
@@ -175,6 +324,9 @@ export default function NetworkVisualization3D({
         scene.add(label)
         nodeObjects.set(node.id, { mesh, label, position })
 
+        // Store in ref for interaction
+        nodeObjectsRef.current.set(node.id, { mesh, label, position })
+
         console.log(`✅ Created node: ${node.name || node.id} (${node.type})`)
       })
 
@@ -221,13 +373,17 @@ export default function NetworkVisualization3D({
 
       console.log(`✅ Links created: ${linksCreated}/${data.links.length}`)
 
-      // Simple animation loop
+      // Enhanced animation loop with controls and interaction
       function animate() {
         animationId = requestAnimationFrame(animate)
 
-        if (autoRotateEnabled) {
-          scene.rotation.y += 0.002
+        // Update controls for smooth damping
+        if (controlsRef.current) {
+          controlsRef.current.update()
         }
+
+        // Auto-rotate is now handled by OrbitControls
+        // No need for manual scene rotation
 
         renderer.render(scene, camera)
       }
@@ -243,13 +399,27 @@ export default function NetworkVisualization3D({
       setIsLoading(false)
     }
 
-    // Cleanup function
+    // Enhanced cleanup function
     return () => {
       console.log('🧹 Cleaning up 3D visualization...')
 
       if (animationId) {
         cancelAnimationFrame(animationId)
       }
+
+      // Cleanup controls
+      if (controlsRef.current) {
+        controlsRef.current.dispose()
+      }
+
+      // Remove event listeners
+      if (renderer && renderer.domElement) {
+        renderer.domElement.removeEventListener('click', onMouseClick)
+        renderer.domElement.removeEventListener('mousemove', onMouseMove)
+      }
+
+      // Clear node references
+      nodeObjectsRef.current.clear()
 
       if (scene) {
         scene.traverse((object) => {
@@ -307,19 +477,49 @@ export default function NetworkVisualization3D({
         </div>
       )}
 
-      {/* Controls */}
-      <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg border">
-        <h4 className="font-semibold text-sm mb-2">3D Controls</h4>
-        <button
-          onClick={() => setAutoRotateEnabled(!autoRotateEnabled)}
-          className={`text-xs px-2 py-1 rounded ${
-            autoRotateEnabled
-              ? 'bg-primary-500 text-white'
-              : 'bg-gray-200 text-gray-700'
-          }`}
-        >
-          {autoRotateEnabled ? '⏸️ Stop Rotation' : '▶️ Auto Rotate'}
-        </button>
+      {/* Enhanced Controls Panel */}
+      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-200">
+        <h4 className="font-semibold text-sm mb-3 text-gray-800">3D Controls</h4>
+
+        {/* Auto-rotate toggle */}
+        <div className="mb-3">
+          <button
+            onClick={() => {
+              const newAutoRotate = !autoRotateEnabled
+              setAutoRotateEnabled(newAutoRotate)
+              if (controlsRef.current) {
+                controlsRef.current.autoRotate = newAutoRotate
+              }
+            }}
+            className={`text-xs px-3 py-1.5 rounded transition-colors font-medium ${
+              autoRotateEnabled
+                ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {autoRotateEnabled ? '⏸️ Stop Rotation' : '▶️ Auto Rotate'}
+          </button>
+        </div>
+
+        {/* Mouse controls guide */}
+        <div className="text-xs text-gray-600 space-y-1">
+          <div className="font-medium text-gray-700 mb-1">Mouse Controls:</div>
+          <div>🖱️ <strong>Left Click + Drag:</strong> Rotate</div>
+          <div>🖱️ <strong>Right Click + Drag:</strong> Pan</div>
+          <div>🖱️ <strong>Scroll Wheel:</strong> Zoom</div>
+          <div>🖱️ <strong>Click Node:</strong> Select & Focus</div>
+        </div>
+
+        {/* Selected node info */}
+        {selectedNode && (
+          <div className="mt-3 pt-2 border-t border-gray-200">
+            <div className="text-xs font-medium text-gray-700 mb-1">Selected:</div>
+            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+              <div className="font-medium">{selectedNode.name || selectedNode.id}</div>
+              <div className="text-gray-500">Type: {selectedNode.type}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Legend */}
