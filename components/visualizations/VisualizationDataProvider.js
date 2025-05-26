@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import { generateNetworkData, generateFocusedNetworkData } from '../../lib/graphDataGenerator'
+import { processRootNodeVisualization } from '../../lib/rootNodeProcessor'
+import { sortNetworkNodes, SORTING_METHODS } from '../../lib/visualizationSorting'
 
 // Visualization Data Context
 const VisualizationDataContext = createContext()
@@ -454,6 +456,47 @@ export default function VisualizationDataProvider({ children }) {
     )
   }, [rawData, loading])
 
+  // Enhanced visualization data generation with root node processing
+  const generateEnhancedVisualization = useMemo(() => {
+    return (rootNodeId, options = {}) => {
+      if (loading || !rootNodeId || globalNetworkData.nodes.length === 0) {
+        return { nodes: [], links: [], stats: {} }
+      }
+
+      const {
+        sortMethod = SORTING_METHODS.RELATIONSHIP_STRENGTH,
+        maxDistance = 3,
+        layoutType = 'force',
+        filters = {}
+      } = options
+
+      console.log('🎯 Generating enhanced visualization for root:', rootNodeId)
+
+      // Process with root node emphasis
+      const processedData = processRootNodeVisualization(
+        globalNetworkData,
+        rootNodeId,
+        { maxDistance, layoutType, ...options }
+      )
+
+      // Apply sorting to nodes
+      const sortedNodes = sortNetworkNodes(
+        processedData.nodes,
+        processedData.links,
+        rootNodeId,
+        sortMethod,
+        { ...filters, maxResults: filters.maxResults }
+      )
+
+      return {
+        ...processedData,
+        nodes: sortedNodes,
+        sortMethod,
+        options
+      }
+    }
+  }, [globalNetworkData, loading])
+
   // Context value
   const value = {
     // Raw data
@@ -464,10 +507,13 @@ export default function VisualizationDataProvider({ children }) {
     // Global network data
     globalNetworkData,
 
+    // Enhanced visualization generation
+    generateEnhancedVisualization,
+
     // Data fetching
     fetchAllData,
 
-    // Entity-focused data generation
+    // Entity-focused data generation (legacy support)
     generateEntityFocusedData: (entityType, entityId) =>
       generateEntityFocusedData(entityType, entityId, rawData),
 
@@ -479,7 +525,10 @@ export default function VisualizationDataProvider({ children }) {
       skills: rawData.skills,
       positions: rawData.positions,
       matches: rawData.matches
-    }
+    },
+
+    // Sorting methods and utilities
+    sortingMethods: SORTING_METHODS
   }
 
   return (

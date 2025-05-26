@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Layout from '../components/Layout'
 import VisualizationDataProvider from '../components/visualizations/VisualizationDataProvider'
 import GraphExplorerGrid from '../components/visualizations/GraphExplorerGrid'
+import EnhancedGraphExplorer from '../components/visualizations/EnhancedGraphExplorer'
 import NetworkView from '../components/visualizations/NetworkView'
 import GlobalAnalysisView from '../components/visualizations/GlobalAnalysisView'
 import VisualizationDebugger from '../components/visualizations/VisualizationDebugger'
@@ -10,15 +11,21 @@ import SimpleVisualizationTest from '../components/visualizations/SimpleVisualiz
 
 
 export default function Visualizations() {
-  const [activeTab, setActiveTab] = useState('explorer') // 'explorer', 'network', 'global'
+  const [activeTab, setActiveTab] = useState('enhanced') // Default to enhanced explorer
 
   // Tab configuration
   const tabs = [
     {
+      id: 'enhanced',
+      name: 'Enhanced Explorer',
+      icon: '🎯',
+      description: 'Context-aware visualization with root node emphasis'
+    },
+    {
       id: 'explorer',
-      name: 'Graph Explorer',
+      name: 'Classic Explorer',
       icon: '🔍',
-      description: 'Explore connections by entity type'
+      description: 'Traditional entity-based exploration'
     },
     {
       id: 'network',
@@ -49,6 +56,9 @@ export default function Visualizations() {
   // Render tab content
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'enhanced':
+        return <EnhancedGraphExplorer />
+
       case 'explorer':
         return <GraphExplorerGrid />
 
@@ -65,7 +75,7 @@ export default function Visualizations() {
         return <SimpleVisualizationTest />
 
       default:
-        return <GraphExplorerGrid />
+        return <EnhancedGraphExplorer />
     }
   }
 
