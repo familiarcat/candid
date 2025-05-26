@@ -183,13 +183,21 @@ const generateAuthorityFocusedData = (authorityId, allData) => {
     })
   }
 
-  // Add matches
-  const authorityMatches = matches.filter(match => match.hiring_authority_id === authorityId)
+  // Add matches (fix data contract)
+  const authorityMatches = matches.filter(match =>
+    match.hiringAuthorityId === `hiringAuthorities/${authorityId}` ||
+    match.hiringAuthorityId?.split('/')[1] === authorityId ||
+    match.hiring_authority_id === authorityId
+  )
   authorityMatches.forEach(match => {
-    const jobSeeker = jobSeekers.find(js => js.id === match.job_seeker_id)
+    const jobSeeker = jobSeekers.find(js =>
+      js.id === match.jobSeekerId?.split('/')[1] ||
+      js._key === match.jobSeekerId?.split('/')[1] ||
+      js.id === match.job_seeker_id
+    )
     if (jobSeeker) {
       nodes.push({
-        id: jobSeeker.id,
+        id: jobSeeker.id || jobSeeker._key,
         name: jobSeeker.name,
         type: 'jobSeeker',
         size: 12,
@@ -197,11 +205,11 @@ const generateAuthorityFocusedData = (authorityId, allData) => {
       })
 
       links.push({
-        source: authority.id,
-        target: jobSeeker.id,
+        source: authority.id || authority._key,
+        target: jobSeeker.id || jobSeeker._key,
         type: 'match',
-        strength: match.compatibility_score || 0.5,
-        label: `${Math.round((match.compatibility_score || 0.5) * 100)}% match`
+        strength: (match.score || match.compatibility_score || 50) / 100,
+        label: `${Math.round(match.score || match.compatibility_score || 50)}% match`
       })
     }
   })
@@ -285,13 +293,21 @@ const generateJobSeekerFocusedData = (jobSeekerId, allData) => {
     })
   }
 
-  // Add matches
-  const jobSeekerMatches = matches.filter(match => match.job_seeker_id === jobSeekerId)
+  // Add matches (fix data contract)
+  const jobSeekerMatches = matches.filter(match =>
+    match.jobSeekerId === `jobSeekers/${jobSeekerId}` ||
+    match.jobSeekerId?.split('/')[1] === jobSeekerId ||
+    match.job_seeker_id === jobSeekerId
+  )
   jobSeekerMatches.forEach(match => {
-    const authority = hiringAuthorities.find(auth => auth.id === match.hiring_authority_id)
+    const authority = hiringAuthorities.find(auth =>
+      auth.id === match.hiringAuthorityId?.split('/')[1] ||
+      auth._key === match.hiringAuthorityId?.split('/')[1] ||
+      auth.id === match.hiring_authority_id
+    )
     if (authority) {
       nodes.push({
-        id: authority.id,
+        id: authority.id || authority._key,
         name: authority.name,
         type: 'authority',
         size: 14,
@@ -299,18 +315,23 @@ const generateJobSeekerFocusedData = (jobSeekerId, allData) => {
       })
 
       links.push({
-        source: jobSeeker.id,
-        target: authority.id,
+        source: jobSeeker.id || jobSeeker._key,
+        target: authority.id || authority._key,
         type: 'match',
-        strength: match.compatibility_score || 0.5,
-        label: `${Math.round((match.compatibility_score || 0.5) * 100)}% match`
+        strength: (match.score || match.compatibility_score || 50) / 100,
+        label: `${Math.round(match.score || match.compatibility_score || 50)}% match`
       })
 
       // Add company
-      const company = companies.find(c => c.id === authority.company_id)
-      if (company && !nodes.find(n => n.id === company.id)) {
+      const company = companies.find(c =>
+        c.id === match.companyId?.split('/')[1] ||
+        c._key === match.companyId?.split('/')[1] ||
+        c.id === authority.company_id ||
+        c.name === authority.company
+      )
+      if (company && !nodes.find(n => n.id === (company.id || company._key))) {
         nodes.push({
-          id: company.id,
+          id: company.id || company._key,
           name: company.name,
           type: 'company',
           size: 12,
@@ -318,8 +339,8 @@ const generateJobSeekerFocusedData = (jobSeekerId, allData) => {
         })
 
         links.push({
-          source: company.id,
-          target: authority.id,
+          source: company.id || company._key,
+          target: authority.id || authority._key,
           type: 'employment',
           strength: 0.8,
           label: 'employs'
@@ -340,20 +361,361 @@ const generateJobSeekerFocusedData = (jobSeekerId, allData) => {
   }
 }
 
-// Skill-focused, Position-focused, and Match-focused generators
+// Skill-focused network data (2-level edge limit)
 const generateSkillFocusedData = (skillId, allData) => {
-  // Implementation for skill-focused view
-  return { nodes: [], links: [], stats: {} }
+  const { companies, hiringAuthorities, jobSeekers, skills, positions, matches } = allData
+  const skill = skills.find(s => s.id === skillId || s._key === skillId)
+  if (!skill) return { nodes: [], links: [], stats: {} }
+
+  const nodes = []
+  const links = []
+
+  // Add skill node (root)
+  nodes.push({
+    id: skill.id || skill._key,
+    name: skill.name,
+    type: 'skill',
+    size: 18,
+    color: '#f59e0b',
+    central: true
+  })
+
+  // Level 1: Job seekers and positions that use this skill
+  const skillUsers = jobSeekers.filter(js =>
+    js.skills?.some(s => s === skill.name || s.toLowerCase() === skill.name.toLowerCase())
+  )
+  const skillPositions = positions.filter(pos =>
+    pos.requirements?.some(req => req === skill.name || req.toLowerCase() === skill.name.toLowerCase())
+  )
+
+  // Add job seekers (Level 1)
+  skillUsers.forEach(jobSeeker => {
+    nodes.push({
+      id: jobSeeker.id || jobSeeker._key,
+      name: jobSeeker.name,
+      type: 'jobSeeker',
+      size: 14,
+      color: '#8b5cf6'
+    })
+
+    links.push({
+      source: skill.id || skill._key,
+      target: jobSeeker.id || jobSeeker._key,
+      type: 'has_skill',
+      strength: 0.7,
+      label: 'has skill'
+    })
+  })
+
+  // Add positions (Level 1)
+  skillPositions.forEach(position => {
+    nodes.push({
+      id: position.id || position._key,
+      name: position.title,
+      type: 'position',
+      size: 14,
+      color: '#10b981'
+    })
+
+    links.push({
+      source: skill.id || skill._key,
+      target: position.id || position._key,
+      type: 'requires',
+      strength: 0.8,
+      label: 'requires'
+    })
+
+    // Level 2: Companies for these positions
+    const company = companies.find(c =>
+      c.id === position.companyId?.split('/')[1] ||
+      c._key === position.companyId?.split('/')[1] ||
+      c.name === position.company
+    )
+    if (company && !nodes.find(n => n.id === (company.id || company._key))) {
+      nodes.push({
+        id: company.id || company._key,
+        name: company.name,
+        type: 'company',
+        size: 12,
+        color: '#3b82f6'
+      })
+
+      links.push({
+        source: company.id || company._key,
+        target: position.id || position._key,
+        type: 'posts',
+        strength: 0.6,
+        label: 'posts'
+      })
+    }
+  })
+
+  return {
+    nodes,
+    links,
+    stats: {
+      totalNodes: nodes.length,
+      totalLinks: links.length,
+      jobSeekers: skillUsers.length,
+      positions: skillPositions.length,
+      companies: new Set(skillPositions.map(p => p.company)).size
+    }
+  }
 }
 
+// Position-focused network data (2-level edge limit)
 const generatePositionFocusedData = (positionId, allData) => {
-  // Implementation for position-focused view
-  return { nodes: [], links: [], stats: {} }
+  const { companies, hiringAuthorities, jobSeekers, skills, positions, matches } = allData
+  const position = positions.find(p => p.id === positionId || p._key === positionId)
+  if (!position) return { nodes: [], links: [], stats: {} }
+
+  const nodes = []
+  const links = []
+
+  // Add position node (root)
+  nodes.push({
+    id: position.id || position._key,
+    name: position.title,
+    type: 'position',
+    size: 18,
+    color: '#10b981',
+    central: true
+  })
+
+  // Level 1: Company that posted this position
+  const company = companies.find(c =>
+    c.id === position.companyId?.split('/')[1] ||
+    c._key === position.companyId?.split('/')[1] ||
+    c.name === position.company
+  )
+  if (company) {
+    nodes.push({
+      id: company.id || company._key,
+      name: company.name,
+      type: 'company',
+      size: 16,
+      color: '#3b82f6'
+    })
+
+    links.push({
+      source: company.id || company._key,
+      target: position.id || position._key,
+      type: 'posts',
+      strength: 0.9,
+      label: 'posts'
+    })
+
+    // Level 2: Hiring authorities at this company
+    const companyAuthorities = hiringAuthorities.filter(auth =>
+      auth.companyId === `companies/${company._key || company.id}` ||
+      auth.company === company.name
+    )
+    companyAuthorities.forEach(authority => {
+      nodes.push({
+        id: authority.id || authority._key,
+        name: authority.name,
+        type: 'authority',
+        size: 12,
+        color: '#059669'
+      })
+
+      links.push({
+        source: company.id || company._key,
+        target: authority.id || authority._key,
+        type: 'employs',
+        strength: 0.7,
+        label: 'employs'
+      })
+    })
+  }
+
+  // Level 1: Required skills
+  if (position.requirements) {
+    position.requirements.forEach(skillName => {
+      const skill = skills.find(s => s.name === skillName)
+      if (skill) {
+        nodes.push({
+          id: skill.id || skill._key,
+          name: skill.name,
+          type: 'skill',
+          size: 14,
+          color: '#f59e0b'
+        })
+
+        links.push({
+          source: position.id || position._key,
+          target: skill.id || skill._key,
+          type: 'requires',
+          strength: 0.8,
+          label: 'requires'
+        })
+      }
+    })
+  }
+
+  // Level 1: Matched job seekers
+  const positionMatches = matches.filter(match =>
+    match.positionId === `positions/${position._key || position.id}`
+  )
+  positionMatches.forEach(match => {
+    const jobSeeker = jobSeekers.find(js =>
+      js.id === match.jobSeekerId?.split('/')[1] ||
+      js._key === match.jobSeekerId?.split('/')[1]
+    )
+    if (jobSeeker && !nodes.find(n => n.id === (jobSeeker.id || jobSeeker._key))) {
+      nodes.push({
+        id: jobSeeker.id || jobSeeker._key,
+        name: jobSeeker.name,
+        type: 'jobSeeker',
+        size: 12,
+        color: '#8b5cf6'
+      })
+
+      links.push({
+        source: position.id || position._key,
+        target: jobSeeker.id || jobSeeker._key,
+        type: 'matched_to',
+        strength: (match.score || 50) / 100,
+        label: `${match.score || 50}% match`
+      })
+    }
+  })
+
+  return {
+    nodes,
+    links,
+    stats: {
+      totalNodes: nodes.length,
+      totalLinks: links.length,
+      company: company?.name || 'Unknown',
+      requiredSkills: position.requirements?.length || 0,
+      matches: positionMatches.length
+    }
+  }
 }
 
+// Match-focused network data (2-level edge limit)
 const generateMatchFocusedData = (matchId, allData) => {
-  // Implementation for match-focused view
-  return { nodes: [], links: [], stats: {} }
+  const { companies, hiringAuthorities, jobSeekers, skills, positions, matches } = allData
+  const match = matches.find(m => m.id === matchId || m._key === matchId)
+  if (!match) return { nodes: [], links: [], stats: {} }
+
+  const nodes = []
+  const links = []
+
+  // Get core entities
+  const jobSeeker = jobSeekers.find(js =>
+    js.id === match.jobSeekerId?.split('/')[1] ||
+    js._key === match.jobSeekerId?.split('/')[1]
+  )
+  const authority = hiringAuthorities.find(auth =>
+    auth.id === match.hiringAuthorityId?.split('/')[1] ||
+    auth._key === match.hiringAuthorityId?.split('/')[1]
+  )
+  const company = companies.find(c =>
+    c.id === match.companyId?.split('/')[1] ||
+    c._key === match.companyId?.split('/')[1]
+  )
+
+  if (!jobSeeker || !authority) return { nodes: [], links: [], stats: {} }
+
+  // Add core match nodes
+  nodes.push({
+    id: jobSeeker.id || jobSeeker._key,
+    name: jobSeeker.name,
+    type: 'jobSeeker',
+    size: 16,
+    color: '#8b5cf6',
+    central: true
+  })
+
+  nodes.push({
+    id: authority.id || authority._key,
+    name: authority.name,
+    type: 'authority',
+    size: 16,
+    color: '#10b981',
+    central: true
+  })
+
+  // Core match link
+  links.push({
+    source: jobSeeker.id || jobSeeker._key,
+    target: authority.id || authority._key,
+    type: 'matched_to',
+    strength: (match.score || 50) / 100,
+    label: `${match.score || 50}% match`,
+    central: true
+  })
+
+  // Level 1: Company
+  if (company) {
+    nodes.push({
+      id: company.id || company._key,
+      name: company.name,
+      type: 'company',
+      size: 14,
+      color: '#3b82f6'
+    })
+
+    links.push({
+      source: company.id || company._key,
+      target: authority.id || authority._key,
+      type: 'employs',
+      strength: 0.8,
+      label: 'employs'
+    })
+  }
+
+  // Level 1: Shared skills
+  const jobSeekerSkills = jobSeeker.skills || []
+  const authoritySkills = authority.skillsLookingFor || []
+  const sharedSkillNames = jobSeekerSkills.filter(skill =>
+    authoritySkills.some(authSkill =>
+      authSkill.toLowerCase() === skill.toLowerCase()
+    )
+  )
+
+  sharedSkillNames.forEach(skillName => {
+    const skill = skills.find(s => s.name.toLowerCase() === skillName.toLowerCase())
+    if (skill) {
+      nodes.push({
+        id: skill.id || skill._key,
+        name: skill.name,
+        type: 'skill',
+        size: 12,
+        color: '#f59e0b'
+      })
+
+      links.push({
+        source: jobSeeker.id || jobSeeker._key,
+        target: skill.id || skill._key,
+        type: 'has_skill',
+        strength: 0.7,
+        label: 'has skill'
+      })
+
+      links.push({
+        source: authority.id || authority._key,
+        target: skill.id || skill._key,
+        type: 'seeks_skill',
+        strength: 0.7,
+        label: 'seeks'
+      })
+    }
+  })
+
+  return {
+    nodes,
+    links,
+    stats: {
+      totalNodes: nodes.length,
+      totalLinks: links.length,
+      matchScore: match.score || 50,
+      sharedSkills: sharedSkillNames.length,
+      company: company?.name || 'Unknown'
+    }
+  }
 }
 
 export default function VisualizationDataProvider({ children }) {

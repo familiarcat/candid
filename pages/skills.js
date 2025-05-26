@@ -3,10 +3,13 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
 import DetailModal from '../components/ui/DetailModal'
+import VisualizationModal from '../components/VisualizationModal'
 import { SkillCard } from '../components/ui/CollapsibleCard'
 import { useData } from '../contexts/DataContext'
+import { usePageVisualization } from '../hooks/useComponentVisualization'
+import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
 
-export default function Skills() {
+function SkillsContent() {
   const router = useRouter()
 
   // Use DataContext for data management
@@ -15,6 +18,12 @@ export default function Skills() {
     loading,
     errors
   } = useData()
+
+  // Component-specific visualization
+  const visualization = usePageVisualization('skill', {
+    maxDistance: 2,
+    layoutType: 'radial'
+  })
 
   // Local UI state
   const [selectedSkill, setSelectedSkill] = useState(null)
@@ -281,6 +290,13 @@ export default function Skills() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Skills Analysis</h1>
           <div className="flex space-x-3">
+            {/* Skill-specific visualization selector */}
+            {visualization.hasData && (
+              <div className="flex items-center space-x-2">
+                {visualization.pageHelpers.renderEntitySelector('text-sm')}
+                {visualization.pageHelpers.renderVisualizationButton('text-sm px-3 py-2')}
+              </div>
+            )}
             <button
               onClick={enhanceAllSkillsWithAI}
               disabled={loadingEnhancement}
@@ -301,9 +317,9 @@ export default function Skills() {
             </button>
             <button
               onClick={() => router.push('/visualizations')}
-              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
             >
-              📊 Visualize
+              📊 Global View
             </button>
           </div>
         </div>
@@ -391,6 +407,20 @@ export default function Skills() {
         entityType="skill"
         onFindTalent={handleFindTalent}
       />
+
+      {/* Skill-Focused Visualization Modal */}
+      <VisualizationModal
+        {...visualization.pageHelpers.getModalProps()}
+      />
     </Layout>
+  )
+}
+
+// Main component with VisualizationDataProvider wrapper
+export default function Skills() {
+  return (
+    <VisualizationDataProvider>
+      <SkillsContent />
+    </VisualizationDataProvider>
   )
 }

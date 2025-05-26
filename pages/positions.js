@@ -3,11 +3,14 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
 import DetailModal from '../components/ui/DetailModal'
+import VisualizationModal from '../components/VisualizationModal'
 import { CompanyLink, SkillLink } from '../components/ui/LinkButton'
 import { formatDate, getEntityIcon } from '../lib/utils'
 import { useData } from '../contexts/DataContext'
+import { usePageVisualization } from '../hooks/useComponentVisualization'
+import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
 
-export default function Positions() {
+function PositionsContent() {
   const router = useRouter()
 
   // Use DataContext for data management
@@ -18,6 +21,12 @@ export default function Positions() {
     loading,
     errors
   } = useData()
+
+  // Component-specific visualization
+  const visualization = usePageVisualization('position', {
+    maxDistance: 2,
+    layoutType: 'radial'
+  })
 
   // Local UI state
   const [selectedPosition, setSelectedPosition] = useState(null)
@@ -160,12 +169,21 @@ export default function Positions() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Open Positions</h1>
-          <button
-            onClick={() => router.push('/visualizations')}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            📊 Visualize
-          </button>
+          <div className="flex items-center space-x-3">
+            {/* Position-specific visualization selector */}
+            {visualization.hasData && (
+              <div className="flex items-center space-x-2">
+                {visualization.pageHelpers.renderEntitySelector('text-sm')}
+                {visualization.pageHelpers.renderVisualizationButton('text-sm px-3 py-2')}
+              </div>
+            )}
+            <button
+              onClick={() => router.push('/visualizations')}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              📊 Global View
+            </button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -311,6 +329,15 @@ export default function Positions() {
                     View Details
                   </button>
                   <button
+                    onClick={() => {
+                      visualization.controls.setSelectedEntity(position.id || position._key)
+                      visualization.controls.openVisualization()
+                    }}
+                    className="bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 transition-colors"
+                  >
+                    🌐 Network
+                  </button>
+                  <button
                     onClick={() => handleFindMatches(position)}
                     className="border border-primary-600 text-primary-600 px-4 py-2 rounded text-sm hover:bg-primary-50 transition-colors"
                   >
@@ -339,6 +366,20 @@ export default function Positions() {
         entityType="position"
         onFindMatches={handleFindMatches}
       />
+
+      {/* Position-Focused Visualization Modal */}
+      <VisualizationModal
+        {...visualization.pageHelpers.getModalProps()}
+      />
     </Layout>
+  )
+}
+
+// Main component with VisualizationDataProvider wrapper
+export default function Positions() {
+  return (
+    <VisualizationDataProvider>
+      <PositionsContent />
+    </VisualizationDataProvider>
   )
 }

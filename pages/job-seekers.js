@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
+import VisualizationModal from '../components/VisualizationModal'
 import { SkillLink, CompanyLink } from '../components/ui/LinkButton'
 import { CollapsibleCard } from '../components/ui/CollapsibleCard'
 import AuthorityNetworkGraph from '../components/visualizations/AuthorityNetworkGraph'
 import { transformToNetworkData } from '../lib/visualizationData'
 import { useData } from '../contexts/DataContext'
+import { usePageVisualization } from '../hooks/useComponentVisualization'
+import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
 
-export default function JobSeekers() {
+function JobSeekersContent() {
   const router = useRouter()
 
   // Use DataContext for data management
@@ -21,6 +24,12 @@ export default function JobSeekers() {
     loading,
     errors
   } = useData()
+
+  // Component-specific visualization
+  const visualization = usePageVisualization('jobSeeker', {
+    maxDistance: 2,
+    layoutType: 'radial'
+  })
 
   // Local UI state
   const [networkData, setNetworkData] = useState({ nodes: [], links: [] })
@@ -116,13 +125,30 @@ export default function JobSeekers() {
 
       <div className="space-y-8">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-secondary-800 mb-4">
-            Job Seekers
-          </h1>
-          <p className="text-xl text-candid-gray-600 max-w-3xl mx-auto">
-            Discover talented professionals and explore their connections within the hiring authority network.
-          </p>
+        <div className="flex justify-between items-start mb-6">
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-bold text-secondary-800 mb-4">
+              Job Seekers
+            </h1>
+            <p className="text-xl text-candid-gray-600 max-w-3xl mx-auto">
+              Discover talented professionals and explore their connections within the hiring authority network.
+            </p>
+          </div>
+          <div className="flex items-center space-x-3 ml-6">
+            {/* Job Seeker-specific visualization selector */}
+            {visualization.hasData && (
+              <div className="flex items-center space-x-2">
+                {visualization.pageHelpers.renderEntitySelector('text-sm')}
+                {visualization.pageHelpers.renderVisualizationButton('text-sm px-3 py-2')}
+              </div>
+            )}
+            <button
+              onClick={() => router.push('/visualizations')}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              📊 Global View
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -316,10 +342,19 @@ export default function JobSeekers() {
                       View Profile
                     </button>
                     <button
-                      onClick={() => handleNetworkFocus(jobSeeker)}
-                      className="btn-outline text-sm px-4 py-2"
+                      onClick={() => {
+                        visualization.controls.setSelectedEntity(jobSeeker.id || jobSeeker._key)
+                        visualization.controls.openVisualization()
+                      }}
+                      className="bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700 transition-colors"
                     >
-                      Focus Network
+                      🌐 Network
+                    </button>
+                    <button
+                      onClick={() => handleNetworkFocus(jobSeeker)}
+                      className="btn-outline text-sm px-3 py-2"
+                    >
+                      Focus
                     </button>
                   </div>
                 </div>
@@ -378,7 +413,21 @@ export default function JobSeekers() {
             </button>
           </div>
         )}
+
+        {/* Job Seeker-Focused Visualization Modal */}
+        <VisualizationModal
+          {...visualization.pageHelpers.getModalProps()}
+        />
       </div>
     </Layout>
+  )
+}
+
+// Main component with VisualizationDataProvider wrapper
+export default function JobSeekers() {
+  return (
+    <VisualizationDataProvider>
+      <JobSeekersContent />
+    </VisualizationDataProvider>
   )
 }
