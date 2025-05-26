@@ -279,7 +279,11 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
 
   return (
     <div className="relative">
-      <div ref={mountRef} className="border border-gray-200 rounded-lg bg-white" />
+      <div
+        ref={mountRef}
+        className="border border-gray-200 rounded-lg bg-white"
+        style={{ width: width, height: height }}
+      />
 
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">

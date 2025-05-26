@@ -229,7 +229,11 @@ export default function AuthorityNetworkGraph({ data, width = 800, height = 600 
 
   return (
     <div className="relative">
-      <svg ref={svgRef} className="border border-gray-200 rounded-lg bg-white"></svg>
+      <svg
+        ref={svgRef}
+        className="border border-gray-200 rounded-lg bg-white"
+        style={{ width: width, height: height }}
+      ></svg>
 
       {/* Legend */}
       <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg border">
