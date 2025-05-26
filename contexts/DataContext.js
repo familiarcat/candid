@@ -219,6 +219,14 @@ export function DataProvider({ children }) {
 
       const data = await response.json()
 
+      console.log(`📦 Raw API response for ${entity}:`, {
+        dataType: typeof data,
+        isArray: Array.isArray(data),
+        length: data?.length,
+        keys: Object.keys(data || {}),
+        sample: Array.isArray(data) ? data[0] : data
+      })
+
       // Handle different API response structures
       let entityData = data
       if (data.companies) entityData = data.companies
@@ -228,7 +236,18 @@ export function DataProvider({ children }) {
       if (data.positions) entityData = data.positions
       if (data.matches) entityData = data.matches
 
+      console.log(`🔄 Processing ${entity} data:`, {
+        originalLength: data?.length,
+        processedLength: entityData?.length,
+        entityData: entityData?.slice(0, 1)
+      })
+
       const normalizedData = normalizeData(entityData, entity)
+
+      console.log(`✨ Normalized ${entity} data:`, {
+        normalizedLength: normalizedData?.length,
+        sample: normalizedData?.[0]
+      })
 
       console.log(`✅ Fetched ${entity}:`, {
         count: normalizedData.length,
