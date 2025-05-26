@@ -201,9 +201,16 @@ export function DataProvider({ children }) {
 
   // Fetch data for a specific entity
   const fetchEntity = useCallback(async (entity) => {
-    dispatch({ type: DATA_ACTIONS.SET_LOADING, entity, loading: true })
+    // Normalize entity name for state first
+    let stateKey = entity
+    if (entity === 'hiring-authorities') stateKey = 'hiringAuthorities'
+    if (entity === 'job-seekers') stateKey = 'jobSeekers'
+
+    dispatch({ type: DATA_ACTIONS.SET_LOADING, entity: stateKey, loading: true })
 
     try {
+      console.log(`🔄 Fetching ${entity}...`)
+
       const response = await fetch(`/api/${entity}`)
 
       if (!response.ok) {
@@ -223,10 +230,13 @@ export function DataProvider({ children }) {
 
       const normalizedData = normalizeData(entityData, entity)
 
-      // Normalize entity name for state
-      let stateKey = entity
-      if (entity === 'hiring-authorities') stateKey = 'hiringAuthorities'
-      if (entity === 'job-seekers') stateKey = 'jobSeekers'
+      console.log(`✅ Fetched ${entity}:`, {
+        count: normalizedData.length,
+        sample: normalizedData.slice(0, 1),
+        stateKey,
+        responseStatus: response.status,
+        timestamp: new Date().toISOString()
+      })
 
       dispatch({
         type: DATA_ACTIONS.SET_DATA,
