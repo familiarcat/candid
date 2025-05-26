@@ -5,6 +5,9 @@ import VisualizationDataProvider from '../components/visualizations/Visualizatio
 import GraphExplorerGrid from '../components/visualizations/GraphExplorerGrid'
 import NetworkView from '../components/visualizations/NetworkView'
 import GlobalAnalysisView from '../components/visualizations/GlobalAnalysisView'
+import VisualizationDebugger from '../components/visualizations/VisualizationDebugger'
+import SimpleVisualizationTest from '../components/visualizations/SimpleVisualizationTest'
+
 
 export default function Visualizations() {
   const [activeTab, setActiveTab] = useState('explorer') // 'explorer', 'network', 'global'
@@ -28,6 +31,18 @@ export default function Visualizations() {
       name: 'Global Analysis',
       icon: '🌐',
       description: 'Comprehensive network analysis'
+    },
+    {
+      id: 'debug',
+      name: 'Debug',
+      icon: '🔍',
+      description: 'Debug visualization data'
+    },
+    {
+      id: 'test',
+      name: 'Test',
+      icon: '🧪',
+      description: 'Test visualization rendering'
     }
   ]
 
@@ -42,6 +57,12 @@ export default function Visualizations() {
 
       case 'global':
         return <GlobalAnalysisView />
+
+      case 'debug':
+        return <VisualizationDebugger />
+
+      case 'test':
+        return <SimpleVisualizationTest />
 
       default:
         return <GraphExplorerGrid />
