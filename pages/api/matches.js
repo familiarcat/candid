@@ -62,7 +62,7 @@ async function handleGet(req, res, db, collections) {
     }
 
     query += `
-        SORT match.score DESC, match.createdAt DESC
+        SORT (match.matchScore || match.score) DESC, match.createdAt DESC
         LIMIT @offset, @limit
         RETURN {
           id: match._key,
@@ -80,9 +80,10 @@ async function handleGet(req, res, db, collections) {
             level: hiringAuthority.level,
             company: company.name,
             hiringPower: hiringAuthority.hiringPower,
-            decisionMaker: hiringAuthority.decisionMaker
+            decisionMaker: hiringAuthority.decisionMaker,
+            skillsLookingFor: hiringAuthority.skillsLookingFor || []
           },
-          matchScore: match.score,
+          matchScore: match.matchScore || match.score,
           status: match.status,
           createdAt: match.createdAt,
           matchReasons: match.matchReasons || [],

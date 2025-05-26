@@ -8,6 +8,7 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
   const cameraRef = useRef()
   const [selectedNode, setSelectedNode] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [autoRotate, setAutoRotate] = useState(false) // Start with rotation disabled
 
   useEffect(() => {
     if (!data || !data.nodes || !data.links || !mountRef.current) return
@@ -35,14 +36,19 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
     mountRef.current.innerHTML = ''
     mountRef.current.appendChild(renderer.domElement)
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6)
+    // Enhanced lighting for better color visibility
+    const ambientLight = new THREE.AmbientLight(0x404040, 1.2) // Increased ambient light
     scene.add(ambientLight)
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
     directionalLight.position.set(50, 50, 50)
     directionalLight.castShadow = true
     scene.add(directionalLight)
+
+    // Additional fill light for better color representation
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.4)
+    fillLight.position.set(-50, -50, -50)
+    scene.add(fillLight)
 
     // Materials for different node types
     const materials = {
@@ -84,7 +90,7 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       const geometry = geometries[node.type] || geometries.skill
       const material = materials[node.type] || materials.skill
       const mesh = new THREE.Mesh(geometry, material)
-      
+
       mesh.position.set(position.x, position.y, position.z)
       mesh.castShadow = true
       mesh.receiveShadow = true
@@ -134,7 +140,7 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
           match: 0xef4444
         }[link.type] || 0x6b7280
 
-        const material = new THREE.LineBasicMaterial({ 
+        const material = new THREE.LineBasicMaterial({
           color,
           opacity: 0.6,
           transparent: true
@@ -173,7 +179,7 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
         // Highlight connected links
         linkObjects.forEach(line => {
           const link = line.userData.link
-          if (link.source === selectedMesh.userData.node.id || 
+          if (link.source === selectedMesh.userData.node.id ||
               link.target === selectedMesh.userData.node.id) {
             line.material.opacity = 1
             line.material.color.setHex(0xffff00)
@@ -187,13 +193,16 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
 
     renderer.domElement.addEventListener('click', onMouseClick)
 
-    // Camera controls (simple rotation)
+    // Enhanced camera controls with zoom, pan, and rotation
     let mouseDown = false
+    let mouseButton = 0
     let mouseX = 0
     let mouseY = 0
+    let cameraDistance = 100
 
     function onMouseDown(event) {
       mouseDown = true
+      mouseButton = event.button
       mouseX = event.clientX
       mouseY = event.clientY
     }
@@ -208,30 +217,69 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       const deltaX = event.clientX - mouseX
       const deltaY = event.clientY - mouseY
 
-      const spherical = new THREE.Spherical()
-      spherical.setFromVector3(camera.position)
-      spherical.theta -= deltaX * 0.01
-      spherical.phi += deltaY * 0.01
-      spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi))
+      if (mouseButton === 0) { // Left mouse button - rotate
+        const spherical = new THREE.Spherical()
+        spherical.setFromVector3(camera.position)
+        spherical.theta -= deltaX * 0.01
+        spherical.phi += deltaY * 0.01
+        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi))
 
-      camera.position.setFromSpherical(spherical)
-      camera.lookAt(0, 0, 0)
+        camera.position.setFromSpherical(spherical)
+        camera.lookAt(0, 0, 0)
+      } else if (mouseButton === 2) { // Right mouse button - pan
+        const panSpeed = 0.1
+        const right = new THREE.Vector3()
+        const up = new THREE.Vector3()
+
+        camera.getWorldDirection(right)
+        right.cross(camera.up).normalize()
+        up.copy(camera.up)
+
+        const panVector = new THREE.Vector3()
+        panVector.addScaledVector(right, -deltaX * panSpeed)
+        panVector.addScaledVector(up, deltaY * panSpeed)
+
+        camera.position.add(panVector)
+        camera.lookAt(panVector)
+      }
 
       mouseX = event.clientX
       mouseY = event.clientY
     }
 
+    function onWheel(event) {
+      event.preventDefault()
+      const zoomSpeed = 0.1
+      cameraDistance += event.deltaY * zoomSpeed
+      cameraDistance = Math.max(20, Math.min(300, cameraDistance))
+
+      const direction = new THREE.Vector3()
+      camera.getWorldDirection(direction)
+      direction.normalize()
+
+      const spherical = new THREE.Spherical()
+      spherical.setFromVector3(camera.position)
+      spherical.radius = cameraDistance
+
+      camera.position.setFromSpherical(spherical)
+      camera.lookAt(0, 0, 0)
+    }
+
     renderer.domElement.addEventListener('mousedown', onMouseDown)
     renderer.domElement.addEventListener('mouseup', onMouseUp)
     renderer.domElement.addEventListener('mousemove', onMouseMove)
+    renderer.domElement.addEventListener('wheel', onWheel)
+    renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault()) // Disable right-click menu
 
     // Animation loop
     function animate() {
       requestAnimationFrame(animate)
-      
-      // Gentle rotation
-      scene.rotation.y += 0.002
-      
+
+      // Optional auto-rotation
+      if (autoRotate) {
+        scene.rotation.y += 0.002
+      }
+
       renderer.render(scene, camera)
     }
 
@@ -244,20 +292,22 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       renderer.domElement.removeEventListener('mousedown', onMouseDown)
       renderer.domElement.removeEventListener('mouseup', onMouseUp)
       renderer.domElement.removeEventListener('mousemove', onMouseMove)
-      
+      renderer.domElement.removeEventListener('wheel', onWheel)
+      renderer.domElement.removeEventListener('contextmenu', (e) => e.preventDefault())
+
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement)
       }
-      
+
       renderer.dispose()
     }
 
-  }, [data, width, height])
+  }, [data, width, height, autoRotate])
 
   return (
     <div className="relative">
       <div ref={mountRef} className="border border-gray-200 rounded-lg bg-white" />
-      
+
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
           <div className="loading-spinner w-8 h-8"></div>
@@ -267,11 +317,22 @@ export default function NetworkVisualization3D({ data, width = 800, height = 600
       {/* Controls */}
       <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg border">
         <h4 className="font-semibold text-sm mb-2">3D Controls</h4>
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1 text-xs mb-3">
+          <p>• Left click + drag: Rotate</p>
+          <p>• Right click + drag: Pan</p>
+          <p>• Mouse wheel: Zoom</p>
           <p>• Click nodes to select</p>
-          <p>• Drag to rotate view</p>
-          <p>• Auto-rotation enabled</p>
         </div>
+        <button
+          onClick={() => setAutoRotate(!autoRotate)}
+          className={`text-xs px-2 py-1 rounded ${
+            autoRotate
+              ? 'bg-primary-500 text-white'
+              : 'bg-gray-200 text-gray-700'
+          }`}
+        >
+          {autoRotate ? '⏸️ Stop Rotation' : '▶️ Auto Rotate'}
+        </button>
       </div>
 
       {/* Legend */}
