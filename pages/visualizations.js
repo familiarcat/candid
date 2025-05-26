@@ -22,6 +22,7 @@ export default function Visualizations() {
   const [activeTab, setActiveTab] = useState('network')
   const [visualizationMode, setVisualizationMode] = useState('2d') // '2d' or '3d'
   const [loading, setLoading] = useState(true)
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
 
   // Memoized network data generation - only recalculates when data actually changes
   const networkData = useMemo(() => {
@@ -64,10 +65,32 @@ export default function Visualizations() {
     }
   }, [dataLoading, companies.length, fetchAllData])
 
-  // Update loading state based on data availability
+  // Timeout fallback to prevent infinite loading
   useEffect(() => {
-    setLoading(dataLoading || networkData.nodes.length === 0)
-  }, [dataLoading, networkData.nodes.length])
+    const timeout = setTimeout(() => {
+      console.warn('⚠️ Loading timeout reached, forcing page to show')
+      setLoadingTimeout(true)
+      setLoading(false)
+    }, 10000) // 10 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [])
+
+  // Update loading state based on data availability - prevent infinite loops
+  useEffect(() => {
+    const hasData = companies.length > 0 && !dataLoading
+    const hasNetworkData = networkData.nodes.length > 0
+
+    console.log('🔄 Loading state check:', {
+      dataLoading,
+      companiesLength: companies.length,
+      networkDataNodes: networkData.nodes.length,
+      hasData,
+      hasNetworkData
+    })
+
+    setLoading(!hasData || !hasNetworkData)
+  }, [dataLoading, companies.length, networkData.nodes.length])
 
   const tabs = [
     { id: 'network', name: 'Authority Network', icon: '🌐' },
@@ -105,13 +128,16 @@ export default function Visualizations() {
     )
   }
 
-  if (loading || dataLoading) {
+  if ((loading || dataLoading) && !loadingTimeout) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="loading-spinner w-12 h-12 mx-auto mb-4"></div>
             <p className="text-candid-gray-600">Loading visualization data...</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Debug: dataLoading={dataLoading.toString()}, companies={companies.length}, networkNodes={networkData.nodes.length}
+            </p>
           </div>
         </div>
       </Layout>
