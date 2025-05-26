@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
+import UniversalProfileModal from '../components/ui/UniversalProfileModal'
 import VisualizationModal from '../components/VisualizationModal'
 import { SkillLink, CompanyLink } from '../components/ui/LinkButton'
 import { CollapsibleCard } from '../components/ui/CollapsibleCard'
@@ -35,6 +36,7 @@ function JobSeekersContent() {
   const [networkData, setNetworkData] = useState({ nodes: [], links: [] })
   const [selectedJobSeeker, setSelectedJobSeeker] = useState(null)
   const [showNetworkFocus, setShowNetworkFocus] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
 
   // Filtering state
   const [searchTerm, setSearchTerm] = useState('')
@@ -79,7 +81,7 @@ function JobSeekersContent() {
 
   const handleJobSeekerSelect = (jobSeeker) => {
     setSelectedJobSeeker(jobSeeker)
-    setShowNetworkFocus(true)
+    setShowProfileModal(true)
   }
 
   const handleNetworkFocus = (jobSeeker) => {
@@ -413,6 +415,14 @@ function JobSeekersContent() {
             </button>
           </div>
         )}
+
+        {/* Universal Profile Modal */}
+        <UniversalProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          entity={selectedJobSeeker}
+          entityType="jobSeeker"
+        />
 
         {/* Job Seeker-Focused Visualization Modal */}
         <VisualizationModal

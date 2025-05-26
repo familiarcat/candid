@@ -50,10 +50,11 @@ export default function GraphVisualization2D({ data }) {
       .attr('r', d => d.size || 5)
       .attr('fill', d => {
         switch(d.type) {
-          case 'jobSeeker': return '#3b82f6' // blue
-          case 'company': return '#14b8a6' // teal
-          case 'position': return '#10b981' // emerald
-          case 'skill': return '#f59e0b' // amber
+          case 'company': return '#8b5cf6' // purple - FIXED
+          case 'authority': return '#00d4ff' // cyan
+          case 'jobSeeker': return '#f97316' // orange
+          case 'skill': return '#10b981' // green
+          case 'position': return '#ef4444' // red
           default: return '#6366f1' // indigo
         }
       })
