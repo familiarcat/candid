@@ -2,6 +2,7 @@
 // Integrates unified controls, sorting, and seamless 2D/3D switching
 
 import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/router'
 import { useVisualizationData } from './VisualizationDataProvider'
 import UnifiedVisualizationControls from './UnifiedVisualizationControls'
 import AuthorityNetworkGraph from './AuthorityNetworkGraph'
@@ -9,11 +10,12 @@ import NetworkVisualization3D from './NetworkVisualization3D_Simple'
 import { SORTING_METHODS } from '../../lib/visualizationSorting'
 
 export default function EnhancedGraphExplorer() {
-  const { 
-    entities, 
-    loading, 
+  const router = useRouter()
+  const {
+    entities,
+    loading,
     generateEnhancedVisualization,
-    globalNetworkData 
+    globalNetworkData
   } = useVisualizationData()
 
   // Visualization state
@@ -33,7 +35,7 @@ export default function EnhancedGraphExplorer() {
     if (!rootNode && !loading) {
       // Priority order for auto-selection
       const priorityOrder = ['companies', 'authorities', 'jobSeekers', 'skills', 'positions']
-      
+
       for (const entityType of priorityOrder) {
         const entityList = entities[entityType] || []
         if (entityList.length > 0) {
@@ -63,7 +65,7 @@ export default function EnhancedGraphExplorer() {
   // Handle root node changes with smooth transitions
   const handleRootNodeChange = async (newRootNode) => {
     setIsTransitioning(true)
-    
+
     // Small delay for smooth transition effect
     setTimeout(() => {
       setRootNode(newRootNode)
@@ -96,6 +98,27 @@ export default function EnhancedGraphExplorer() {
     })
     setSortMethod(SORTING_METHODS.RELATIONSHIP_STRENGTH)
     setLayoutType('force')
+  }
+
+  // Navigation helpers
+  const getEntityPageUrl = (entityType) => {
+    const pageMap = {
+      company: '/companies',
+      authority: '/hiring-authorities',
+      jobSeeker: '/job-seekers',
+      skill: '/skills',
+      position: '/positions'
+    }
+    return pageMap[entityType] || '/'
+  }
+
+  const handleNavigateToEntityPage = (entityType) => {
+    router.push(getEntityPageUrl(entityType))
+  }
+
+  const handleNavigateToEntityDetail = (entity) => {
+    const baseUrl = getEntityPageUrl(entity.type)
+    router.push(`${baseUrl}?id=${entity.id}`)
   }
 
   if (loading) {
@@ -166,9 +189,18 @@ export default function EnhancedGraphExplorer() {
                     </p>
                   )}
                 </div>
-                
+
                 {/* Quick Actions */}
                 <div className="flex items-center space-x-2">
+                  {rootNode && (
+                    <button
+                      onClick={() => handleNavigateToEntityDetail(rootNode)}
+                      className="px-3 py-1 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded transition-colors"
+                      title={`View ${rootNode.name} details`}
+                    >
+                      📋 View Details
+                    </button>
+                  )}
                   <button
                     onClick={handleResetView}
                     className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
@@ -240,8 +272,31 @@ export default function EnhancedGraphExplorer() {
       {/* Statistics Panel */}
       {rootNode && visualizationData.stats && (
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Network Statistics</h3>
-          
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Network Statistics</h3>
+
+            {/* Entity Type Navigation */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Explore by type:</span>
+              {[
+                { type: 'company', icon: '🏢', label: 'Companies' },
+                { type: 'authority', icon: '👔', label: 'Authorities' },
+                { type: 'jobSeeker', icon: '👥', label: 'Job Seekers' },
+                { type: 'skill', icon: '🛠️', label: 'Skills' },
+                { type: 'position', icon: '📋', label: 'Positions' }
+              ].map(({ type, icon, label }) => (
+                <button
+                  key={type}
+                  onClick={() => handleNavigateToEntityPage(type)}
+                  className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                  title={`View all ${label}`}
+                >
+                  {icon}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -249,35 +304,35 @@ export default function EnhancedGraphExplorer() {
               </div>
               <div className="text-sm text-gray-600">Direct Connections</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
                 {visualizationData.nodes.length}
               </div>
               <div className="text-sm text-gray-600">Total Nodes</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {visualizationData.links.length}
               </div>
               <div className="text-sm text-gray-600">Total Links</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
                 {filters.maxDistance}
               </div>
               <div className="text-sm text-gray-600">Max Distance</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
                 {Object.keys(visualizationData.stats.nodesAtDistance || {}).length}
               </div>
               <div className="text-sm text-gray-600">Distance Levels</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-600">
                 {visualizationMode.toUpperCase()}
@@ -293,10 +348,10 @@ export default function EnhancedGraphExplorer() {
               <div className="flex items-end space-x-2 h-16">
                 {Object.entries(visualizationData.stats.nodesAtDistance).map(([distance, count]) => (
                   <div key={distance} className="flex-1 flex flex-col items-center">
-                    <div 
+                    <div
                       className="bg-blue-500 rounded-t w-full min-h-1"
-                      style={{ 
-                        height: `${Math.max(4, (count / Math.max(...Object.values(visualizationData.stats.nodesAtDistance))) * 48)}px` 
+                      style={{
+                        height: `${Math.max(4, (count / Math.max(...Object.values(visualizationData.stats.nodesAtDistance))) * 48)}px`
                       }}
                     ></div>
                     <div className="text-xs text-gray-600 mt-1">{distance}</div>

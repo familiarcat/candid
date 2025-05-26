@@ -2,89 +2,159 @@ import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Layout from '../components/Layout'
 import VisualizationModal from '../components/VisualizationModal'
-import { generateSampleGraphData } from '../lib/graphData'
+import { VisualizationDataProvider, useVisualizationData } from '../components/visualizations/VisualizationDataProvider'
+import { calculateNetworkInsights, getTrendDisplay } from '../lib/networkInsights'
 
-export default function GlobalView() {
-  const [graphData, setGraphData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+// Real Global View Component using database data
+function GlobalViewContent() {
+  const {
+    rawData,
+    loading,
+    errors,
+    globalNetworkData,
+    entities
+  } = useVisualizationData()
+
   const [showVisualization, setShowVisualization] = useState(false)
-  const [stats, setStats] = useState({})
   const [selectedEntityType, setSelectedEntityType] = useState('all')
-  const [networkMetrics, setNetworkMetrics] = useState({})
+  const [networkInsights, setNetworkInsights] = useState(null)
 
+  // Calculate real network insights when data is available
   useEffect(() => {
-    const fetchGlobalData = async () => {
-      try {
-        // Simulate API call - in real app this would fetch comprehensive network data
-        setTimeout(() => {
-          const data = generateSampleGraphData()
-          setGraphData(data)
-          
-          // Calculate network statistics
-          const nodesByType = data.nodes.reduce((acc, node) => {
-            acc[node.type] = (acc[node.type] || 0) + 1
-            return acc
-          }, {})
-
-          const linksByType = data.links.reduce((acc, link) => {
-            acc[link.type] = (acc[link.type] || 0) + 1
-            return acc
-          }, {})
-
-          setStats({
-            totalNodes: data.nodes.length,
-            totalLinks: data.links.length,
-            nodesByType,
-            linksByType
-          })
-
-          // Calculate network metrics
-          setNetworkMetrics({
-            density: ((data.links.length * 2) / (data.nodes.length * (data.nodes.length - 1)) * 100).toFixed(2),
-            avgConnections: (data.links.length * 2 / data.nodes.length).toFixed(1),
-            clusters: Math.ceil(data.nodes.length / 8), // Simplified cluster calculation
-            centralNodes: data.nodes.filter(node => node.size > 8).length
-          })
-
-          setLoading(false)
-        }, 1000)
-      } catch (err) {
-        setError(err.message)
-        setLoading(false)
-      }
+    if (!loading && rawData && globalNetworkData) {
+      const insights = calculateNetworkInsights(rawData, globalNetworkData)
+      setNetworkInsights(insights)
     }
+  }, [loading, rawData, globalNetworkData])
 
-    fetchGlobalData()
-  }, [])
+  // Calculate real-time statistics from database data
+  const stats = {
+    totalNodes: globalNetworkData?.nodes?.length || 0,
+    totalLinks: globalNetworkData?.links?.length || 0,
+    companies: entities.companies?.length || 0,
+    authorities: entities.authorities?.length || 0,
+    jobSeekers: entities.jobSeekers?.length || 0,
+    skills: entities.skills?.length || 0,
+    positions: entities.positions?.length || 0,
+    matches: entities.matches?.length || 0
+  }
 
-  const filteredData = graphData ? {
-    nodes: selectedEntityType === 'all' 
-      ? graphData.nodes 
-      : graphData.nodes.filter(node => node.type === selectedEntityType),
+  // Calculate network metrics from real data
+  const networkMetrics = {
+    density: stats.totalNodes > 1 ?
+      ((stats.totalLinks * 2) / (stats.totalNodes * (stats.totalNodes - 1)) * 100).toFixed(2) : 0,
+    avgConnections: stats.totalNodes > 0 ?
+      (stats.totalLinks * 2 / stats.totalNodes).toFixed(1) : 0,
+    clusters: Math.ceil(stats.totalNodes / 8),
+    centralNodes: globalNetworkData?.nodes?.filter(node =>
+      globalNetworkData.links.filter(link =>
+        link.source === node.id || link.target === node.id
+      ).length > 3
+    ).length || 0
+  }
+
+  // Filter real network data by entity type
+  const filteredData = globalNetworkData ? {
+    nodes: selectedEntityType === 'all'
+      ? globalNetworkData.nodes
+      : globalNetworkData.nodes.filter(node => node.type === selectedEntityType),
     links: selectedEntityType === 'all'
-      ? graphData.links
-      : graphData.links.filter(link => {
-          const sourceNode = graphData.nodes.find(n => n.id === link.source)
-          const targetNode = graphData.nodes.find(n => n.id === link.target)
+      ? globalNetworkData.links
+      : globalNetworkData.links.filter(link => {
+          const sourceNode = globalNetworkData.nodes.find(n => n.id === link.source)
+          const targetNode = globalNetworkData.nodes.find(n => n.id === link.target)
           return sourceNode?.type === selectedEntityType || targetNode?.type === selectedEntityType
         })
   } : { nodes: [], links: [] }
 
+  // Real entity types with actual counts from database
   const entityTypes = [
-    { value: 'all', label: 'All Entities', icon: '🌐', color: 'bg-indigo-100 text-indigo-800' },
-    { value: 'jobSeeker', label: 'Job Seekers', icon: '👤', color: 'bg-blue-100 text-blue-800' },
-    { value: 'company', label: 'Companies', icon: '🏢', color: 'bg-teal-100 text-teal-800' },
-    { value: 'position', label: 'Positions', icon: '📋', color: 'bg-emerald-100 text-emerald-800' },
-    { value: 'skill', label: 'Skills', icon: '🔧', color: 'bg-amber-100 text-amber-800' }
+    {
+      value: 'all',
+      label: 'All Entities',
+      icon: '🌐',
+      color: 'bg-indigo-100 text-indigo-800',
+      count: stats.totalNodes
+    },
+    {
+      value: 'jobSeeker',
+      label: 'Job Seekers',
+      icon: '👥',
+      color: 'bg-blue-100 text-blue-800',
+      count: stats.jobSeekers
+    },
+    {
+      value: 'authority',
+      label: 'Hiring Authorities',
+      icon: '👔',
+      color: 'bg-green-100 text-green-800',
+      count: stats.authorities
+    },
+    {
+      value: 'company',
+      label: 'Companies',
+      icon: '🏢',
+      color: 'bg-teal-100 text-teal-800',
+      count: stats.companies
+    },
+    {
+      value: 'position',
+      label: 'Positions',
+      icon: '📋',
+      color: 'bg-emerald-100 text-emerald-800',
+      count: stats.positions
+    },
+    {
+      value: 'skill',
+      label: 'Skills',
+      icon: '🛠️',
+      color: 'bg-amber-100 text-amber-800',
+      count: stats.skills
+    }
   ]
 
+  // Real relationship types with actual counts from network data
+  const linksByType = globalNetworkData?.links?.reduce((acc, link) => {
+    acc[link.type] = (acc[link.type] || 0) + 1
+    return acc
+  }, {}) || {}
+
   const relationshipTypes = [
-    { type: 'works_for', label: 'Employment', icon: '💼', color: 'bg-blue-500' },
-    { type: 'posts', label: 'Job Postings', icon: '📝', color: 'bg-emerald-500' },
-    { type: 'requires', label: 'Skill Requirements', icon: '🎯', color: 'bg-amber-500' },
-    { type: 'has_skill', label: 'Skill Possession', icon: '⭐', color: 'bg-purple-500' },
-    { type: 'matched_to', label: 'Job Matches', icon: '🤝', color: 'bg-red-500' }
+    {
+      type: 'works_for',
+      label: 'Employment',
+      icon: '💼',
+      color: 'bg-blue-500',
+      count: linksByType.works_for || 0
+    },
+    {
+      type: 'posts',
+      label: 'Job Postings',
+      icon: '📝',
+      color: 'bg-emerald-500',
+      count: linksByType.posts || 0
+    },
+    {
+      type: 'requires',
+      label: 'Skill Requirements',
+      icon: '🎯',
+      color: 'bg-amber-500',
+      count: linksByType.requires || 0
+    },
+    {
+      type: 'has_skill',
+      label: 'Skill Possession',
+      icon: '⭐',
+      color: 'bg-purple-500',
+      count: linksByType.has_skill || 0
+    },
+    {
+      type: 'matched_to',
+      label: 'Job Matches',
+      icon: '🤝',
+      color: 'bg-red-500',
+      count: linksByType.matched_to || stats.matches || 0
+    }
   ]
 
   if (loading) {
@@ -99,12 +169,15 @@ export default function GlobalView() {
     )
   }
 
-  if (error) {
+  if (errors && Object.keys(errors).length > 0) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            Error: {error}
+            <h3 className="font-bold mb-2">Data Loading Errors:</h3>
+            {Object.entries(errors).map(([key, error]) => (
+              <div key={key}>• {key}: {error}</div>
+            ))}
           </div>
         </div>
       </Layout>
@@ -116,7 +189,7 @@ export default function GlobalView() {
       <Head>
         <title>Global Network View | Candid Connections Katra</title>
       </Head>
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Global Network View</h1>
@@ -197,7 +270,7 @@ export default function GlobalView() {
                   <span className="text-2xl block mb-2">{type.icon}</span>
                   <p className="font-medium text-sm">{type.label}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {stats.nodesByType?.[type.value] || stats.totalNodes || 0} nodes
+                    {type.count} {type.value === 'all' ? 'nodes' : 'entities'}
                   </p>
                 </div>
               </button>
@@ -211,24 +284,23 @@ export default function GlobalView() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold mb-4">Entities by Type</h2>
             <div className="space-y-4">
-              {Object.entries(stats.nodesByType || {}).map(([type, count]) => {
-                const entityType = entityTypes.find(et => et.value === type)
-                const percentage = ((count / stats.totalNodes) * 100).toFixed(1)
-                
+              {entityTypes.filter(et => et.value !== 'all' && et.count > 0).map((entityType) => {
+                const percentage = stats.totalNodes > 0 ? ((entityType.count / stats.totalNodes) * 100).toFixed(1) : 0
+
                 return (
-                  <div key={type} className="flex items-center justify-between">
+                  <div key={entityType.value} className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <span className="text-xl mr-3">{entityType?.icon || '📄'}</span>
-                      <span className="font-medium">{entityType?.label || type}</span>
+                      <span className="text-xl mr-3">{entityType.icon}</span>
+                      <span className="font-medium">{entityType.label}</span>
                     </div>
                     <div className="flex items-center">
                       <div className="w-24 bg-gray-200 rounded-full h-2 mr-3">
-                        <div 
-                          className="bg-indigo-600 h-2 rounded-full" 
+                        <div
+                          className="bg-indigo-600 h-2 rounded-full"
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium w-12 text-right">{count}</span>
+                      <span className="text-sm font-medium w-12 text-right">{entityType.count}</span>
                     </div>
                   </div>
                 )
@@ -240,10 +312,9 @@ export default function GlobalView() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold mb-4">Relationships by Type</h2>
             <div className="space-y-4">
-              {relationshipTypes.map((relType) => {
-                const count = stats.linksByType?.[relType.type] || 0
-                const percentage = stats.totalLinks > 0 ? ((count / stats.totalLinks) * 100).toFixed(1) : 0
-                
+              {relationshipTypes.filter(relType => relType.count > 0).map((relType) => {
+                const percentage = stats.totalLinks > 0 ? ((relType.count / stats.totalLinks) * 100).toFixed(1) : 0
+
                 return (
                   <div key={relType.type} className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -252,12 +323,12 @@ export default function GlobalView() {
                     </div>
                     <div className="flex items-center">
                       <div className="w-24 bg-gray-200 rounded-full h-2 mr-3">
-                        <div 
+                        <div
                           className={`h-2 rounded-full ${relType.color}`}
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium w-12 text-right">{count}</span>
+                      <span className="text-sm font-medium w-12 text-right">{relType.count}</span>
                     </div>
                   </div>
                 )
@@ -266,35 +337,124 @@ export default function GlobalView() {
           </div>
         </div>
 
-        {/* Network Insights */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold mb-4">Network Insights</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="text-center p-4 bg-emerald-50 rounded-lg">
-              <span className="text-3xl block mb-2">🎯</span>
-              <h3 className="font-medium text-emerald-800">High Match Potential</h3>
-              <p className="text-sm text-emerald-600 mt-1">
-                Strong skill alignment across the network
-              </p>
+        {/* Real Network Insights */}
+        {networkInsights && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold mb-6">🔍 Real-Time Network Insights</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              {/* High Match Potential */}
+              <div className={`p-4 rounded-lg ${getTrendDisplay(networkInsights.highMatchPotential.trend).bg}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-800">🎯 High Match Potential</h3>
+                  <span className={`text-lg ${getTrendDisplay(networkInsights.highMatchPotential.trend).color}`}>
+                    {getTrendDisplay(networkInsights.highMatchPotential.trend).icon}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 mb-2">
+                  {networkInsights.highMatchPotential.value}
+                </div>
+                <div className="text-sm text-gray-600 mb-3">
+                  {networkInsights.highMatchPotential.percentage}% high-quality matches
+                </div>
+                <div className="text-xs text-gray-500">
+                  Avg score: {networkInsights.highMatchPotential.avgScore}%
+                </div>
+              </div>
+
+              {/* Growing Connections */}
+              <div className={`p-4 rounded-lg ${getTrendDisplay(networkInsights.growingConnections.trend).bg}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-800">📈 Growing Connections</h3>
+                  <span className={`text-lg ${getTrendDisplay(networkInsights.growingConnections.trend).color}`}>
+                    {getTrendDisplay(networkInsights.growingConnections.trend).icon}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 mb-2">
+                  {networkInsights.growingConnections.value}
+                </div>
+                <div className="text-sm text-gray-600 mb-3">
+                  {networkInsights.growingConnections.density}% network density
+                </div>
+                <div className="text-xs text-gray-500">
+                  {networkInsights.growingConnections.avgConnectionsPerNode} avg connections/node
+                </div>
+              </div>
+
+              {/* Skill Gaps */}
+              <div className={`p-4 rounded-lg ${getTrendDisplay(networkInsights.skillGaps.trend).bg}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-800">🔍 Skill Gaps Identified</h3>
+                  <span className={`text-lg ${getTrendDisplay(networkInsights.skillGaps.trend).color}`}>
+                    {getTrendDisplay(networkInsights.skillGaps.trend).icon}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 mb-2">
+                  {networkInsights.skillGaps.value}
+                </div>
+                <div className="text-sm text-gray-600 mb-3">
+                  {networkInsights.skillGaps.criticalGaps} critical shortages
+                </div>
+                <div className="text-xs text-gray-500">
+                  Avg gap: {networkInsights.skillGaps.avgGapSize} positions
+                </div>
+              </div>
             </div>
-            
-            <div className="text-center p-4 bg-amber-50 rounded-lg">
-              <span className="text-3xl block mb-2">📈</span>
-              <h3 className="font-medium text-amber-800">Growing Connections</h3>
-              <p className="text-sm text-amber-600 mt-1">
-                Network density increasing over time
-              </p>
-            </div>
-            
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <span className="text-3xl block mb-2">🔍</span>
-              <h3 className="font-medium text-blue-800">Skill Gaps Identified</h3>
-              <p className="text-sm text-blue-600 mt-1">
-                Opportunities for talent development
-              </p>
+
+            {/* Detailed Insights */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
+              {/* Top Skill Gaps */}
+              {networkInsights.skillGaps.topGaps.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-3">🔥 Top Skill Gaps</h4>
+                  <div className="space-y-2">
+                    {networkInsights.skillGaps.topGaps.slice(0, 5).map((gap, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600 truncate">{gap.name}</span>
+                        <span className={`font-medium ml-2 ${
+                          gap.severity === 'high' ? 'text-red-600' :
+                          gap.severity === 'medium' ? 'text-orange-600' : 'text-yellow-600'
+                        }`}>
+                          +{gap.gap}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Top Matches */}
+              {networkInsights.highMatchPotential.topMatches.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-3">⭐ Top Potential Matches</h4>
+                  <div className="space-y-2">
+                    {networkInsights.highMatchPotential.topMatches.slice(0, 3).map((match, idx) => (
+                      <div key={idx} className="text-sm">
+                        <div className="font-medium text-gray-800 truncate">{match.jobSeekerName}</div>
+                        <div className="text-gray-600 text-xs truncate">{match.company} • {match.score}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Connections */}
+              {networkInsights.growingConnections.recentConnections.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-3">🔗 Recent Connections</h4>
+                  <div className="space-y-2">
+                    {networkInsights.growingConnections.recentConnections.slice(0, 3).map((conn, idx) => (
+                      <div key={idx} className="text-sm">
+                        <div className="font-medium text-gray-800 truncate">{conn.source}</div>
+                        <div className="text-gray-600 text-xs truncate">→ {conn.target} • {conn.score}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Visualization Modal */}
@@ -305,5 +465,14 @@ export default function GlobalView() {
         title={`Global Network - ${entityTypes.find(et => et.value === selectedEntityType)?.label || 'All Entities'}`}
       />
     </Layout>
+  )
+}
+
+// Main component with data provider wrapper
+export default function GlobalView() {
+  return (
+    <VisualizationDataProvider>
+      <GlobalViewContent />
+    </VisualizationDataProvider>
   )
 }

@@ -476,7 +476,7 @@ export default function VisualizationDataProvider({ children }) {
       const processedData = processRootNodeVisualization(
         globalNetworkData,
         rootNodeId,
-        { maxDistance, layoutType, ...options }
+        { maxDistance, layoutType, filters, ...options }
       )
 
       // Apply sorting to nodes
@@ -537,3 +537,6 @@ export default function VisualizationDataProvider({ children }) {
     </VisualizationDataContext.Provider>
   )
 }
+
+// Export the provider
+export { VisualizationDataProvider }
