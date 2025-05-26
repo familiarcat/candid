@@ -235,17 +235,25 @@ export function DataProvider({ children }) {
       })
 
     } catch (error) {
-      console.error(`Error fetching ${entity}:`, error)
+      console.error(`❌ Error fetching ${entity}:`, {
+        error: error.message,
+        stack: error.stack,
+        url: `/api/${entity}`,
+        timestamp: new Date().toISOString()
+      })
 
       // Normalize entity name for state
       let stateKey = entity
       if (entity === 'hiring-authorities') stateKey = 'hiringAuthorities'
       if (entity === 'job-seekers') stateKey = 'jobSeekers'
 
+      // Enhanced error message with context
+      const errorMessage = `Failed to fetch ${entity}: ${error.message}`
+
       dispatch({
         type: DATA_ACTIONS.SET_ERROR,
         entity: stateKey,
-        error: error.message
+        error: errorMessage
       })
     }
   }, [])
