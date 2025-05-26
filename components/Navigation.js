@@ -6,6 +6,10 @@ export default function Navigation() {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  // For development: keep admin controls active
+  // TODO: Implement user authentication system
+  const isAdmin = true // Development mode - always true
+
   const navItems = [
     { name: 'Dashboard', path: '/', icon: '🏠' },
     { name: 'Matches', path: '/matches', icon: '🎯' },
@@ -18,9 +22,16 @@ export default function Navigation() {
     { name: 'Network View', path: '/global-view', icon: '🌐' }
   ]
 
+  const adminItems = [
+    { name: 'Admin', path: '/admin', icon: '⚙️', type: 'outline' },
+    { name: 'Visualize', path: '/visualizations', icon: '📊', type: 'outline' },
+    { name: 'Portal Login', path: 'https://portal.candid-connections.com/user/login', icon: '🔗', type: 'primary', external: true }
+  ]
+
   return (
     <nav className="bg-white shadow-soft border-b border-candid-gray-200">
       <div className="container-app">
+        {/* Main Navigation Row */}
         <div className="flex justify-between items-center h-16">
           {/* Logo - Geometric Network Style */}
           <div className="flex-shrink-0 flex items-center">
@@ -52,48 +63,81 @@ export default function Navigation() {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Compact Grid with Text Labels */}
-          <div className="hidden lg:block flex-1 max-w-5xl mx-8">
-            <div className="flex items-center justify-center space-x-1">
+          {/* Brockman/Bento Progressive Navigation - Left Aligned */}
+          {/* Extra Large screens: Full size navigation */}
+          <div className="hidden 2xl:flex flex-1 ml-8">
+            <div className="flex items-center space-x-3">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`flex flex-col items-center px-2 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                  className={`nav-item-xl ${
                     router.pathname === item.path
                       ? 'nav-link-active'
                       : 'nav-link'
                   }`}
                 >
-                  <span className="text-sm mb-1">{item.icon}</span>
-                  <span className="text-xs">{item.name}</span>
+                  <span className="text-base mb-1">{item.icon}</span>
+                  <span className="text-sm font-medium">{item.name}</span>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/admin"
-              className="btn-outline text-sm py-2 px-4"
-            >
-              ⚙️ Admin
-            </Link>
-            <Link
-              href="/visualizations"
-              className="btn-outline text-sm py-2 px-4"
-            >
-              📊 Visualize
-            </Link>
-            <Link
-              href="https://portal.candid-connections.com/user/login"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary text-sm py-2 px-4"
-            >
-              Portal Login
-            </Link>
+          {/* Large screens: Medium size navigation */}
+          <div className="hidden xl:flex 2xl:hidden flex-1 ml-6">
+            <div className="flex items-center space-x-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`nav-item-lg ${
+                    router.pathname === item.path
+                      ? 'nav-link-active'
+                      : 'nav-link'
+                  }`}
+                >
+                  <span className="text-sm mb-0.5">{item.icon}</span>
+                  <span className="text-xs font-medium">{item.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Medium screens: Small size navigation (10pt threshold) */}
+          <div className="hidden lg:flex xl:hidden flex-1 ml-4">
+            <div className="flex items-center space-x-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`nav-item-md ${
+                    router.pathname === item.path
+                      ? 'nav-link-active'
+                      : 'nav-link'
+                  }`}
+                >
+                  <span className="text-sm">{item.icon}</span>
+                  <span className="text-xs font-medium leading-tight">{item.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Small screens: Icon-only navigation (below 10pt threshold) */}
+          <div className="hidden md:flex lg:hidden flex-1 ml-4">
+            <div className="flex items-center space-x-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={router.pathname === item.path ? 'nav-icon-only-active' : 'nav-icon-only'}
+                  title={item.name}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -114,10 +158,51 @@ export default function Navigation() {
           </div>
         </div>
 
+        {/* Admin Controls Row - Second Tier (Brockman/Bento Left-Aligned) */}
+        {isAdmin && (
+          <div className="hidden md:block admin-controls-row">
+            {/* Large+ screens: Full admin controls */}
+            <div className="hidden lg:flex items-center ml-8 space-x-3">
+              {adminItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  {...(item.external && { target: "_blank", rel: "noopener noreferrer" })}
+                  className={`admin-control-lg ${
+                    item.type === 'primary' ? 'btn-primary' : 'btn-outline'
+                  }`}
+                >
+                  <span className="mr-2">{item.icon}</span>
+                  <span>{item.name}</span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Medium screens: Compact admin controls */}
+            <div className="flex lg:hidden items-center ml-6 space-x-2">
+              {adminItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  {...(item.external && { target: "_blank", rel: "noopener noreferrer" })}
+                  className={`admin-control-md ${
+                    item.type === 'primary' ? 'btn-primary' : 'btn-outline'
+                  }`}
+                  title={item.name}
+                >
+                  <span className="mr-1">{item.icon}</span>
+                  <span className="text-xs">{item.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="lg:hidden border-t border-candid-gray-200 py-4">
             <div className="space-y-2">
+              {/* Main Navigation Items */}
               {navItems.map((item) => (
                 <Link
                   key={item.path}
@@ -134,24 +219,28 @@ export default function Navigation() {
                 </Link>
               ))}
 
-              {/* Mobile CTA Buttons */}
-              <div className="pt-4 space-y-2">
-                <Link
-                  href="/visualizations"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full btn-outline text-center"
-                >
-                  📊 Visualize
-                </Link>
-                <Link
-                  href="https://portal.candid-connections.com/user/login"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full btn-primary text-center"
-                >
-                  Portal Login
-                </Link>
-              </div>
+              {/* Admin Controls for Mobile */}
+              {isAdmin && (
+                <div className="mobile-nav-section space-y-2">
+                  <div className="mobile-nav-header">
+                    Admin Controls
+                  </div>
+                  {adminItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      href={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      {...(item.external && { target: "_blank", rel: "noopener noreferrer" })}
+                      className={`block w-full text-center ${
+                        item.type === 'primary' ? 'btn-primary' : 'btn-outline'
+                      }`}
+                    >
+                      <span className="mr-2">{item.icon}</span>
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -4,76 +4,59 @@ import Layout from '../components/Layout'
 import AuthorityNetworkGraph from '../components/visualizations/AuthorityNetworkGraph'
 import NetworkVisualization3D from '../components/visualizations/NetworkVisualization3D'
 import { generateNetworkData, generateFocusedNetworkData } from '../lib/graphDataGenerator'
+import { useData } from '../contexts/DataContext'
 
 export default function Visualizations() {
-  const [data, setData] = useState({
-    companies: [],
-    hiringAuthorities: [],
-    jobSeekers: [],
-    skills: [],
-    positions: [],
-    matches: []
-  })
-  const [loading, setLoading] = useState(true)
+  const {
+    companies,
+    hiringAuthorities,
+    jobSeekers,
+    skills,
+    positions,
+    matches,
+    loading: dataLoading,
+    fetchAllData
+  } = useData()
+
   const [activeTab, setActiveTab] = useState('network')
   const [visualizationMode, setVisualizationMode] = useState('2d') // '2d' or '3d'
   const [networkData, setNetworkData] = useState({ nodes: [], links: [] })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchData = async () => {
+    // Fetch all data using DataContext if not already loaded
+    if (!dataLoading && companies.length === 0) {
+      fetchAllData()
+    }
+  }, [dataLoading, companies.length, fetchAllData])
+
+  useEffect(() => {
+    // Generate network data when DataContext data is available
+    if (!dataLoading && companies.length > 0) {
+      setLoading(true)
       try {
-        setLoading(true)
-
-        // Fetch all data in parallel
-        const [companiesRes, authoritiesRes, jobSeekersRes, skillsRes, positionsRes, matchesRes] = await Promise.all([
-          fetch('/api/companies'),
-          fetch('/api/hiring-authorities'),
-          fetch('/api/job-seekers'),
-          fetch('/api/skills'),
-          fetch('/api/positions'),
-          fetch('/api/matches')
-        ])
-
-        const [companies, authoritiesData, jobSeekersData, skills, positions, matchesData] = await Promise.all([
-          companiesRes.json(),
-          authoritiesRes.json(),
-          jobSeekersRes.json(),
-          skillsRes.json(),
-          positionsRes.json(),
-          matchesRes.json()
-        ])
-
-        const fetchedData = {
-          companies: companies.companies || companies,
-          hiringAuthorities: authoritiesData.authorities || authoritiesData,
-          jobSeekers: jobSeekersData.jobSeekers || jobSeekersData,
-          skills: skills.skills || skills,
-          positions: positions.positions || positions,
-          matches: matchesData.matches || matchesData
-        }
-
-        setData(fetchedData)
-
         // Generate enhanced network data with positions and proper edges
         const networkData = generateNetworkData(
-          fetchedData.companies,
-          fetchedData.hiringAuthorities,
-          fetchedData.jobSeekers,
-          fetchedData.skills,
-          fetchedData.positions,
-          fetchedData.matches
+          companies,
+          hiringAuthorities,
+          jobSeekers,
+          skills,
+          positions,
+          matches
         )
         setNetworkData(networkData)
-
+        console.log('Generated network data:', {
+          nodes: networkData.nodes.length,
+          links: networkData.links.length,
+          stats: networkData.stats
+        })
       } catch (error) {
-        console.error('Error fetching visualization data:', error)
+        console.error('Error generating visualization data:', error)
       } finally {
         setLoading(false)
       }
     }
-
-    fetchData()
-  }, [])
+  }, [dataLoading, companies, hiringAuthorities, jobSeekers, skills, positions, matches])
 
   const tabs = [
     { id: 'network', name: 'Authority Network', icon: '🌐' },
@@ -82,7 +65,7 @@ export default function Visualizations() {
     { id: 'skills', name: 'Skill Demand', icon: '📊' }
   ]
 
-  if (loading) {
+  if (loading || dataLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
@@ -116,27 +99,27 @@ export default function Visualizations() {
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{data.companies.length}</div>
+            <div className="text-2xl font-bold text-purple-600">{companies.length}</div>
             <div className="text-sm text-candid-gray-500">Companies</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-primary-600">{data.hiringAuthorities.length}</div>
+            <div className="text-2xl font-bold text-primary-600">{hiringAuthorities.length}</div>
             <div className="text-sm text-candid-gray-500">Authorities</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">{data.jobSeekers.length}</div>
+            <div className="text-2xl font-bold text-orange-600">{jobSeekers.length}</div>
             <div className="text-sm text-candid-gray-500">Job Seekers</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{data.skills.length}</div>
+            <div className="text-2xl font-bold text-green-600">{skills.length}</div>
             <div className="text-sm text-candid-gray-500">Skills</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-600">{data.positions.length}</div>
+            <div className="text-2xl font-bold text-red-600">{positions.length}</div>
             <div className="text-sm text-candid-gray-500">Positions</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent-600">{data.matches.length}</div>
+            <div className="text-2xl font-bold text-accent-600">{matches.length}</div>
             <div className="text-sm text-candid-gray-500">Matches</div>
           </div>
         </div>
@@ -253,8 +236,8 @@ export default function Visualizations() {
                   Organizational charts showing hiring authority levels within each company based on size and structure.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {data.companies.map((company) => {
-                    const companyAuthorities = data.hiringAuthorities.filter(auth =>
+                  {companies.map((company) => {
+                    const companyAuthorities = hiringAuthorities.filter(auth =>
                       auth.companyId === `companies/${company._key}`
                     )
 
@@ -313,7 +296,7 @@ export default function Visualizations() {
                 <div className="text-center text-candid-gray-500 py-12">
                   <div className="text-4xl mb-4">🔥</div>
                   <p>Interactive heatmap visualization coming soon...</p>
-                  <p className="text-sm mt-2">Will show {data.matches.length} authority matches</p>
+                  <p className="text-sm mt-2">Will show {matches.length} authority matches</p>
                 </div>
               </div>
             )}
@@ -332,8 +315,8 @@ export default function Visualizations() {
                   <div>
                     <h4 className="font-semibold mb-3">Most Common Skills (Job Seekers)</h4>
                     <div className="space-y-2">
-                      {data.skills.slice(0, 10).map((skill, index) => {
-                        const jobSeekerCount = data.jobSeekers.filter(js =>
+                      {skills.slice(0, 10).map((skill, index) => {
+                        const jobSeekerCount = jobSeekers.filter(js =>
                           js.skills?.includes(skill._key)
                         ).length
 
@@ -344,7 +327,7 @@ export default function Visualizations() {
                               <div className="w-20 bg-gray-200 rounded-full h-2">
                                 <div
                                   className="bg-primary-500 h-2 rounded-full"
-                                  style={{ width: `${(jobSeekerCount / data.jobSeekers.length) * 100}%` }}
+                                  style={{ width: `${(jobSeekerCount / jobSeekers.length) * 100}%` }}
                                 ></div>
                               </div>
                               <span className="text-xs text-candid-gray-500">{jobSeekerCount}</span>
@@ -359,8 +342,8 @@ export default function Visualizations() {
                   <div>
                     <h4 className="font-semibold mb-3">Most Demanded Skills (Authorities)</h4>
                     <div className="space-y-2">
-                      {data.skills.slice(0, 10).map((skill, index) => {
-                        const authorityCount = data.hiringAuthorities.filter(auth =>
+                      {skills.slice(0, 10).map((skill, index) => {
+                        const authorityCount = hiringAuthorities.filter(auth =>
                           auth.skillsLookingFor?.includes(skill.name)
                         ).length
 
@@ -371,7 +354,7 @@ export default function Visualizations() {
                               <div className="w-20 bg-gray-200 rounded-full h-2">
                                 <div
                                   className="bg-accent-500 h-2 rounded-full"
-                                  style={{ width: `${(authorityCount / data.hiringAuthorities.length) * 100}%` }}
+                                  style={{ width: `${(authorityCount / hiringAuthorities.length) * 100}%` }}
                                 ></div>
                               </div>
                               <span className="text-xs text-candid-gray-500">{authorityCount}</span>
@@ -398,26 +381,26 @@ export default function Visualizations() {
                 <div className="text-3xl mb-2">🎯</div>
                 <h4 className="font-semibold mb-2">Match Quality</h4>
                 <p className="text-sm text-candid-gray-600">
-                  {data.matches.filter(m => m.score >= 80).length} high-quality matches (80%+ score)
-                  out of {data.matches.length} total connections
+                  {matches.filter(m => (m.score || m.matchScore || 0) >= 80).length} high-quality matches (80%+ score)
+                  out of {matches.length} total connections
                 </p>
               </div>
               <div className="text-center">
                 <div className="text-3xl mb-2">🏢</div>
                 <h4 className="font-semibold mb-2">Company Distribution</h4>
                 <p className="text-sm text-candid-gray-600">
-                  {data.companies.filter(c => c.employeeCount < 100).length} startups, {' '}
-                  {data.companies.filter(c => c.employeeCount >= 100 && c.employeeCount < 1000).length} mid-size, {' '}
-                  {data.companies.filter(c => c.employeeCount >= 1000).length} enterprise
+                  {companies.filter(c => c.employeeCount < 100).length} startups, {' '}
+                  {companies.filter(c => c.employeeCount >= 100 && c.employeeCount < 1000).length} mid-size, {' '}
+                  {companies.filter(c => c.employeeCount >= 1000).length} enterprise
                 </p>
               </div>
               <div className="text-center">
                 <div className="text-3xl mb-2">👔</div>
                 <h4 className="font-semibold mb-2">Authority Levels</h4>
                 <p className="text-sm text-candid-gray-600">
-                  {data.hiringAuthorities.filter(a => a.hiringPower === 'Ultimate').length} ultimate, {' '}
-                  {data.hiringAuthorities.filter(a => a.hiringPower === 'High').length} high, {' '}
-                  {data.hiringAuthorities.filter(a => a.hiringPower === 'Medium').length} medium power authorities
+                  {hiringAuthorities.filter(a => a.hiringPower === 'Ultimate').length} ultimate, {' '}
+                  {hiringAuthorities.filter(a => a.hiringPower === 'High').length} high, {' '}
+                  {hiringAuthorities.filter(a => a.hiringPower === 'Medium').length} medium power authorities
                 </p>
               </div>
             </div>
