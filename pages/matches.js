@@ -106,12 +106,14 @@ export default function Matches() {
     }
   }
 
-  if (loading) {
+  // More specific loading check to prevent infinite loops
+  if (loading.matches || loading.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            <span className="ml-3 text-gray-600">Loading matches...</span>
           </div>
         </div>
       </Layout>
