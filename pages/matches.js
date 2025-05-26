@@ -120,12 +120,29 @@ export default function Matches() {
     )
   }
 
-  if (errors && Object.keys(errors).length > 0) {
+  // Enhanced error handling with proper filtering and logging
+  const activeErrors = Object.entries(errors || {})
+    .filter(([, error]) => error !== null && error !== undefined)
+    .map(([key, error]) => `${key}: ${error}`)
+
+  if (activeErrors.length > 0) {
+    console.error('Matches page errors:', errors)
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            Error loading data: {Object.values(errors).join(', ')}
+            <div className="font-semibold mb-2">Error loading data:</div>
+            <ul className="list-disc list-inside space-y-1">
+              {activeErrors.map((error, index) => (
+                <li key={index} className="text-sm">{error}</li>
+              ))}
+            </ul>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700"
+            >
+              🔄 Retry
+            </button>
           </div>
         </div>
       </Layout>
