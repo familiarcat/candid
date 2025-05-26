@@ -54,7 +54,7 @@ const generateCompanyFocusedData = (companyId, allData) => {
     name: company.name,
     type: 'company',
     size: 20,
-    color: '#3b82f6',
+    color: '#8b5cf6', // purple - FIXED
     central: true
   })
 
@@ -171,7 +171,7 @@ const generateAuthorityFocusedData = (authorityId, allData) => {
       name: company.name,
       type: 'company',
       size: 16,
-      color: '#3b82f6'
+      color: '#8b5cf6' // purple - FIXED
     })
 
     links.push({
@@ -335,7 +335,7 @@ const generateJobSeekerFocusedData = (jobSeekerId, allData) => {
           name: company.name,
           type: 'company',
           size: 12,
-          color: '#3b82f6'
+          color: '#8b5cf6' // purple - FIXED
         })
 
         links.push({
@@ -437,7 +437,7 @@ const generateSkillFocusedData = (skillId, allData) => {
         name: company.name,
         type: 'company',
         size: 12,
-        color: '#3b82f6'
+        color: '#8b5cf6' // purple - FIXED
       })
 
       links.push({
@@ -494,7 +494,7 @@ const generatePositionFocusedData = (positionId, allData) => {
       name: company.name,
       type: 'company',
       size: 16,
-      color: '#3b82f6'
+      color: '#8b5cf6' // purple - FIXED
     })
 
     links.push({
@@ -516,7 +516,7 @@ const generatePositionFocusedData = (positionId, allData) => {
         name: authority.name,
         type: 'authority',
         size: 12,
-        color: '#059669'
+        color: '#00d4ff' // cyan - FIXED
       })
 
       links.push({
@@ -539,7 +539,7 @@ const generatePositionFocusedData = (positionId, allData) => {
           name: skill.name,
           type: 'skill',
           size: 14,
-          color: '#f59e0b'
+          color: '#10b981' // green - FIXED
         })
 
         links.push({
@@ -568,7 +568,7 @@ const generatePositionFocusedData = (positionId, allData) => {
         name: jobSeeker.name,
         type: 'jobSeeker',
         size: 12,
-        color: '#8b5cf6'
+        color: '#f97316' // orange - FIXED
       })
 
       links.push({
@@ -625,7 +625,7 @@ const generateMatchFocusedData = (matchId, allData) => {
     name: jobSeeker.name,
     type: 'jobSeeker',
     size: 16,
-    color: '#8b5cf6',
+    color: '#f97316', // orange - FIXED
     central: true
   })
 
@@ -634,7 +634,7 @@ const generateMatchFocusedData = (matchId, allData) => {
     name: authority.name,
     type: 'authority',
     size: 16,
-    color: '#10b981',
+    color: '#00d4ff', // cyan - FIXED
     central: true
   })
 
@@ -655,7 +655,7 @@ const generateMatchFocusedData = (matchId, allData) => {
       name: company.name,
       type: 'company',
       size: 14,
-      color: '#3b82f6'
+      color: '#8b5cf6' // purple - FIXED
     })
 
     links.push({
@@ -684,7 +684,7 @@ const generateMatchFocusedData = (matchId, allData) => {
         name: skill.name,
         type: 'skill',
         size: 12,
-        color: '#f59e0b'
+        color: '#10b981' // green - FIXED
       })
 
       links.push({

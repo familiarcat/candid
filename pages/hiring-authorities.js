@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
+import UniversalProfileModal from '../components/ui/UniversalProfileModal'
 import VisualizationModal from '../components/VisualizationModal'
 import { CompanyLink, SkillLink } from '../components/ui/LinkButton'
 import { useData } from '../contexts/DataContext'
@@ -24,6 +25,14 @@ function HiringAuthoritiesContent() {
     companySize: '',
     industry: ''
   })
+
+  const [selectedAuthority, setSelectedAuthority] = useState(null)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+
+  const handleViewProfile = (authority) => {
+    setSelectedAuthority(authority)
+    setShowProfileModal(true)
+  }
 
   // Data comes from DataContext - no need for useEffect
 
@@ -231,12 +240,12 @@ function HiringAuthoritiesContent() {
 
                   {/* Actions */}
                   <div className="flex space-x-2">
-                    <Link
-                      href={`/hiring-authorities/${authority.id || authority._key}`}
-                      className="btn-primary text-sm py-2 px-4 flex-1 text-center"
+                    <button
+                      onClick={() => handleViewProfile(authority)}
+                      className="btn-primary text-sm py-2 px-4 flex-1"
                     >
                       View Profile
-                    </Link>
+                    </button>
                     <button
                       onClick={() => {
                         visualization.controls.setSelectedEntity(authority.id || authority._key)
@@ -258,6 +267,14 @@ function HiringAuthoritiesContent() {
             <p className="text-candid-gray-600">No hiring authorities match your current filters.</p>
           </div>
         )}
+
+        {/* Universal Profile Modal */}
+        <UniversalProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          entity={selectedAuthority}
+          entityType="authority"
+        />
 
         {/* Authority-Focused Visualization Modal */}
         <VisualizationModal
