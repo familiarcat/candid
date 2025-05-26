@@ -174,28 +174,46 @@ export function SkillCard({ skill, onViewDetails, onFindTalent }) {
 
 // Position Card Component
 export function PositionCard({ position, onViewDetails, onFindMatches, onNetworkView }) {
-  const primaryMetrics = [
-    {
-      label: 'Level',
-      value: position.level || 'Mid',
-      color: position.level === 'Senior' ? 'purple' : position.level === 'Junior' ? 'green' : 'blue'
-    },
-    {
-      label: 'Type',
-      value: position.type || 'Full-time',
-      color: position.type === 'Contract' ? 'orange' : position.type === 'Part-time' ? 'yellow' : 'emerald'
-    },
-    {
-      label: 'Applicants',
-      value: position.applicants || 0,
-      color: 'gray'
-    },
-    {
-      label: 'Status',
-      value: position.status || 'active',
-      color: position.status === 'active' ? 'green' : position.status === 'paused' ? 'yellow' : 'red'
+  const getColorClass = (color) => {
+    const colorMap = {
+      purple: 'text-purple-600',
+      green: 'text-green-600',
+      blue: 'text-blue-600',
+      orange: 'text-orange-600',
+      yellow: 'text-yellow-600',
+      emerald: 'text-emerald-600',
+      gray: 'text-gray-600',
+      red: 'text-red-600'
     }
-  ]
+    return colorMap[color] || 'text-gray-600'
+  }
+
+  const primaryMetrics = (
+    <>
+      <div className="text-center">
+        <div className={`text-sm font-bold ${getColorClass(position.level === 'Senior' ? 'purple' : position.level === 'Junior' ? 'green' : 'blue')}`}>
+          {position.level || 'Mid'}
+        </div>
+        <div className="text-xs text-gray-500">Level</div>
+      </div>
+      <div className="text-center">
+        <div className={`text-sm font-bold ${getColorClass(position.type === 'Contract' ? 'orange' : position.type === 'Part-time' ? 'yellow' : 'emerald')}`}>
+          {position.type || 'Full-time'}
+        </div>
+        <div className="text-xs text-gray-500">Type</div>
+      </div>
+      <div className="text-center">
+        <div className="text-sm font-bold text-gray-600">{position.applicants || 0}</div>
+        <div className="text-xs text-gray-500">Applicants</div>
+      </div>
+      <div className="text-center">
+        <div className={`text-sm font-bold ${getColorClass(position.status === 'active' ? 'green' : position.status === 'paused' ? 'yellow' : 'red')}`}>
+          {position.status || 'active'}
+        </div>
+        <div className="text-xs text-gray-500">Status</div>
+      </div>
+    </>
+  )
 
   const expandedContent = (
     <div className="space-y-4">
@@ -316,28 +334,44 @@ export function PositionCard({ position, onViewDetails, onFindMatches, onNetwork
 
 // Company Card Component
 export function CompanyCard({ company, onViewDetails, onFindMatches, onNetworkView }) {
-  const primaryMetrics = [
-    {
-      label: 'Industry',
-      value: company.industry || 'Technology',
-      color: 'blue'
-    },
-    {
-      label: 'Size',
-      value: company.size || `${company.employeeCount || 100} employees`,
-      color: company.size === 'Large' ? 'purple' : company.size === 'Medium' ? 'blue' : 'green'
-    },
-    {
-      label: 'Open Positions',
-      value: company.openPositions || 0,
-      color: 'emerald'
-    },
-    {
-      label: 'Authorities',
-      value: company.authorityCount || 0,
-      color: 'orange'
+  const getColorClass = (color) => {
+    const colorMap = {
+      purple: 'text-purple-600',
+      green: 'text-green-600',
+      blue: 'text-blue-600',
+      orange: 'text-orange-600',
+      yellow: 'text-yellow-600',
+      emerald: 'text-emerald-600',
+      gray: 'text-gray-600',
+      red: 'text-red-600'
     }
-  ]
+    return colorMap[color] || 'text-gray-600'
+  }
+
+  const primaryMetrics = (
+    <>
+      <div className="text-center">
+        <div className="text-sm font-bold text-blue-600">
+          {company.industry || 'Technology'}
+        </div>
+        <div className="text-xs text-gray-500">Industry</div>
+      </div>
+      <div className="text-center">
+        <div className={`text-sm font-bold ${getColorClass(company.size === 'Large' ? 'purple' : company.size === 'Medium' ? 'blue' : 'green')}`}>
+          {company.size || `${company.employeeCount || 100} employees`}
+        </div>
+        <div className="text-xs text-gray-500">Size</div>
+      </div>
+      <div className="text-center">
+        <div className="text-sm font-bold text-emerald-600">{company.openPositions || 0}</div>
+        <div className="text-xs text-gray-500">Open Positions</div>
+      </div>
+      <div className="text-center">
+        <div className="text-sm font-bold text-orange-600">{company.authorityCount || 0}</div>
+        <div className="text-xs text-gray-500">Authorities</div>
+      </div>
+    </>
+  )
 
   const expandedContent = (
     <div className="space-y-4">
