@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import Head from 'next/head'
 import Layout from '../components/Layout'
 import DashboardCards from '../components/DashboardCards'
@@ -17,15 +18,22 @@ export default function Home() {
     matches
   } = useData()
 
-  // Generate network data for 3D background visualization
-  const networkData = companies.length > 0 ? generateNetworkData(
-    companies,
-    hiringAuthorities,
-    jobSeekers,
-    skills,
-    positions,
-    matches
-  ) : { nodes: [], links: [] }
+  // Memoized network data for 3D background visualization - only regenerates when data changes
+  const networkData = useMemo(() => {
+    if (companies.length === 0) {
+      return { nodes: [], links: [] }
+    }
+
+    console.log('🎨 Generating dashboard 3D background data (memoized)...')
+    return generateNetworkData(
+      companies,
+      hiringAuthorities,
+      jobSeekers,
+      skills,
+      positions,
+      matches
+    )
+  }, [companies, hiringAuthorities, jobSeekers, skills, positions, matches])
 
   return (
     <Layout>
