@@ -7,6 +7,9 @@
 /* Import mobile-optimized styles */
 @import './mobile.css';
 
+/* Import accessibility styles */
+@import './accessibility.css';
+
 /* Candid Connections Global Styles */
 @layer base {
   html {
