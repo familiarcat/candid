@@ -355,9 +355,9 @@ function GlobalViewContent() {
               </div>
             </div>
 
-            {/* Enhanced Grid with Proper Alignment */}
+            {/* Enhanced Grid with Salinger & Brockman Design Theory - Integrated Insights */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              {/* High Match Potential */}
+              {/* High Match Potential with Top Matches Integrated */}
               <div className={`p-6 rounded-lg border-2 ${getTrendDisplay(networkInsights.highMatchPotential.trend).bg} ${
                 getTrendDisplay(networkInsights.highMatchPotential.trend).trend === 'up' ? 'border-green-200' :
                 getTrendDisplay(networkInsights.highMatchPotential.trend).trend === 'down' ? 'border-red-200' : 'border-gray-200'
@@ -368,6 +368,22 @@ function GlobalViewContent() {
                     {getTrendDisplay(networkInsights.highMatchPotential.trend).icon}
                   </span>
                 </div>
+
+                {/* Top Potential Matches - Integrated at Top */}
+                {networkInsights.highMatchPotential.topMatches.length > 0 && (
+                  <div className="mb-4 p-3 bg-white bg-opacity-60 rounded border border-gray-200">
+                    <h4 className="font-medium text-gray-700 text-xs mb-2">⭐ Top Potential Matches</h4>
+                    <div className="space-y-1">
+                      {networkInsights.highMatchPotential.topMatches.slice(0, 2).map((match, idx) => (
+                        <div key={idx} className="text-xs">
+                          <div className="font-medium text-gray-800 truncate">{match.jobSeekerName}</div>
+                          <div className="text-gray-600 text-xs truncate">{match.company} • {match.score}%</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-3xl font-bold text-gray-900 mb-2">
                   {networkInsights.highMatchPotential.value}
                 </div>
@@ -379,7 +395,7 @@ function GlobalViewContent() {
                 </div>
               </div>
 
-              {/* Growing Connections */}
+              {/* Growing Connections with Recent Connections Integrated */}
               <div className={`p-6 rounded-lg border-2 ${getTrendDisplay(networkInsights.growingConnections.trend).bg} ${
                 getTrendDisplay(networkInsights.growingConnections.trend).trend === 'up' ? 'border-green-200' :
                 getTrendDisplay(networkInsights.growingConnections.trend).trend === 'down' ? 'border-red-200' : 'border-gray-200'
@@ -390,6 +406,22 @@ function GlobalViewContent() {
                     {getTrendDisplay(networkInsights.growingConnections.trend).icon}
                   </span>
                 </div>
+
+                {/* Recent Connections - Integrated at Top */}
+                {networkInsights.growingConnections.recentConnections.length > 0 && (
+                  <div className="mb-4 p-3 bg-white bg-opacity-60 rounded border border-gray-200">
+                    <h4 className="font-medium text-gray-700 text-xs mb-2">🔗 Recent Connections</h4>
+                    <div className="space-y-1">
+                      {networkInsights.growingConnections.recentConnections.slice(0, 2).map((conn, idx) => (
+                        <div key={idx} className="text-xs">
+                          <div className="font-medium text-gray-800 truncate">{conn.source}</div>
+                          <div className="text-gray-600 text-xs truncate">→ {conn.target} • {conn.score}%</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-3xl font-bold text-gray-900 mb-2">
                   {networkInsights.growingConnections.value}
                 </div>
@@ -401,7 +433,7 @@ function GlobalViewContent() {
                 </div>
               </div>
 
-              {/* Skill Gaps */}
+              {/* Skill Gaps with Top Gaps Integrated */}
               <div className={`p-6 rounded-lg border-2 ${getTrendDisplay(networkInsights.skillGaps.trend).bg} ${
                 getTrendDisplay(networkInsights.skillGaps.trend).trend === 'up' ? 'border-red-200' :
                 getTrendDisplay(networkInsights.skillGaps.trend).trend === 'down' ? 'border-green-200' : 'border-gray-200'
@@ -412,6 +444,27 @@ function GlobalViewContent() {
                     {getTrendDisplay(networkInsights.skillGaps.trend).icon}
                   </span>
                 </div>
+
+                {/* Top Skill Gaps - Integrated at Top */}
+                {networkInsights.skillGaps.topGaps.length > 0 && (
+                  <div className="mb-4 p-3 bg-white bg-opacity-60 rounded border border-gray-200">
+                    <h4 className="font-medium text-gray-700 text-xs mb-2">🔥 Top Skill Gaps</h4>
+                    <div className="space-y-1">
+                      {networkInsights.skillGaps.topGaps.slice(0, 3).map((gap, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-xs">
+                          <span className="text-gray-600 truncate">{gap.name}</span>
+                          <span className={`font-medium ml-2 ${
+                            gap.severity === 'high' ? 'text-red-600' :
+                            gap.severity === 'medium' ? 'text-orange-600' : 'text-yellow-600'
+                          }`}>
+                            +{gap.gap}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-3xl font-bold text-gray-900 mb-2">
                   {networkInsights.skillGaps.value}
                 </div>
@@ -424,57 +477,18 @@ function GlobalViewContent() {
               </div>
             </div>
 
-            {/* Detailed Insights */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
-              {/* Top Skill Gaps */}
-              {networkInsights.skillGaps.topGaps.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-3">🔥 Top Skill Gaps</h4>
-                  <div className="space-y-2">
-                    {networkInsights.skillGaps.topGaps.slice(0, 5).map((gap, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600 truncate">{gap.name}</span>
-                        <span className={`font-medium ml-2 ${
-                          gap.severity === 'high' ? 'text-red-600' :
-                          gap.severity === 'medium' ? 'text-orange-600' : 'text-yellow-600'
-                        }`}>
-                          +{gap.gap}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+            {/* Network Analysis Summary - Salinger & Brockman Minimalist Approach */}
+            <div className="pt-6 border-t border-gray-200">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-2">
+                  Network analysis based on {stats.totalNodes} entities and {stats.totalLinks} connections
+                </p>
+                <div className="flex justify-center space-x-6 text-xs text-gray-500">
+                  <span>Density: {networkMetrics.density}%</span>
+                  <span>Avg Connections: {networkMetrics.avgConnections}</span>
+                  <span>Central Nodes: {networkMetrics.centralNodes}</span>
                 </div>
-              )}
-
-              {/* Top Matches */}
-              {networkInsights.highMatchPotential.topMatches.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-3">⭐ Top Potential Matches</h4>
-                  <div className="space-y-2">
-                    {networkInsights.highMatchPotential.topMatches.slice(0, 3).map((match, idx) => (
-                      <div key={idx} className="text-sm">
-                        <div className="font-medium text-gray-800 truncate">{match.jobSeekerName}</div>
-                        <div className="text-gray-600 text-xs truncate">{match.company} • {match.score}%</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent Connections */}
-              {networkInsights.growingConnections.recentConnections.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-3">🔗 Recent Connections</h4>
-                  <div className="space-y-2">
-                    {networkInsights.growingConnections.recentConnections.slice(0, 3).map((conn, idx) => (
-                      <div key={idx} className="text-sm">
-                        <div className="font-medium text-gray-800 truncate">{conn.source}</div>
-                        <div className="text-gray-600 text-xs truncate">→ {conn.target} • {conn.score}%</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         )}

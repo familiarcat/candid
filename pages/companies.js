@@ -8,6 +8,7 @@ import VisualizationModal from '../components/VisualizationModal'
 import { CompanyCard } from '../components/ui/CollapsibleCard'
 import { AuthorityLink } from '../components/ui/LinkButton'
 import { formatDate, getEntityIcon } from '../lib/utils'
+import { getEntityUrl, getMatchesUrl, getVisualizationUrl, validateEntityData, getRelatedEntities } from '../lib/crossPageNavigation'
 import { useData } from '../contexts/DataContext'
 import { usePageVisualization } from '../hooks/useComponentVisualization'
 import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
@@ -41,6 +42,32 @@ function CompaniesContent() {
   const [filterIndustry, setFilterIndustry] = useState('all')
   const [filterSize, setFilterSize] = useState('all')
   const [sortBy, setSortBy] = useState('name')
+  const [dataQualityIssues, setDataQualityIssues] = useState([])
+
+  // Handle URL parameters for cross-page navigation
+  useEffect(() => {
+    const { query } = router
+    if (query.industry) setFilterIndustry(query.industry)
+    if (query.size) setFilterSize(query.size)
+    if (query.search) setSearchTerm(query.search)
+  }, [router.query])
+
+  // Validate data quality for all companies
+  useEffect(() => {
+    if (companies && companies.length > 0) {
+      const issues = []
+      companies.forEach(company => {
+        const validation = validateEntityData(company, 'company')
+        if (validation.warnings.length > 0) {
+          issues.push({
+            entity: company.name || 'Unknown Company',
+            issues: validation.warnings
+          })
+        }
+      })
+      setDataQualityIssues(issues)
+    }
+  }, [companies])
 
   // Data comes from DataContext - no need for useEffect data fetching
 
@@ -108,7 +135,30 @@ function CompaniesContent() {
   }
 
   const handleFindMatches = (company) => {
-    router.push(`/matches?company=${company.id || company._key}`)
+    const matchesUrl = getMatchesUrl({ company: company.id || company._key })
+    router.push(matchesUrl)
+  }
+
+  // Enhanced navigation handlers for interoperational functionality
+  const handleViewPositions = (company) => {
+    const positionsUrl = getEntityUrl('position', null, { company: company.id || company._key })
+    router.push(positionsUrl)
+  }
+
+  const handleViewAuthorities = (company) => {
+    const authoritiesUrl = getEntityUrl('authority', null, { company: company.id || company._key })
+    router.push(authoritiesUrl)
+  }
+
+  const handleViewSkills = (company) => {
+    // Get related skills for this company
+    const allData = { companies, positions, skills, hiringAuthorities, jobSeekers, matches }
+    const related = getRelatedEntities(company, 'company', allData)
+
+    if (related.skills.length > 0) {
+      const skillsUrl = getEntityUrl('skill', null, { company: company.id || company._key })
+      router.push(skillsUrl)
+    }
   }
 
   // Enhance companies with real database calculations
@@ -263,6 +313,23 @@ function CompaniesContent() {
               {sortedCompanies.length} companies found
             </div>
           </div>
+
+          {/* Data Quality Indicator - Salinger & Brockman Minimalist Approach */}
+          {dataQualityIssues.length > 0 && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-amber-600 mr-2">⚠️</span>
+                  <span className="text-sm text-amber-800">
+                    Data quality: {dataQualityIssues.length} companies have incomplete information
+                  </span>
+                </div>
+                <button className="text-xs text-amber-600 hover:text-amber-800 underline">
+                  View Details
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Enhanced Companies Grid with Collapsible Cards */}

@@ -419,20 +419,27 @@ export function CompanyCard({ company, onViewDetails, onFindMatches, onNetworkVi
       )}
 
       {/* Key Contacts */}
-      {company.hiringAuthorities && company.hiringAuthorities.length > 0 && (
+      {Array.isArray(company.hiringAuthorities) && company.hiringAuthorities.length > 0 && (
         <div>
           <label className="text-sm font-medium text-gray-700 mb-2 block">Key Contacts</label>
           <div className="space-y-2">
-            {company.hiringAuthorities.slice(0, 3).map((authority, index) => (
-              <div key={authority.id || index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                <div className="flex items-center text-sm">
-                  <span className="mr-2">👤</span>
-                  <span className="font-medium">{authority.name}</span>
-                  <span className="mx-2 text-gray-400">•</span>
-                  <span className="text-gray-600">{authority.role || authority.level}</span>
+            {company.hiringAuthorities.slice(0, 3).map((authority, index) => {
+              // Defensive programming - ensure authority is an object
+              if (!authority || typeof authority !== 'object') {
+                return null
+              }
+
+              return (
+                <div key={authority.id || authority._key || index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                  <div className="flex items-center text-sm">
+                    <span className="mr-2">👤</span>
+                    <span className="font-medium">{authority.name || 'Unknown'}</span>
+                    <span className="mx-2 text-gray-400">•</span>
+                    <span className="text-gray-600">{authority.role || authority.level || 'Staff'}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            }).filter(Boolean)}
             {company.hiringAuthorities.length > 3 && (
               <p className="text-xs text-gray-500">
                 +{company.hiringAuthorities.length - 3} more contacts
