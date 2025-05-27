@@ -8,6 +8,7 @@ import VisualizationModal from '../components/VisualizationModal'
 import { PositionCard } from '../components/ui/CollapsibleCard'
 import { CompanyLink, SkillLink } from '../components/ui/LinkButton'
 import { formatDate, getEntityIcon } from '../lib/utils'
+import { getEntityUrl, getMatchesUrl, getVisualizationUrl, validateEntityData, getRelatedEntities } from '../lib/crossPageNavigation'
 import { useData } from '../contexts/DataContext'
 import { usePageVisualization } from '../hooks/useComponentVisualization'
 import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
@@ -39,6 +40,38 @@ function PositionsContent() {
   const [filterLevel, setFilterLevel] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [sortBy, setSortBy] = useState('posted')
+  const [dataQualityIssues, setDataQualityIssues] = useState([])
+
+  // Handle URL parameters for cross-page navigation
+  useEffect(() => {
+    const { query } = router
+    if (query.company) {
+      setSearchTerm(query.company)
+    }
+    if (query.skill) {
+      setSearchTerm(query.skill)
+    }
+    if (query.level) setFilterLevel(query.level)
+    if (query.type) setFilterType(query.type)
+    if (query.search) setSearchTerm(query.search)
+  }, [router.query])
+
+  // Validate data quality for all positions
+  useEffect(() => {
+    if (positions && positions.length > 0) {
+      const issues = []
+      positions.forEach(position => {
+        const validation = validateEntityData(position, 'position')
+        if (validation.warnings.length > 0) {
+          issues.push({
+            entity: position.title || 'Unknown Position',
+            issues: validation.warnings
+          })
+        }
+      })
+      setDataQualityIssues(issues)
+    }
+  }, [positions])
 
   // Calculate real database metrics for positions
   const calculatePositionMetrics = (position) => {
@@ -86,7 +119,30 @@ function PositionsContent() {
   }
 
   const handleFindMatches = (position) => {
-    router.push(`/matches?position=${position.id}`)
+    const matchesUrl = getMatchesUrl({ position: position.id || position._key })
+    router.push(matchesUrl)
+  }
+
+  // Enhanced navigation handlers for interoperational functionality
+  const handleViewCompany = (position) => {
+    const companiesUrl = getEntityUrl('company', null, { search: position.company })
+    router.push(companiesUrl)
+  }
+
+  const handleViewSkills = (position) => {
+    // Get related skills for this position
+    const allData = { companies, positions, skills, jobSeekers }
+    const related = getRelatedEntities(position, 'position', allData)
+
+    if (related.skills.length > 0) {
+      const skillsUrl = getEntityUrl('skill', null, { position: position.id || position._key })
+      router.push(skillsUrl)
+    }
+  }
+
+  const handleViewCandidates = (position) => {
+    const jobSeekersUrl = getEntityUrl('jobSeeker', null, { position: position.id || position._key })
+    router.push(jobSeekersUrl)
   }
 
   const getCompanyByName = (companyName) => {
@@ -306,6 +362,23 @@ function PositionsContent() {
               {sortedPositions.length} positions found
             </div>
           </div>
+
+          {/* Data Quality Indicator - Salinger & Brockman Minimalist Approach */}
+          {dataQualityIssues.length > 0 && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-amber-600 mr-2">⚠️</span>
+                  <span className="text-sm text-amber-800">
+                    Data quality: {dataQualityIssues.length} positions have incomplete information
+                  </span>
+                </div>
+                <button className="text-xs text-amber-600 hover:text-amber-800 underline">
+                  View Details
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Enhanced Positions Grid with Collapsible Cards */}

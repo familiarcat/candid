@@ -8,6 +8,7 @@ import { SkillLink, CompanyLink } from '../components/ui/LinkButton'
 import { CollapsibleCard } from '../components/ui/CollapsibleCard'
 import AuthorityNetworkGraph from '../components/visualizations/AuthorityNetworkGraph'
 import { transformToNetworkData } from '../lib/visualizationData'
+import { getEntityUrl, getMatchesUrl, getVisualizationUrl, validateEntityData, getRelatedEntities } from '../lib/crossPageNavigation'
 import { useData } from '../contexts/DataContext'
 import { usePageVisualization } from '../hooks/useComponentVisualization'
 import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
@@ -43,6 +44,39 @@ function JobSeekersContent() {
   const [skillFilter, setSkillFilter] = useState('')
   const [experienceFilter, setExperienceFilter] = useState('')
   const [locationFilter, setLocationFilter] = useState('')
+  const [dataQualityIssues, setDataQualityIssues] = useState([])
+
+  // Handle URL parameters for cross-page navigation
+  useEffect(() => {
+    const { query } = router
+    if (query.skill) setSkillFilter(query.skill)
+    if (query.position) {
+      setSearchTerm(query.position)
+    }
+    if (query.company) {
+      setSearchTerm(query.company)
+    }
+    if (query.experience) setExperienceFilter(query.experience)
+    if (query.location) setLocationFilter(query.location)
+    if (query.search) setSearchTerm(query.search)
+  }, [router.query])
+
+  // Validate data quality for all job seekers
+  useEffect(() => {
+    if (jobSeekers && jobSeekers.length > 0) {
+      const issues = []
+      jobSeekers.forEach(jobSeeker => {
+        const validation = validateEntityData(jobSeeker, 'jobSeeker')
+        if (validation.warnings.length > 0) {
+          issues.push({
+            entity: jobSeeker.name || 'Unknown Job Seeker',
+            issues: validation.warnings
+          })
+        }
+      })
+      setDataQualityIssues(issues)
+    }
+  }, [jobSeekers])
 
   // Update network data when data changes
   useEffect(() => {
@@ -92,6 +126,30 @@ function JobSeekersContent() {
     }
     setNetworkData(focusedNetworkData)
     setShowNetworkFocus(true)
+  }
+
+  // Enhanced navigation handlers for interoperational functionality
+  const handleViewSkills = (jobSeeker) => {
+    if (jobSeeker.skills && jobSeeker.skills.length > 0) {
+      const skillsUrl = getEntityUrl('skill', null, { jobSeeker: jobSeeker.id || jobSeeker._key })
+      router.push(skillsUrl)
+    }
+  }
+
+  const handleFindMatches = (jobSeeker) => {
+    const matchesUrl = getMatchesUrl({ jobSeeker: jobSeeker.id || jobSeeker._key })
+    router.push(matchesUrl)
+  }
+
+  const handleViewPositions = (jobSeeker) => {
+    // Get related positions for this job seeker
+    const allData = { companies, positions, skills, jobSeekers, matches }
+    const related = getRelatedEntities(jobSeeker, 'jobSeeker', allData)
+
+    if (related.positions.length > 0) {
+      const positionsUrl = getEntityUrl('position', null, { jobSeeker: jobSeeker.id || jobSeeker._key })
+      router.push(positionsUrl)
+    }
   }
 
   // Filtering logic
@@ -248,6 +306,23 @@ function JobSeekersContent() {
                 >
                   Clear all filters
                 </button>
+              </div>
+            )}
+
+            {/* Data Quality Indicator - Salinger & Brockman Minimalist Approach */}
+            {dataQualityIssues.length > 0 && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <span className="text-amber-600 mr-2">⚠️</span>
+                    <span className="text-sm text-amber-800">
+                      Data quality: {dataQualityIssues.length} job seekers have incomplete information
+                    </span>
+                  </div>
+                  <button className="text-xs text-amber-600 hover:text-amber-800 underline">
+                    View Details
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -5,6 +5,7 @@ import Layout from '../components/Layout'
 import DetailModal from '../components/ui/DetailModal'
 import VisualizationModal from '../components/VisualizationModal'
 import { SkillCard } from '../components/ui/CollapsibleCard'
+import { getEntityUrl, getMatchesUrl, getVisualizationUrl, validateEntityData, getRelatedEntities } from '../lib/crossPageNavigation'
 import { useData } from '../contexts/DataContext'
 import { usePageVisualization } from '../hooks/useComponentVisualization'
 import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
@@ -36,6 +37,37 @@ function SkillsContent() {
   const [enhancedSalaryData, setEnhancedSalaryData] = useState({})
   const [loadingEnhancement, setLoadingEnhancement] = useState(false)
   const [autoEnhancementComplete, setAutoEnhancementComplete] = useState(false)
+  const [dataQualityIssues, setDataQualityIssues] = useState([])
+
+  // Handle URL parameters for cross-page navigation
+  useEffect(() => {
+    const { query } = router
+    if (query.company) {
+      setSearchTerm(query.company)
+    }
+    if (query.position) {
+      setSearchTerm(query.position)
+    }
+    if (query.category) setFilterCategory(query.category)
+    if (query.search) setSearchTerm(query.search)
+  }, [router.query])
+
+  // Validate data quality for all skills
+  useEffect(() => {
+    if (skills && skills.length > 0) {
+      const issues = []
+      skills.forEach(skill => {
+        const validation = validateEntityData(skill, 'skill')
+        if (validation.warnings.length > 0) {
+          issues.push({
+            entity: skill.name || 'Unknown Skill',
+            issues: validation.warnings
+          })
+        }
+      })
+      setDataQualityIssues(issues)
+    }
+  }, [skills])
 
   // Auto-enhance skills with AI when data loads
   useEffect(() => {
@@ -183,7 +215,30 @@ function SkillsContent() {
   }
 
   const handleFindTalent = (skill) => {
-    router.push(`/job-seekers?skill=${encodeURIComponent(skill.name)}`)
+    const jobSeekersUrl = getEntityUrl('jobSeeker', null, { skill: skill.name })
+    router.push(jobSeekersUrl)
+  }
+
+  // Enhanced navigation handlers for interoperational functionality
+  const handleViewPositions = (skill) => {
+    const positionsUrl = getEntityUrl('position', null, { skill: skill.name })
+    router.push(positionsUrl)
+  }
+
+  const handleViewCompanies = (skill) => {
+    // Get related companies for this skill
+    const allData = { companies, positions, skills, jobSeekers }
+    const related = getRelatedEntities(skill, 'skill', allData)
+
+    if (related.companies.length > 0) {
+      const companiesUrl = getEntityUrl('company', null, { skill: skill.name })
+      router.push(companiesUrl)
+    }
+  }
+
+  const handleFindMatches = (skill) => {
+    const matchesUrl = getMatchesUrl({ skill: skill.name })
+    router.push(matchesUrl)
   }
 
   // 🤖 Enhance all skills with OpenAI salary data
@@ -415,6 +470,23 @@ function SkillsContent() {
               )}
             </div>
           </div>
+
+          {/* Data Quality Indicator - Salinger & Brockman Minimalist Approach */}
+          {dataQualityIssues.length > 0 && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-amber-600 mr-2">⚠️</span>
+                  <span className="text-sm text-amber-800">
+                    Data quality: {dataQualityIssues.length} skills have incomplete information
+                  </span>
+                </div>
+                <button className="text-xs text-amber-600 hover:text-amber-800 underline">
+                  View Details
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Skills Grid */}
