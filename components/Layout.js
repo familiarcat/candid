@@ -1,5 +1,5 @@
 import Navigation from './Navigation'
-import PerformanceDashboard from './PerformanceDashboard'
+import PerformanceMonitorWidget from './optimization/PerformanceMonitorWidget'
 
 export default function Layout({ children }) {
   return (
@@ -7,8 +7,8 @@ export default function Layout({ children }) {
       <Navigation />
       <main className="container-app section-padding">{children}</main>
 
-      {/* Performance monitoring dashboard (development mode) */}
-      {process.env.NODE_ENV === 'development' && <PerformanceDashboard />}
+      {/* Performance monitoring widget (development mode) */}
+      <PerformanceMonitorWidget />
     </div>
   )
 }
