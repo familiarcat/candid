@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
@@ -9,6 +9,8 @@ import { VisualizationDataProvider } from '../components/visualizations/Visualiz
 import AdvancedFilterPanel from '../components/filters/AdvancedFilterPanel'
 import { useMatchFilters } from '../hooks/useAdvancedFilters'
 import EnhancedMatchCard from '../components/ui/EnhancedMatchCard'
+import { OptimizedCardGrid } from '../components/optimization/PerformanceOptimizedComponents'
+import { performanceMonitor } from '../lib/performanceOptimizer'
 
 function MatchesContent() {
   const router = useRouter()
@@ -33,27 +35,47 @@ function MatchesContent() {
 
 
 
-  const filteredMatches = (matches || []).filter(match => {
-    if (filterStatus === 'all') return true
-    return match.status === filterStatus
-  })
+  // Memoized filtering for performance
+  const filteredMatches = useMemo(() => {
+    performanceMonitor.recordMetric('MatchesFilter', Date.now(), 'timestamp')
+    return (matches || []).filter(match => {
+      if (filterStatus === 'all') return true
+      return match.status === filterStatus
+    })
+  }, [matches, filterStatus])
 
-  const sortedMatches = [...filteredMatches].sort((a, b) => {
-    switch (sortBy) {
-      case 'score':
-        return (b.matchScore || b.score || 0) - (a.matchScore || a.score || 0)
-      case 'date':
-        return new Date(b.createdAt) - new Date(a.createdAt)
-      case 'name':
-        return (a.jobSeeker?.name || '').localeCompare(b.jobSeeker?.name || '')
-      default:
-        return 0
-    }
-  })
+  // Memoized sorting for performance
+  const sortedMatches = useMemo(() => {
+    performanceMonitor.recordMetric('MatchesSort', Date.now(), 'timestamp')
+    return [...filteredMatches].sort((a, b) => {
+      switch (sortBy) {
+        case 'score':
+          return (b.matchScore || b.score || 0) - (a.matchScore || a.score || 0)
+        case 'date':
+          return new Date(b.createdAt) - new Date(a.createdAt)
+        case 'name':
+          return (a.jobSeeker?.name || '').localeCompare(b.jobSeeker?.name || '')
+        default:
+          return 0
+      }
+    })
+  }, [filteredMatches, sortBy])
+
+  // Memoized match tiers for performance
+  const matchTiers = useMemo(() => {
+    const excellent = sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 90)
+    const high = sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 80 && (m.matchScore || m.score || 0) < 90)
+    const good = sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 60 && (m.matchScore || m.score || 0) < 80)
+    const potential = sortedMatches.filter(m => (m.matchScore || m.score || 0) < 60)
+
+    return { excellent, high, good, potential }
+  }, [sortedMatches])
 
 
 
-  const handleAction = async (matchId, action) => {
+  // Memoized action handler for performance
+  const handleAction = useCallback(async (matchId, action) => {
+    performanceMonitor.recordMetric('MatchAction', Date.now(), 'timestamp', { action })
     setActionLoading(prev => ({ ...prev, [matchId]: true }))
 
     try {
@@ -77,17 +99,19 @@ function MatchesContent() {
         // Refresh matches data from DataContext
         // The DataContext will automatically update the UI
         console.log(`Match ${matchId} ${action} successfully`)
+        performanceMonitor.recordMetric('MatchActionSuccess', 1, 'count')
       } else {
         throw new Error('Failed to update match status')
       }
 
     } catch (error) {
       console.error('Error updating match status:', error)
+      performanceMonitor.recordMetric('MatchActionError', 1, 'count')
       // Handle error state
     } finally {
       setActionLoading(prev => ({ ...prev, [matchId]: false }))
     }
-  }
+  }, [setActionLoading])
 
   // More specific loading check to prevent infinite loops
   if (loading.matches || loading.global) {
@@ -247,82 +271,118 @@ function MatchesContent() {
         {/* Enhanced Matches Grid with Quality Tiers */}
         <div className="space-y-8">
           {/* Excellent Matches (90%+) */}
-          {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 90).length > 0 && (
+          {matchTiers.excellent.length > 0 && (
             <div>
               <div className="flex items-center mb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
                   <h3 className="text-xl font-semibold text-gray-900">Excellent Matches</h3>
                   <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                    {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 90).length} matches
+                    {matchTiers.excellent.length} matches
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 90).map((match) => (
-                  <EnhancedMatchCard key={match.id} match={match} tier="excellent" onAction={handleAction} actionLoading={actionLoading} />
-                ))}
-              </div>
+              <OptimizedCardGrid
+                items={matchTiers.excellent}
+                renderCard={(match) => (
+                  <EnhancedMatchCard
+                    key={match.id}
+                    match={match}
+                    tier="excellent"
+                    onAction={handleAction}
+                    actionLoading={actionLoading}
+                  />
+                )}
+                columns={{ xs: 1, sm: 1, md: 2, lg: 3 }}
+                gap={6}
+              />
             </div>
           )}
 
           {/* High Quality Matches (80-89%) */}
-          {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 80 && (m.matchScore || m.score || 0) < 90).length > 0 && (
+          {matchTiers.high.length > 0 && (
             <div>
               <div className="flex items-center mb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full"></div>
                   <h3 className="text-xl font-semibold text-gray-900">High Quality Matches</h3>
                   <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                    {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 80 && (m.matchScore || m.score || 0) < 90).length} matches
+                    {matchTiers.high.length} matches
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 80 && (m.matchScore || m.score || 0) < 90).map((match) => (
-                  <EnhancedMatchCard key={match.id} match={match} tier="high" onAction={handleAction} actionLoading={actionLoading} />
-                ))}
-              </div>
+              <OptimizedCardGrid
+                items={matchTiers.high}
+                renderCard={(match) => (
+                  <EnhancedMatchCard
+                    key={match.id}
+                    match={match}
+                    tier="high"
+                    onAction={handleAction}
+                    actionLoading={actionLoading}
+                  />
+                )}
+                columns={{ xs: 1, sm: 1, md: 2, lg: 3 }}
+                gap={6}
+              />
             </div>
           )}
 
           {/* Good Matches (60-79%) */}
-          {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 60 && (m.matchScore || m.score || 0) < 80).length > 0 && (
+          {matchTiers.good.length > 0 && (
             <div>
               <div className="flex items-center mb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"></div>
                   <h3 className="text-xl font-semibold text-gray-900">Good Matches</h3>
                   <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                    {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 60 && (m.matchScore || m.score || 0) < 80).length} matches
+                    {matchTiers.good.length} matches
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {sortedMatches.filter(m => (m.matchScore || m.score || 0) >= 60 && (m.matchScore || m.score || 0) < 80).map((match) => (
-                  <EnhancedMatchCard key={match.id} match={match} tier="good" onAction={handleAction} actionLoading={actionLoading} />
-                ))}
-              </div>
+              <OptimizedCardGrid
+                items={matchTiers.good}
+                renderCard={(match) => (
+                  <EnhancedMatchCard
+                    key={match.id}
+                    match={match}
+                    tier="good"
+                    onAction={handleAction}
+                    actionLoading={actionLoading}
+                  />
+                )}
+                columns={{ xs: 1, sm: 1, md: 2, lg: 3 }}
+                gap={6}
+              />
             </div>
           )}
 
           {/* Lower Quality Matches (<60%) */}
-          {sortedMatches.filter(m => (m.matchScore || m.score || 0) < 60).length > 0 && (
+          {matchTiers.potential.length > 0 && (
             <div>
               <div className="flex items-center mb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-3 h-3 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full"></div>
                   <h3 className="text-xl font-semibold text-gray-900">Potential Matches</h3>
                   <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                    {sortedMatches.filter(m => (m.matchScore || m.score || 0) < 60).length} matches
+                    {matchTiers.potential.length} matches
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {sortedMatches.filter(m => (m.matchScore || m.score || 0) < 60).map((match) => (
-                  <EnhancedMatchCard key={match.id} match={match} tier="potential" onAction={handleAction} actionLoading={actionLoading} />
-                ))}
-              </div>
+              <OptimizedCardGrid
+                items={matchTiers.potential}
+                renderCard={(match) => (
+                  <EnhancedMatchCard
+                    key={match.id}
+                    match={match}
+                    tier="potential"
+                    onAction={handleAction}
+                    actionLoading={actionLoading}
+                  />
+                )}
+                columns={{ xs: 1, sm: 1, md: 2, lg: 3 }}
+                gap={6}
+              />
             </div>
           )}
         </div>
