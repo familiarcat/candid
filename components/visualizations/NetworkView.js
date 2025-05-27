@@ -1,19 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useVisualizationData } from './VisualizationDataProvider'
 import AuthorityNetworkGraph from './AuthorityNetworkGraph'
 import NetworkVisualization3D from './NetworkVisualization3D_Simple'
+import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
+import { LoadingOverlay, VisualizationLoadingAnimation, PageTransition } from '../animations/LoadingAnimations'
+import { ResponsiveVisualizationContainer, MobileVisualizationControls, MobileVisualizationGestures } from '../mobile/ResponsiveVisualization'
+import { mobileDetector } from '../../lib/mobileAnimations'
 
 export default function NetworkView() {
   const { globalNetworkData, loading, errors } = useVisualizationData()
   const [visualizationMode, setVisualizationMode] = useState('2d') // '2d' or '3d'
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [statsVisible, setStatsVisible] = useState(false)
+  const [mobileFilters, setMobileFilters] = useState({
+    showMatches: true,
+    showSkills: true,
+    showCompanies: true
+  })
+
+  // Animate stats cards on mount
+  useEffect(() => {
+    if (globalNetworkData && !loading) {
+      const timer = setTimeout(() => setStatsVisible(true), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [globalNetworkData, loading])
+
+  // Handle visualization mode transitions
+  const handleModeChange = async (newMode) => {
+    if (newMode === visualizationMode) return
+
+    setIsTransitioning(true)
+
+    // Small delay for smooth transition
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    setVisualizationMode(newMode)
+    setIsTransitioning(false)
+  }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="text-center">
-          <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading network data...</p>
-        </div>
+        <VisualizationLoadingAnimation type="network" />
       </div>
     )
   }
@@ -42,63 +71,73 @@ export default function NetworkView() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with mode toggle */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Global Network View</h2>
-          <p className="text-gray-600">
-            Interactive network showing all connections in the system
-          </p>
+    <PageTransition isLoading={loading}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="text-center md:text-left">
+          <div className="transform transition-all duration-500 translate-y-0 opacity-100">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Global Network View</h2>
+            <p className="text-gray-600 mt-2">
+              Interactive network showing all connections in the system
+            </p>
+          </div>
         </div>
-        
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setVisualizationMode('2d')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              visualizationMode === '2d'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            2D Network
-          </button>
-          <button
-            onClick={() => setVisualizationMode('3d')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              visualizationMode === '3d'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            3D Network
-          </button>
-        </div>
-      </div>
 
-      {/* Network Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-blue-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-blue-600">{globalNetworkData.nodes?.length || 0}</div>
-          <div className="text-sm text-blue-600">Total Nodes</div>
+        {/* Mobile-optimized controls */}
+        <MobileVisualizationControls
+          visualizationMode={visualizationMode}
+          onModeChange={handleModeChange}
+          filters={mobileFilters}
+          onFiltersChange={setMobileFilters}
+          className="mb-6"
+        />
+
+        {/* Network Stats with staggered animation */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            {
+              value: globalNetworkData.nodes?.length || 0,
+              label: 'Total Nodes',
+              color: 'blue',
+              delay: 0
+            },
+            {
+              value: globalNetworkData.links?.length || 0,
+              label: 'Total Connections',
+              color: 'green',
+              delay: 100
+            },
+            {
+              value: globalNetworkData.stats?.linkTypes?.match || 0,
+              label: 'Match Connections',
+              color: 'purple',
+              delay: 200
+            },
+            {
+              value: globalNetworkData.stats?.linkTypes?.skill || 0,
+              label: 'Skill Connections',
+              color: 'orange',
+              delay: 300
+            }
+          ].map((stat, index) => (
+            <div
+              key={index}
+              className={`bg-${stat.color}-50 p-4 rounded-lg text-center transform transition-all duration-500 hover:scale-105 hover:shadow-lg ${
+                statsVisible
+                  ? 'translate-y-0 opacity-100'
+                  : 'translate-y-4 opacity-0'
+              }`}
+              style={{
+                transitionDelay: `${stat.delay}ms`
+              }}
+            >
+              <div className={`text-2xl font-bold text-${stat.color}-600 transition-all duration-300`}>
+                {stat.value}
+              </div>
+              <div className={`text-sm text-${stat.color}-600`}>{stat.label}</div>
+            </div>
+          ))}
         </div>
-        <div className="bg-green-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-green-600">{globalNetworkData.links?.length || 0}</div>
-          <div className="text-sm text-green-600">Total Connections</div>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-purple-600">
-            {globalNetworkData.stats?.linkTypes?.match || 0}
-          </div>
-          <div className="text-sm text-purple-600">Match Connections</div>
-        </div>
-        <div className="bg-orange-50 p-4 rounded-lg text-center">
-          <div className="text-2xl font-bold text-orange-600">
-            {globalNetworkData.stats?.linkTypes?.skill || 0}
-          </div>
-          <div className="text-sm text-orange-600">Skill Connections</div>
-        </div>
-      </div>
 
       {/* Instructions */}
       <div className="bg-gray-50 rounded-lg p-4">
@@ -111,30 +150,49 @@ export default function NetworkView() {
         </p>
       </div>
 
-      {/* Visualization Container */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-        <div className="bg-gray-50 rounded-lg overflow-hidden">
-          {visualizationMode === '2d' ? (
-            <AuthorityNetworkGraph
-              data={globalNetworkData}
-              width={800}
-              height={600}
-            />
-          ) : (
-            <NetworkVisualization3D
-              data={globalNetworkData}
-              width={800}
-              height={600}
-            />
-          )}
-        </div>
-      </div>
+        {/* Responsive Visualization Container */}
+        <LoadingOverlay
+          isVisible={isTransitioning}
+          type="visualization"
+          message={`Switching to ${visualizationMode.toUpperCase()} view...`}
+        >
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 md:p-6 transform transition-all duration-500 hover:shadow-xl">
+            <ResponsiveVisualizationContainer
+              minHeight={mobileDetector.isMobile ? 300 : 400}
+              maxHeight={mobileDetector.isMobile ? 500 : 800}
+              className="bg-gray-50 rounded-lg overflow-hidden"
+            >
+              {(dimensions) => (
+                <MobileVisualizationGestures
+                  onZoomIn={() => console.log('Zoom in')}
+                  onZoomOut={() => console.log('Zoom out')}
+                  onReset={() => console.log('Reset view')}
+                  className="w-full h-full"
+                >
+                  {visualizationMode === '2d' ? (
+                    <AuthorityNetworkGraph
+                      data={globalNetworkData}
+                      width={dimensions.width}
+                      height={dimensions.height}
+                    />
+                  ) : (
+                    <NetworkVisualization3D
+                      data={globalNetworkData}
+                      width={dimensions.width}
+                      height={dimensions.height}
+                    />
+                  )}
+                </MobileVisualizationGestures>
+              )}
+            </ResponsiveVisualizationContainer>
+          </div>
+        </LoadingOverlay>
 
       {/* Detailed Stats */}
       {globalNetworkData.stats && (
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Network Statistics</h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Node Types */}
             <div>
@@ -188,6 +246,7 @@ export default function NetworkView() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PageTransition>
   )
 }
