@@ -45,13 +45,13 @@
   outline-offset: 2px !important;
 }
 
-/* Enhanced focus indicators */
-button:focus,
-a:focus,
-input:focus,
-select:focus,
-textarea:focus,
-[tabindex]:focus {
+/* Enhanced focus indicators - only when no existing focus styles */
+button:focus:not(.btn-primary):not(.btn-secondary):not(.btn-accent):not(.btn-outline),
+a:focus:not(.nav-link):not(.nav-link-active),
+input:focus:not(.form-input),
+select:focus:not(.form-input),
+textarea:focus:not(.form-input),
+[tabindex]:focus:not([class]) {
   outline: 2px solid #005fcc;
   outline-offset: 2px;
   border-radius: 4px;
@@ -255,12 +255,12 @@ html[style*="font-size: 150%"] {
   font-weight: 500;
 }
 
-/* Loading states */
-.loading-spinner {
-  animation: spin 1s linear infinite;
+/* Loading states - accessibility specific */
+.accessibility-loading-spinner {
+  animation: accessibility-spin 1s linear infinite;
 }
 
-@keyframes spin {
+@keyframes accessibility-spin {
   from {
     transform: rotate(0deg);
   }
@@ -269,19 +269,19 @@ html[style*="font-size: 150%"] {
   }
 }
 
-/* Accessible form styling */
-.form-field {
+/* Accessible form styling - only for accessibility components */
+.accessibility-form-field {
   margin-bottom: 1rem;
 }
 
-.form-label {
+.accessibility-form-label {
   display: block;
   font-weight: 500;
   margin-bottom: 0.25rem;
   color: #374151;
 }
 
-.form-input {
+.accessibility-form-input {
   display: block;
   width: 100%;
   padding: 0.5rem 0.75rem;
@@ -292,23 +292,23 @@ html[style*="font-size: 150%"] {
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.form-input:focus {
+.accessibility-form-input:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.form-input:invalid {
+.accessibility-form-input:invalid {
   border-color: #dc2626;
 }
 
-.form-help {
+.accessibility-form-help {
   font-size: 0.875rem;
   color: #6b7280;
   margin-top: 0.25rem;
 }
 
-.form-error {
+.accessibility-form-error {
   font-size: 0.875rem;
   color: #dc2626;
   margin-top: 0.25rem;
@@ -370,8 +370,8 @@ html[style*="font-size: 150%"] {
   overflow: auto;
 }
 
-/* Accessible navigation */
-.nav-link {
+/* Accessible navigation - only for accessibility-specific nav elements */
+.accessibility-nav-link {
   display: inline-block;
   padding: 0.5rem 1rem;
   text-decoration: none;
@@ -379,12 +379,12 @@ html[style*="font-size: 150%"] {
   transition: background-color 0.15s ease-in-out;
 }
 
-.nav-link:hover,
-.nav-link:focus {
+.accessibility-nav-link:hover,
+.accessibility-nav-link:focus {
   background-color: #f3f4f6;
 }
 
-.nav-link.active {
+.accessibility-nav-link.active {
   background-color: #2563eb;
   color: white;
 }
