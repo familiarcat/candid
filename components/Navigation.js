@@ -91,7 +91,10 @@ export default function Navigation() {
   const adminItems = [
     { name: 'Admin', path: '/admin', icon: '⚙️', type: 'outline' },
     { name: 'Visualize', path: '/visualizations', icon: '📊', type: 'outline' },
-    { name: 'Portal Login', path: 'https://portal.candid-connections.com/user/login', icon: '🔗', type: 'primary', external: true }
+    // External portal link - only show in production
+    ...(process.env.NODE_ENV === 'production' ? [
+      { name: 'Portal Login', path: 'https://portal.candid-connections.com/user/login', icon: '🔗', type: 'primary', external: true }
+    ] : [])
   ]
 
   return (
