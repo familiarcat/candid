@@ -1,8 +1,9 @@
 // Unified Visualization Controls - Comprehensive control panel for enhanced visualizations
 // Provides root node selection, sorting, filtering, and layout controls
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { SORTING_METHODS, getAvailableSortingMethods, getSortingMethodLabel } from '../../lib/visualizationSorting'
+import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
 
 export default function UnifiedVisualizationControls({
   // Data props
@@ -12,7 +13,7 @@ export default function UnifiedVisualizationControls({
   currentFilters = {},
   currentLayout = 'force',
   visualizationMode = '2d', // '2d' or '3d'
-  
+
   // Callback props
   onRootNodeChange = () => {},
   onSortMethodChange = () => {},
@@ -20,7 +21,7 @@ export default function UnifiedVisualizationControls({
   onLayoutChange = () => {},
   onVisualizationModeChange = () => {},
   onResetView = () => {},
-  
+
   // UI props
   compact = false,
   showAdvanced = true,
@@ -28,9 +29,10 @@ export default function UnifiedVisualizationControls({
 }) {
   const [isExpanded, setIsExpanded] = useState(!compact)
   const [activeTab, setActiveTab] = useState('root') // 'root', 'sort', 'filter', 'layout'
+  const tabContentRef = useRef(null)
 
   // Get available sorting methods for current root node type
-  const availableSortMethods = currentRootNode 
+  const availableSortMethods = currentRootNode
     ? getAvailableSortingMethods(currentRootNode.type)
     : Object.values(SORTING_METHODS)
 
@@ -41,6 +43,33 @@ export default function UnifiedVisualizationControls({
     jobSeekers: { icon: '👥', label: 'Job Seekers', color: 'purple' },
     skills: { icon: '🛠️', label: 'Skills', color: 'orange' },
     positions: { icon: '📋', label: 'Positions', color: 'red' }
+  }
+
+  // Animated tab switching
+  const handleTabChange = (newTab) => {
+    if (newTab === activeTab) return
+
+    // Animate out current content
+    if (tabContentRef.current) {
+      cssAnimator.animate(tabContentRef.current, {
+        opacity: '0',
+        transform: 'translateY(-10px)'
+      }, {
+        duration: ANIMATION_CONFIG.DURATION.FAST,
+        onComplete: () => {
+          setActiveTab(newTab)
+          // Animate in new content
+          cssAnimator.animate(tabContentRef.current, {
+            opacity: '1',
+            transform: 'translateY(0px)'
+          }, {
+            duration: ANIMATION_CONFIG.DURATION.FAST
+          })
+        }
+      })
+    } else {
+      setActiveTab(newTab)
+    }
   }
 
   // Handle root node selection
@@ -117,7 +146,7 @@ export default function UnifiedVisualizationControls({
               3D
             </button>
           </div>
-          
+
           {compact && (
             <button
               onClick={() => setIsExpanded(false)}
@@ -139,8 +168,8 @@ export default function UnifiedVisualizationControls({
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+            onClick={() => handleTabChange(tab.id)}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -153,7 +182,7 @@ export default function UnifiedVisualizationControls({
       </div>
 
       {/* Tab Content */}
-      <div className="p-4">
+      <div ref={tabContentRef} className="p-4 transition-all duration-200">
         {/* Root Node Selection */}
         {activeTab === 'root' && (
           <div className="space-y-4">
@@ -341,7 +370,7 @@ export default function UnifiedVisualizationControls({
         >
           Reset View
         </button>
-        
+
         <div className="text-xs text-gray-500">
           {currentRootNode ? (
             <>Root: {currentRootNode.name}</>
