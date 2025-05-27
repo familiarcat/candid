@@ -2,6 +2,12 @@ import { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import { generateNetworkData, generateFocusedNetworkData } from '../../lib/graphDataGenerator'
 import { processRootNodeVisualization } from '../../lib/rootNodeProcessor'
 import { sortNetworkNodes, SORTING_METHODS } from '../../lib/visualizationSorting'
+import {
+  visualizationCache,
+  optimizeNetworkData,
+  performanceMonitor,
+  memoize
+} from '../../lib/performanceOptimizations'
 
 // Visualization Data Context
 const VisualizationDataContext = createContext()
@@ -801,14 +807,26 @@ export default function VisualizationDataProvider({ children }) {
     fetchAllData()
   }, [])
 
-  // Generate global network data
+  // Generate global network data with caching and optimization
   const globalNetworkData = useMemo(() => {
     if (loading || rawData.companies.length === 0) {
       return { nodes: [], links: [], stats: {} }
     }
 
+    // Generate cache key based on data sizes
+    const cacheKey = `global-network-${rawData.companies.length}-${rawData.hiringAuthorities.length}-${rawData.jobSeekers.length}-${rawData.skills.length}-${rawData.positions.length}-${rawData.matches.length}`
+
+    // Check cache first
+    const cachedData = visualizationCache.get(cacheKey)
+    if (cachedData) {
+      console.log('📦 Using cached global network data')
+      return cachedData
+    }
+
     console.log('🌐 Generating global network data...')
-    return generateNetworkData(
+    performanceMonitor.start('global-network-generation')
+
+    const networkData = generateNetworkData(
       rawData.companies,
       rawData.hiringAuthorities,
       rawData.jobSeekers,
@@ -816,6 +834,17 @@ export default function VisualizationDataProvider({ children }) {
       rawData.positions,
       rawData.matches
     )
+
+    // Optimize for performance if dataset is large
+    const optimizedData = optimizeNetworkData(networkData, 500, 1000)
+
+    // Cache the result
+    visualizationCache.set(cacheKey, optimizedData)
+
+    const metrics = performanceMonitor.end('global-network-generation')
+    console.log('⚡ Global network generation metrics:', metrics)
+
+    return optimizedData
   }, [rawData, loading])
 
   // Enhanced visualization data generation with root node processing
@@ -832,7 +861,18 @@ export default function VisualizationDataProvider({ children }) {
         filters = {}
       } = options
 
+      // Generate cache key for this specific visualization
+      const cacheKey = `enhanced-viz-${rootNodeId}-${sortMethod}-${maxDistance}-${layoutType}-${JSON.stringify(filters)}`
+
+      // Check cache first
+      const cachedVisualization = visualizationCache.get(cacheKey)
+      if (cachedVisualization) {
+        console.log('📦 Using cached enhanced visualization for:', rootNodeId)
+        return cachedVisualization
+      }
+
       console.log('🎯 Generating enhanced visualization for root:', rootNodeId)
+      performanceMonitor.start(`enhanced-viz-${rootNodeId}`)
 
       // Process with root node emphasis
       const processedData = processRootNodeVisualization(
@@ -850,12 +890,29 @@ export default function VisualizationDataProvider({ children }) {
         { ...filters, maxResults: filters.maxResults }
       )
 
-      return {
+      const finalData = {
         ...processedData,
         nodes: sortedNodes,
         sortMethod,
         options
       }
+
+      // Optimize if needed
+      const optimizedData = optimizeNetworkData(finalData, 300, 600)
+
+      // Cache the result
+      visualizationCache.set(cacheKey, optimizedData)
+
+      const metrics = performanceMonitor.end(`enhanced-viz-${rootNodeId}`)
+      console.log('✅ Enhanced visualization generated:', {
+        nodes: optimizedData.nodes.length,
+        links: optimizedData.links.length,
+        rootNode: rootNodeId,
+        sortMethod,
+        metrics
+      })
+
+      return optimizedData
     }
   }, [globalNetworkData, loading])
 

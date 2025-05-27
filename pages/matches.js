@@ -2,16 +2,32 @@ import { useState } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
-
+import VisualizationModal from '../components/VisualizationModal'
 import { useData } from '../contexts/DataContext'
+import { usePageVisualization } from '../hooks/useComponentVisualization'
+import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
+import AdvancedFilterPanel from '../components/filters/AdvancedFilterPanel'
+import { useMatchFilters } from '../hooks/useAdvancedFilters'
 import EnhancedMatchCard from '../components/ui/EnhancedMatchCard'
 
-export default function Matches() {
+function MatchesContent() {
   const router = useRouter()
   const { matches, loading, errors } = useData()
   const [filterStatus, setFilterStatus] = useState('all')
   const [sortBy, setSortBy] = useState('score')
   const [actionLoading, setActionLoading] = useState({})
+
+  // Component-specific visualization
+  const visualization = usePageVisualization('match', {
+    maxDistance: 2,
+    layoutType: 'radial'
+  })
+
+  // Advanced filtering system
+  const advancedFilters = useMatchFilters(matches, {
+    persistFilters: true,
+    storageKey: 'matches-advanced-filters'
+  })
 
   // Data comes from DataContext - no need for useEffect
 
@@ -192,13 +208,14 @@ export default function Matches() {
                 </select>
               </div>
 
-              <div className="flex items-end">
+              <div className="flex items-end space-x-2">
                 <button
                   onClick={() => router.push('/visualizations')}
-                  className="btn-primary w-full"
+                  className="btn-secondary flex-1"
                 >
-                  📊 Visualize Network
+                  📊 Global Network
                 </button>
+                {visualization.pageHelpers.renderVisualizationButton('btn-primary flex-1')}
               </div>
             </div>
 
@@ -217,6 +234,15 @@ export default function Matches() {
             </div>
           </div>
         </div>
+
+        {/* Advanced Filtering Panel */}
+        <AdvancedFilterPanel
+          entityType="match"
+          data={matches}
+          onFiltersChange={advancedFilters.updateFilter}
+          initialFilters={advancedFilters.filters}
+          className="mb-6"
+        />
 
         {/* Enhanced Matches Grid with Quality Tiers */}
         <div className="space-y-8">
@@ -360,7 +386,19 @@ export default function Matches() {
             </div>
           </div>
         </div>
+
+        {/* Visualization Modal */}
+        <VisualizationModal {...visualization.pageHelpers.getModalProps()} />
       </div>
     </Layout>
+  )
+}
+
+// Main component with VisualizationDataProvider wrapper
+export default function Matches() {
+  return (
+    <VisualizationDataProvider>
+      <MatchesContent />
+    </VisualizationDataProvider>
   )
 }
