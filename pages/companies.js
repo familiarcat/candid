@@ -12,6 +12,8 @@ import { getEntityUrl, getMatchesUrl, getVisualizationUrl, validateEntityData, g
 import { useData } from '../contexts/DataContext'
 import { usePageVisualization } from '../hooks/useComponentVisualization'
 import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
+import AdvancedFilterPanel from '../components/filters/AdvancedFilterPanel'
+import { useCompanyFilters } from '../hooks/useAdvancedFilters'
 
 function CompaniesContent() {
   const router = useRouter()
@@ -32,6 +34,12 @@ function CompaniesContent() {
   const visualization = usePageVisualization('company', {
     maxDistance: 2,
     layoutType: 'radial'
+  })
+
+  // Advanced filtering system
+  const advancedFilters = useCompanyFilters(companies, {
+    persistFilters: true,
+    storageKey: 'companies-advanced-filters'
   })
 
   // Local UI state
@@ -205,11 +213,21 @@ function CompaniesContent() {
     }
   }
 
-  const filteredCompanies = enhancedCompanies.filter(company =>
+  // Apply both basic and advanced filtering
+  const basicFilteredCompanies = enhancedCompanies.filter(company =>
     (company.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (company.industry || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (company.location || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Apply advanced filters to the basic filtered results
+  const filteredCompanies = advancedFilters.filteredData.length > 0
+    ? basicFilteredCompanies.filter(company =>
+        advancedFilters.filteredData.some(filtered =>
+          (filtered._key || filtered.id) === (company._key || company.id)
+        )
+      )
+    : basicFilteredCompanies
 
   const sortedCompanies = [...filteredCompanies].sort((a, b) => {
     switch (sortBy) {
@@ -311,6 +329,11 @@ function CompaniesContent() {
 
             <div className="text-sm text-gray-600">
               {sortedCompanies.length} companies found
+              {advancedFilters.isActive && (
+                <span className="ml-2 text-indigo-600">
+                  (filtered from {advancedFilters.filterStats.originalCount})
+                </span>
+              )}
             </div>
           </div>
 
@@ -331,6 +354,15 @@ function CompaniesContent() {
             </div>
           )}
         </div>
+
+        {/* Advanced Filtering Panel */}
+        <AdvancedFilterPanel
+          entityType="company"
+          data={companies}
+          onFiltersChange={advancedFilters.updateFilter}
+          initialFilters={advancedFilters.filters}
+          className="mb-6"
+        />
 
         {/* Enhanced Companies Grid with Collapsible Cards */}
         <div className="space-y-4">
