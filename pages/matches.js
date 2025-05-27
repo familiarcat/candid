@@ -11,6 +11,7 @@ import { useMatchFilters } from '../hooks/useAdvancedFilters'
 import EnhancedMatchCard from '../components/ui/EnhancedMatchCard'
 import { OptimizedCardGrid } from '../components/optimization/PerformanceOptimizedComponents'
 import { performanceMonitor } from '../lib/performanceOptimizer'
+import { advancedAnalytics } from '../lib/advancedAnalytics'
 
 function MatchesContent() {
   const router = useRouter()
@@ -70,6 +71,18 @@ function MatchesContent() {
 
     return { excellent, high, good, potential }
   }, [sortedMatches])
+
+  // Advanced analytics insights
+  const analyticsInsights = useMemo(() => {
+    if (!matches || matches.length === 0) return null
+
+    const networkData = {
+      nodes: matches.map(m => ({ id: m.id, type: 'match', ...m })),
+      links: []
+    }
+
+    return advancedAnalytics.generatePredictiveInsights(networkData)
+  }, [matches])
 
 
 
@@ -267,6 +280,77 @@ function MatchesContent() {
           initialFilters={advancedFilters.filters}
           className="mb-6"
         />
+
+        {/* Advanced Analytics Insights */}
+        {analyticsInsights && (
+          <div className="card">
+            <div className="card-body">
+              <h3 className="text-lg font-semibold text-secondary-800 mb-4">
+                🤖 AI-Powered Match Insights
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Match Predictions */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-900 mb-2">🎯 Future Match Predictions</h4>
+                  <div className="text-2xl font-bold text-blue-600 mb-1">
+                    {analyticsInsights.matchPredictions?.length || 0}
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    High-probability matches predicted for next 30 days
+                  </p>
+                </div>
+
+                {/* Network Growth */}
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h4 className="font-medium text-green-900 mb-2">📈 Network Growth</h4>
+                  <div className="text-2xl font-bold text-green-600 mb-1">
+                    {analyticsInsights.networkGrowth?.growthRate ?
+                      `${(analyticsInsights.networkGrowth.growthRate * 100).toFixed(1)}%` : 'N/A'}
+                  </div>
+                  <p className="text-sm text-green-700">
+                    Monthly growth rate in match quality
+                  </p>
+                </div>
+
+                {/* Risk Assessment */}
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <h4 className="font-medium text-purple-900 mb-2">⚠️ Risk Assessment</h4>
+                  <div className="text-2xl font-bold text-purple-600 mb-1">
+                    {analyticsInsights.riskAssessment?.level || 'Low'}
+                  </div>
+                  <p className="text-sm text-purple-700">
+                    Overall network health and stability
+                  </p>
+                </div>
+              </div>
+
+              {/* Top Predictions */}
+              {analyticsInsights.matchPredictions && analyticsInsights.matchPredictions.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-medium text-gray-900 mb-3">🔮 Top Match Predictions</h4>
+                  <div className="space-y-2">
+                    {analyticsInsights.matchPredictions.slice(0, 3).map((prediction, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">
+                            {prediction.jobSeeker?.name || 'Unknown'} → {prediction.authority?.name || 'Unknown'}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            Confidence: {(prediction.confidence * 100).toFixed(1)}% •
+                            Est. Time: {prediction.estimatedTimeToMatch}
+                          </div>
+                        </div>
+                        <div className="text-lg font-bold text-blue-600">
+                          {(prediction.probability * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Enhanced Matches Grid with Quality Tiers */}
         <div className="space-y-8">

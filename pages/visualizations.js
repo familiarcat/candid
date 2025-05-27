@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Head from 'next/head'
 import Layout from '../components/Layout'
 import VisualizationDataProvider from '../components/visualizations/VisualizationDataProvider'
@@ -8,10 +8,17 @@ import NetworkView from '../components/visualizations/NetworkView'
 import GlobalAnalysisView from '../components/visualizations/GlobalAnalysisView'
 import VisualizationDebugger from '../components/visualizations/VisualizationDebugger'
 import SimpleVisualizationTest from '../components/visualizations/SimpleVisualizationTest'
+import CollaborationPanel from '../components/collaboration/CollaborationPanel'
+import ExportControls from '../components/visualizations/ExportControls'
 
 
 export default function Visualizations() {
   const [activeTab, setActiveTab] = useState('enhanced') // Default to enhanced explorer
+  const [visualizationState, setVisualizationState] = useState({})
+  const [networkData, setNetworkData] = useState({ nodes: [], links: [] })
+  const [showCollaboration, setShowCollaboration] = useState(false)
+  const [showExportControls, setShowExportControls] = useState(false)
+  const svgRef = useRef(null)
 
   // Tab configuration
   const tabs = [
@@ -90,10 +97,44 @@ export default function Visualizations() {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Network Visualizations</h1>
-            <p className="text-gray-600">
-              Explore connections and relationships from multiple perspectives
-            </p>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div className="mb-4 lg:mb-0">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Network Visualizations</h1>
+                <p className="text-gray-600">
+                  Explore connections and relationships from multiple perspectives
+                </p>
+              </div>
+
+              {/* Enterprise Feature Controls */}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setShowCollaboration(!showCollaboration)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showCollaboration
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  👥 Collaborate
+                </button>
+                <button
+                  onClick={() => setShowExportControls(!showExportControls)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showExportControls
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  📤 Export
+                </button>
+                <button
+                  onClick={() => window.open('/dashboard', '_blank')}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                >
+                  📊 Dashboard
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Enhanced Tab Navigation - Bento/Brockman Design */}
@@ -164,6 +205,30 @@ export default function Visualizations() {
           {/* Tab Content */}
           <div className="min-h-screen">
             {renderTabContent()}
+          </div>
+
+          {/* Enterprise Feature Panels */}
+          <div className="fixed bottom-4 right-4 space-y-4 z-50">
+            {/* Collaboration Panel */}
+            {showCollaboration && (
+              <div className="w-80">
+                <CollaborationPanel
+                  visualizationState={visualizationState}
+                  onStateChange={setVisualizationState}
+                />
+              </div>
+            )}
+
+            {/* Export Controls */}
+            {showExportControls && (
+              <div className="w-80">
+                <ExportControls
+                  networkData={networkData}
+                  visualizationState={visualizationState}
+                  svgElement={svgRef.current}
+                />
+              </div>
+            )}
           </div>
         </div>
       </Layout>
