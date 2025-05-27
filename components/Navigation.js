@@ -1,10 +1,73 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { cssAnimator, ANIMATION_CONFIG } from '../lib/animationSystem'
+import { mobileDetector, touchAnimator } from '../lib/mobileAnimations'
 
 export default function Navigation() {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const mobileMenuRef = useRef(null)
+  const hamburgerRef = useRef(null)
+
+  // Handle mobile menu animation
+  const toggleMobileMenu = async () => {
+    if (!mobileMenuRef.current) {
+      setIsMobileMenuOpen(!isMobileMenuOpen)
+      return
+    }
+
+    if (isMobileMenuOpen) {
+      // Close animation
+      await cssAnimator.slideUp(mobileMenuRef.current, {
+        duration: mobileDetector.getOptimalAnimationDuration(250)
+      })
+      setIsMobileMenuOpen(false)
+    } else {
+      // Open animation
+      setIsMobileMenuOpen(true)
+      // Wait for DOM update
+      await new Promise(resolve => setTimeout(resolve, 10))
+      await cssAnimator.slideDown(mobileMenuRef.current, {
+        duration: mobileDetector.getOptimalAnimationDuration(300)
+      })
+    }
+
+    // Animate hamburger icon
+    if (hamburgerRef.current) {
+      cssAnimator.scale(hamburgerRef.current, 1.1, { duration: 100 }).then(() => {
+        cssAnimator.scale(hamburgerRef.current, 1, { duration: 100 })
+      })
+    }
+  }
+
+  // Setup touch animations for mobile menu items
+  useEffect(() => {
+    if (!mobileMenuRef.current || !isMobileMenuOpen) return
+
+    const menuItems = mobileMenuRef.current.querySelectorAll('a')
+    const cleanupFunctions = []
+
+    menuItems.forEach((item, index) => {
+      // Stagger animation for menu items
+      setTimeout(() => {
+        cssAnimator.fadeIn(item, {
+          duration: mobileDetector.getOptimalAnimationDuration(200)
+        })
+      }, index * 50)
+
+      // Add touch animation
+      const cleanup = touchAnimator.animateTouchButton(item, {
+        pressScale: 0.95,
+        duration: 150
+      })
+      cleanupFunctions.push(cleanup)
+    })
+
+    return () => {
+      cleanupFunctions.forEach(cleanup => cleanup && cleanup())
+    }
+  }, [isMobileMenuOpen])
 
   // For development: keep admin controls active
   // TODO: Implement user authentication system
@@ -146,11 +209,19 @@ export default function Navigation() {
           {/* Mobile menu button */}
           <div className="lg:hidden">
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg text-candid-navy-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200"
+              ref={hamburgerRef}
+              onClick={toggleMobileMenu}
+              className="p-2 rounded-lg text-candid-navy-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Toggle mobile menu"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className={`w-6 h-6 transition-transform duration-200 ${
+                  isMobileMenuOpen ? 'rotate-90' : 'rotate-0'
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 {isMobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -203,15 +274,18 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-candid-gray-200 py-4">
+          <div
+            ref={mobileMenuRef}
+            className="lg:hidden border-t border-candid-gray-200 py-4 overflow-hidden"
+          >
             <div className="space-y-2">
               {/* Main Navigation Items */}
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   href={item.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                  onClick={toggleMobileMenu}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 min-h-[48px] opacity-0 ${
                     router.pathname === item.path
                       ? 'nav-link-active'
                       : 'nav-link'
@@ -232,9 +306,9 @@ export default function Navigation() {
                     <Link
                       key={item.path}
                       href={item.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={toggleMobileMenu}
                       {...(item.external && { target: "_blank", rel: "noopener noreferrer" })}
-                      className={`block w-full text-center ${
+                      className={`block w-full text-center min-h-[48px] opacity-0 ${
                         item.type === 'primary' ? 'btn-primary' : 'btn-outline'
                       }`}
                     >

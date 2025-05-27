@@ -1,13 +1,17 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { SkillLink, CompanyLink } from './LinkButton'
 import { formatDate } from '../../lib/utils'
+import { HoverCard, AnimatedButton, AnimatedIcon } from '../animations/HoverEffects'
+import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
 
 export default function EnhancedMatchCard({ match, tier, onAction, actionLoading }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [showAllSkills, setShowAllSkills] = useState(false)
+  const cardRef = useRef(null)
+  const scoreRef = useRef(null)
 
   const score = match.matchScore || match.score || 0
-  
+
   // Tier-based styling
   const getTierStyling = (tier) => {
     switch (tier) {
@@ -55,28 +59,54 @@ export default function EnhancedMatchCard({ match, tier, onAction, actionLoading
 
   const handleAction = async (action) => {
     if (onAction) {
+      // Animate score badge on action
+      if (scoreRef.current) {
+        await cssAnimator.pulse(scoreRef.current, { pulses: 2, intensity: 1.2 })
+      }
       await onAction(match.id, action)
     }
   }
 
+  const handleExpandToggle = async () => {
+    setIsExpanded(!isExpanded)
+    // Small bounce animation when expanding/collapsing
+    if (cardRef.current) {
+      await cssAnimator.scale(cardRef.current, 1.02, {
+        duration: ANIMATION_CONFIG.DURATION.FAST
+      })
+      await cssAnimator.scale(cardRef.current, 1, {
+        duration: ANIMATION_CONFIG.DURATION.FAST
+      })
+    }
+  }
+
   return (
-    <div className={`
-      bg-gradient-to-br ${styling.gradient} 
-      rounded-xl border-2 ${styling.border}
-      transition-all duration-300 ease-in-out
-      hover:shadow-xl ${styling.glow}
-      transform hover:-translate-y-1
-      overflow-hidden
-    `}>
+    <HoverCard
+      ref={cardRef}
+      hoverScale={1.02}
+      hoverShadow={true}
+      className={`
+        bg-gradient-to-br ${styling.gradient}
+        rounded-xl border-2 ${styling.border}
+        transition-all duration-300 ease-in-out
+        ${styling.glow}
+        overflow-hidden
+      `}
+    >
       {/* Header with Score and Status */}
       <div className="p-6 pb-4">
         <div className="flex justify-between items-start mb-4">
-          <div className={`
-            inline-flex items-center px-4 py-2 rounded-full text-white font-bold text-lg
-            bg-gradient-to-r ${styling.scoreGradient}
-            shadow-lg
-          `}>
-            {Math.round(score)}%
+          <div
+            ref={scoreRef}
+            className={`
+              inline-flex items-center px-4 py-2 rounded-full text-white font-bold text-lg
+              bg-gradient-to-r ${styling.scoreGradient}
+              shadow-lg transform transition-transform duration-200 hover:scale-110
+            `}
+          >
+            <AnimatedIcon animation="bounce" trigger="hover">
+              {Math.round(score)}%
+            </AnimatedIcon>
           </div>
           <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(match.status)}`}>
             {match.status.charAt(0).toUpperCase() + match.status.slice(1)}
@@ -94,7 +124,7 @@ export default function EnhancedMatchCard({ match, tier, onAction, actionLoading
               <p className="text-gray-600 text-sm">{match.jobSeeker?.title || 'No title'}</p>
             </div>
           </div>
-          
+
           {/* Skills Preview */}
           {match.jobSeeker?.skills && match.jobSeeker.skills.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3">
@@ -152,9 +182,12 @@ export default function EnhancedMatchCard({ match, tier, onAction, actionLoading
               ))}
               {match.matchReasons.length > 2 && (
                 <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                  onClick={handleExpandToggle}
+                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors flex items-center"
                 >
+                  <AnimatedIcon animation="rotate" trigger="hover" className="mr-1">
+                    {isExpanded ? '▲' : '▼'}
+                  </AnimatedIcon>
                   {isExpanded ? 'Show Less' : `+${match.matchReasons.length - 2} more reasons`}
                 </button>
               )}
@@ -167,20 +200,32 @@ export default function EnhancedMatchCard({ match, tier, onAction, actionLoading
       <div className="px-6 pb-6">
         {match.status === 'pending' && (
           <div className="flex space-x-2">
-            <button
+            <AnimatedButton
               onClick={() => handleAction('approved')}
               disabled={actionLoading[match.id]}
-              className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+              variant="success"
+              size="medium"
+              className="flex-1"
             >
-              {actionLoading[match.id] ? '...' : '✓ Approve'}
-            </button>
-            <button
+              {actionLoading[match.id] ? (
+                <AnimatedIcon animation="rotate" trigger="click">⟳</AnimatedIcon>
+              ) : (
+                '✓ Approve'
+              )}
+            </AnimatedButton>
+            <AnimatedButton
               onClick={() => handleAction('rejected')}
               disabled={actionLoading[match.id]}
-              className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+              variant="danger"
+              size="medium"
+              className="flex-1"
             >
-              {actionLoading[match.id] ? '...' : '✗ Reject'}
-            </button>
+              {actionLoading[match.id] ? (
+                <AnimatedIcon animation="rotate" trigger="click">⟳</AnimatedIcon>
+              ) : (
+                '✗ Reject'
+              )}
+            </AnimatedButton>
           </div>
         )}
 
@@ -195,6 +240,6 @@ export default function EnhancedMatchCard({ match, tier, onAction, actionLoading
           </div>
         )}
       </div>
-    </div>
+    </HoverCard>
   )
 }
