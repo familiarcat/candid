@@ -8,7 +8,21 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next export"
+    "export": "next export",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:enterprise": "node scripts/test-enterprise-features.js",
+    "docker:build": "docker build -t candid-connections .",
+    "docker:run": "docker run -p 3000:3000 candid-connections",
+    "docker:compose": "docker-compose up -d",
+    "docker:compose:down": "docker-compose down",
+    "deploy:infrastructure": "./scripts/deploy.sh infrastructure",
+    "deploy:build": "./scripts/deploy.sh build",
+    "deploy:staging": "./scripts/deploy.sh deploy staging",
+    "deploy:production": "./scripts/deploy.sh deploy production",
+    "deploy:full": "./scripts/deploy.sh full",
+    "deploy:verify": "./scripts/deploy.sh verify"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.8",
