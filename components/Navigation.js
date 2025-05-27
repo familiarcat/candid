@@ -95,7 +95,12 @@ export default function Navigation() {
   ]
 
   return (
-    <nav className="bg-white shadow-soft border-b border-candid-gray-200">
+    <nav
+      id="navigation"
+      className="bg-white shadow-soft border-b border-candid-gray-200"
+      role="navigation"
+      aria-label="Main navigation"
+    >
       <div className="container-app">
         {/* Main Navigation Row */}
         <div className="flex justify-between items-center h-16">
@@ -211,8 +216,10 @@ export default function Navigation() {
             <button
               ref={hamburgerRef}
               onClick={toggleMobileMenu}
-              className="p-2 rounded-lg text-candid-navy-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              aria-label="Toggle mobile menu"
+              className="p-2 rounded-lg text-candid-navy-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label={isMobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-navigation"
             >
               <svg
                 className={`w-6 h-6 transition-transform duration-200 ${
@@ -275,8 +282,11 @@ export default function Navigation() {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div
+            id="mobile-navigation"
             ref={mobileMenuRef}
             className="lg:hidden border-t border-candid-gray-200 py-4 overflow-hidden"
+            role="menu"
+            aria-label="Mobile navigation menu"
           >
             <div className="space-y-2">
               {/* Main Navigation Items */}
@@ -285,11 +295,13 @@ export default function Navigation() {
                   key={item.path}
                   href={item.path}
                   onClick={toggleMobileMenu}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 min-h-[48px] opacity-0 ${
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 min-h-[48px] opacity-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                     router.pathname === item.path
                       ? 'nav-link-active'
                       : 'nav-link'
                   }`}
+                  role="menuitem"
+                  aria-current={router.pathname === item.path ? 'page' : undefined}
                 >
                   <span className="text-lg">{item.icon}</span>
                   <span>{item.name}</span>
