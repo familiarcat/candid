@@ -6,6 +6,8 @@ import Head from 'next/head'
 import Layout from '../components/Layout'
 import { useData } from '../contexts/DataContext'
 import { dashboardManager, WIDGET_TYPES, WIDGET_CONFIGS } from '../lib/dashboardSystem'
+import MobileDashboard from '../components/mobile/MobileDashboard'
+import { MobileResponsiveUtils } from '../lib/mobileVisualizationControls'
 
 export default function CustomDashboard() {
   const { data } = useData()
@@ -13,9 +15,27 @@ export default function CustomDashboard() {
   const [dashboards, setDashboards] = useState([])
   const [isEditing, setIsEditing] = useState(false)
   const [showWidgetPicker, setShowWidgetPicker] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   // Mock user ID (in production, this would come from authentication)
   const userId = 'user_demo'
+
+  useEffect(() => {
+    // Mobile detection
+    setIsMobile(MobileResponsiveUtils.isMobile())
+
+    const handleResize = () => {
+      setIsMobile(MobileResponsiveUtils.isMobile())
+    }
+
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('orientationchange', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('orientationchange', handleResize)
+    }
+  }, [])
 
   useEffect(() => {
     // Load existing dashboards
@@ -30,7 +50,7 @@ export default function CustomDashboard() {
     } else if (!dashboard) {
       dashboard = dashboardManager.createDefaultDashboard(userId)
     }
-    
+
     setCurrentDashboard(dashboard)
   }, [userId])
 
@@ -69,7 +89,7 @@ export default function CustomDashboard() {
 
   const renderWidget = (widget) => {
     const config = WIDGET_CONFIGS[widget.type]
-    
+
     return (
       <div
         key={widget.id}
@@ -129,7 +149,7 @@ export default function CustomDashboard() {
         const highQualityMatches = data?.matches?.filter(m => m.score > 80).length || 0
         const mediumQualityMatches = data?.matches?.filter(m => m.score > 60 && m.score <= 80).length || 0
         const totalMatches = data?.matches?.length || 1
-        
+
         return (
           <div className="space-y-3">
             <div className="space-y-2">
@@ -138,8 +158,8 @@ export default function CustomDashboard() {
                 <span>{highQualityMatches}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-green-600 h-2 rounded-full" 
+                <div
+                  className="bg-green-600 h-2 rounded-full"
                   style={{ width: `${(highQualityMatches / totalMatches) * 100}%` }}
                 ></div>
               </div>
@@ -150,8 +170,8 @@ export default function CustomDashboard() {
                 <span>{mediumQualityMatches}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-yellow-600 h-2 rounded-full" 
+                <div
+                  className="bg-yellow-600 h-2 rounded-full"
                   style={{ width: `${(mediumQualityMatches / totalMatches) * 100}%` }}
                 ></div>
               </div>
@@ -162,7 +182,7 @@ export default function CustomDashboard() {
       case WIDGET_TYPES.SKILL_GAPS:
         const skills = data?.skills || []
         const topSkillGaps = skills.slice(0, 5)
-        
+
         return (
           <div className="space-y-2">
             {topSkillGaps.length > 0 ? (
@@ -181,7 +201,7 @@ export default function CustomDashboard() {
       case WIDGET_TYPES.COMPANY_OVERVIEW:
         const companies = data?.companies || []
         const topCompanies = companies.slice(0, 3)
-        
+
         return (
           <div className="space-y-2">
             {topCompanies.length > 0 ? (
@@ -274,14 +294,23 @@ export default function CustomDashboard() {
       </Head>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="mb-4 lg:mb-0">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{currentDashboard.name}</h1>
-            <p className="text-gray-600">
-              {currentDashboard.description || 'Personalized analytics workspace'}
-            </p>
-          </div>
+        {isMobile ? (
+          /* Mobile Dashboard */
+          <MobileDashboard
+            dashboard={currentDashboard}
+            onDashboardChange={setCurrentDashboard}
+          />
+        ) : (
+          /* Desktop Dashboard */
+          <>
+            {/* Header */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+              <div className="mb-4 lg:mb-0">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{currentDashboard.name}</h1>
+                <p className="text-gray-600">
+                  {currentDashboard.description || 'Personalized analytics workspace'}
+                </p>
+              </div>
 
           {/* Dashboard Controls */}
           <div className="flex flex-wrap gap-3">
@@ -328,9 +357,9 @@ export default function CustomDashboard() {
         </div>
 
         {/* Dashboard Grid */}
-        <div 
+        <div
           className="grid gap-6 auto-rows-fr"
-          style={{ 
+          style={{
             gridTemplateColumns: `repeat(${currentDashboard.layout.columns}, 1fr)`,
             minHeight: '600px'
           }}
@@ -372,6 +401,8 @@ export default function CustomDashboard() {
             </div>
           </div>
         )}
+            </>
+          )}
       </div>
     </Layout>
   )

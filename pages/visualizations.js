@@ -10,6 +10,8 @@ import VisualizationDebugger from '../components/visualizations/VisualizationDeb
 import SimpleVisualizationTest from '../components/visualizations/SimpleVisualizationTest'
 import CollaborationPanel from '../components/collaboration/CollaborationPanel'
 import ExportControls from '../components/visualizations/ExportControls'
+import MobileCollaborationPanel from '../components/mobile/MobileCollaborationPanel'
+import { MobileResponsiveUtils } from '../lib/mobileVisualizationControls'
 
 
 export default function Visualizations() {
@@ -19,6 +21,28 @@ export default function Visualizations() {
   const [showCollaboration, setShowCollaboration] = useState(false)
   const [showExportControls, setShowExportControls] = useState(false)
   const svgRef = useRef(null)
+
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    setIsMobile(MobileResponsiveUtils.isMobile())
+
+    // Listen for orientation changes
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        setIsMobile(MobileResponsiveUtils.isMobile())
+      }, 100)
+    }
+
+    window.addEventListener('orientationchange', handleOrientationChange)
+    window.addEventListener('resize', handleOrientationChange)
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange)
+      window.removeEventListener('resize', handleOrientationChange)
+    }
+  }, [])
 
   // Tab configuration
   const tabs = [
@@ -208,28 +232,50 @@ export default function Visualizations() {
           </div>
 
           {/* Enterprise Feature Panels */}
-          <div className="fixed bottom-4 right-4 space-y-4 z-50">
-            {/* Collaboration Panel */}
-            {showCollaboration && (
-              <div className="w-80">
-                <CollaborationPanel
+          {isMobile ? (
+            /* Mobile-Optimized Panels */
+            <>
+              {showCollaboration && (
+                <MobileCollaborationPanel
                   visualizationState={visualizationState}
                   onStateChange={setVisualizationState}
                 />
-              </div>
-            )}
-
-            {/* Export Controls */}
-            {showExportControls && (
-              <div className="w-80">
-                <ExportControls
-                  networkData={networkData}
-                  visualizationState={visualizationState}
-                  svgElement={svgRef.current}
-                />
-              </div>
-            )}
-          </div>
+              )}
+              {showExportControls && (
+                <div className="fixed bottom-4 left-4 right-4 z-50">
+                  <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4">
+                    <ExportControls
+                      networkData={networkData}
+                      visualizationState={visualizationState}
+                      svgElement={svgRef.current}
+                      isMobile={true}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Desktop Panels */
+            <div className="fixed bottom-4 right-4 space-y-4 z-50">
+              {showCollaboration && (
+                <div className="w-80">
+                  <CollaborationPanel
+                    visualizationState={visualizationState}
+                    onStateChange={setVisualizationState}
+                  />
+                </div>
+              )}
+              {showExportControls && (
+                <div className="w-80">
+                  <ExportControls
+                    networkData={networkData}
+                    visualizationState={visualizationState}
+                    svgElement={svgRef.current}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </Layout>
     </VisualizationDataProvider>
