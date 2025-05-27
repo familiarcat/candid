@@ -1,8 +1,6 @@
 import { useEffect } from 'react'
 import Navigation from './Navigation'
 import PerformanceMonitorWidget from './optimization/PerformanceMonitorWidget'
-import AccessibilityAuditor from './accessibility/AccessibilityAuditor'
-import { AccessibilityPreferencesButton } from './accessibility/AccessibilityPreferences'
 import { accessibilityManager } from '../lib/accessibilitySystem'
 
 export default function Layout({ children }) {
@@ -35,10 +33,6 @@ export default function Layout({ children }) {
 
       {/* Development tools */}
       <PerformanceMonitorWidget />
-      <AccessibilityAuditor />
-
-      {/* Accessibility preferences */}
-      <AccessibilityPreferencesButton />
     </div>
   )
 }
