@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useVisualizationData } from './VisualizationDataProvider'
 import AuthorityNetworkGraph from './AuthorityNetworkGraph'
 import NetworkVisualization3D from './NetworkVisualization3D_Simple'
+import GraphCard from './GraphCard'
 import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
 import { LoadingOverlay, VisualizationLoadingAnimation, PageTransition } from '../animations/LoadingAnimations'
 import { ResponsiveVisualizationContainer, MobileVisualizationControls, MobileVisualizationGestures } from '../mobile/ResponsiveVisualization'
@@ -17,6 +18,23 @@ export default function NetworkView() {
     showSkills: true,
     showCompanies: true
   })
+
+  // Sample data for the instructional graph card
+  const instructionalData = {
+    nodes: [
+      { id: 'company', name: 'Company', type: 'company', size: 12, central: true },
+      { id: 'authority', name: 'Authority', type: 'authority', size: 10 },
+      { id: 'jobSeeker', name: 'Job Seeker', type: 'jobSeeker', size: 8 },
+      { id: 'skill', name: 'Skill', type: 'skill', size: 6 },
+    ],
+    links: [
+      { source: 'company', target: 'authority', type: 'employment' },
+      { source: 'authority', target: 'jobSeeker', type: 'match' },
+      { source: 'jobSeeker', target: 'skill', type: 'has' },
+      { source: 'authority', target: 'skill', type: 'seeks' },
+    ],
+    stats: {}
+  }
 
   // Animate stats cards on mount
   useEffect(() => {
@@ -140,14 +158,25 @@ export default function NetworkView() {
         </div>
 
       {/* Instructions */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h3 className="font-medium text-gray-900 mb-2">How to Use</h3>
-        <p className="text-sm text-gray-600">
-          {visualizationMode === '2d'
-            ? 'Drag nodes to explore relationships, hover for details, and click for more information. Use mouse wheel to zoom in/out.'
-            : 'Click and drag to rotate the 3D view, use mouse wheel to zoom, and click nodes to select them. Explore the network in three dimensions.'
-          }
-        </p>
+      <div className="bg-gray-50 rounded-lg p-4 md:p-6">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <div className="flex-1">
+            <h3 className="font-medium text-gray-900 mb-2">How to Use</h3>
+            <p className="text-sm text-gray-600">
+              {visualizationMode === '2d'
+                ? 'Drag nodes to explore relationships, hover for details, and click for more information. Use mouse wheel to zoom in/out.'
+                : 'Click and drag to rotate the 3D view, use mouse wheel to zoom, and click nodes to select them. Explore the network in three dimensions.'
+              }
+            </p>
+          </div>
+          <div className="w-full md:w-auto">
+            <GraphCard
+              networkData={instructionalData}
+              size="mini"
+              interactive={false}
+            />
+          </div>
+        </div>
       </div>
 
         {/* Responsive Visualization Container */}

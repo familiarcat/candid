@@ -22,12 +22,6 @@ export default function Visualizations() {
       description: 'Context-aware visualization with root node emphasis'
     },
     {
-      id: 'explorer',
-      name: 'Classic Explorer',
-      icon: '🔍',
-      description: 'Traditional entity-based exploration'
-    },
-    {
       id: 'network',
       name: 'Network View',
       icon: '🕸️',
@@ -38,18 +32,6 @@ export default function Visualizations() {
       name: 'Global Analysis',
       icon: '🌐',
       description: 'Comprehensive network analysis'
-    },
-    {
-      id: 'debug',
-      name: 'Debug',
-      icon: '🔍',
-      description: 'Debug visualization data'
-    },
-    {
-      id: 'test',
-      name: 'Test',
-      icon: '🧪',
-      description: 'Test visualization rendering'
     }
   ]
 
