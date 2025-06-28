@@ -1,106 +1,117 @@
+import { useMemo } from 'react'
 import Head from 'next/head'
 import Layout from '../components/Layout'
 import DashboardCards from '../components/DashboardCards'
+import NetworkVisualization3DBackground from '../components/visualizations/NetworkVisualization3DBackground'
+import { useData } from '../contexts/DataContext'
+import { generateNetworkData } from '../lib/graphDataGenerator'
 
 export default function Home() {
+  const {
+    stats,
+    loading,
+    companies,
+    hiringAuthorities,
+    jobSeekers,
+    skills,
+    positions,
+    matches
+  } = useData()
+
+  // Memoized network data for 3D background visualization - only regenerates when data changes
+  const networkData = useMemo(() => {
+    if (companies.length === 0) {
+      return { nodes: [], links: [] }
+    }
+
+    console.log('🎨 Generating dashboard 3D background data (memoized)...')
+    return generateNetworkData(
+      companies,
+      hiringAuthorities,
+      jobSeekers,
+      skills,
+      positions,
+      matches
+    )
+  }, [companies, hiringAuthorities, jobSeekers, skills, positions, matches])
+
   return (
     <Layout>
       <Head>
-        <title>Candid Connections Katra | Professional Talent Matching Platform</title>
+        <title>Talent Network | Connect • Match • Succeed</title>
         <meta name="description" content="Advanced graph-based talent matching platform connecting job seekers with opportunities through intelligent relationship mapping." />
-        <meta name="keywords" content="job matching, talent platform, career connections, hiring, recruitment" />
+        <meta name="keywords" content="job matching, talent platform, career connections, hiring, recruitment, network" />
       </Head>
 
-      {/* Network Hero Section - Hiring Authority Focus */}
-      <div className="relative bg-gradient-to-br from-secondary-900 via-secondary-800 to-secondary-950 rounded-3xl p-12 mb-12 overflow-hidden network-background">
-        {/* Network Visualization - Hiring Authority Hierarchy */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-20">
-          {/* Central Company Node */}
-          <div className="relative">
-            <div className="w-20 h-20 bg-primary-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">COMPANY</span>
-            </div>
+      {/* Interconnective Hero Section - 3D Network Background */}
+      <div className="relative bg-gradient-to-br from-white/95 via-primary-50/80 to-secondary-50/90 backdrop-blur-sm rounded-3xl p-12 mb-12 overflow-hidden border border-primary-100/50 shadow-soft">
+        {/* 3D Network Visualization Background */}
+        {networkData.nodes.length > 0 && (
+          <NetworkVisualization3DBackground
+            data={networkData}
+            width={1200}
+            height={400}
+            opacity={0.45}
+            autoRotate={true}
+            rotationSpeed={0.0008}
+            cameraDistance={140}
+            lightIntensity={0.54}
+            className="opacity-80"
+          />
+        )}
 
-            {/* Hiring Authority Nodes */}
-            <div className="absolute -top-16 -left-16 w-12 h-12 bg-accent-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">CEO</span>
-            </div>
-            <div className="absolute -top-16 left-16 w-12 h-12 bg-accent-400 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">CTO</span>
-            </div>
-            <div className="absolute top-16 -left-16 w-12 h-12 bg-accent-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">VP</span>
-            </div>
-            <div className="absolute top-16 left-16 w-12 h-12 bg-accent-300 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">HR</span>
-            </div>
-
-            {/* Job Seeker Nodes */}
-            <div className="absolute -top-32 left-0 w-10 h-10 bg-primary-300 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">JS1</span>
-            </div>
-            <div className="absolute top-32 left-0 w-10 h-10 bg-primary-300 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">JS2</span>
-            </div>
-            <div className="absolute top-0 -left-32 w-10 h-10 bg-primary-300 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">JS3</span>
-            </div>
-            <div className="absolute top-0 left-32 w-10 h-10 bg-primary-300 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">JS4</span>
-            </div>
-
-            {/* Connection Lines */}
-            <svg className="absolute inset-0 w-full h-full" style={{width: '200px', height: '200px', left: '-100px', top: '-100px'}}>
-              <line x1="100" y1="100" x2="84" y2="84" stroke="#00d4ff" strokeWidth="2" opacity="0.6"/>
-              <line x1="100" y1="100" x2="116" y2="84" stroke="#00d4ff" strokeWidth="2" opacity="0.6"/>
-              <line x1="100" y1="100" x2="84" y2="116" stroke="#00d4ff" strokeWidth="2" opacity="0.6"/>
-              <line x1="100" y1="100" x2="116" y2="116" stroke="#00d4ff" strokeWidth="2" opacity="0.6"/>
-              <line x1="84" y1="84" x2="100" y2="68" stroke="#f97316" strokeWidth="1" opacity="0.4"/>
-              <line x1="116" y1="84" x2="100" y2="68" stroke="#f97316" strokeWidth="1" opacity="0.4"/>
-              <line x1="84" y1="116" x2="100" y2="132" stroke="#f97316" strokeWidth="1" opacity="0.4"/>
-              <line x1="116" y1="116" x2="100" y2="132" stroke="#f97316" strokeWidth="1" opacity="0.4"/>
-            </svg>
-          </div>
+        {/* Floating Connection Elements - Reduced for 3D background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Subtle accent dots */}
+          <div className="absolute top-8 left-8 w-2 h-2 bg-accent-400 rounded-full animate-pulse opacity-30"></div>
+          <div className="absolute bottom-8 right-8 w-2 h-2 bg-primary-400 rounded-full animate-pulse opacity-25" style={{ animationDelay: '2s' }}></div>
         </div>
 
         <div className="relative z-10 text-center">
-          <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6">
+          <h1 className="text-4xl lg:text-6xl font-bold text-secondary-800 mb-6">
             Connect to the Right<br />
-            <span className="cosmic-gradient">
+            <span className="bg-gradient-to-r from-primary-600 via-accent-500 to-secondary-600 bg-clip-text text-transparent">
               Hiring Authority
             </span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8">
-            Skip the job board grind. Our graph database maps your skills directly to the <span className="text-primary-400 font-semibold">correct hiring authority</span> based on company hierarchy, position requirements, and skill connections.
+          <p className="text-xl text-secondary-700 max-w-3xl mx-auto leading-relaxed mb-8">
+            Skip the job board grind. Our graph database maps your skills directly to the <span className="text-primary-600 font-semibold">correct hiring authority</span> based on company hierarchy, position requirements, and skill connections.
           </p>
-
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-secondary-900 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
-              Explore Network Connections
-            </button>
-            <button className="border-2 border-primary-400 text-primary-400 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-400 hover:text-secondary-900 transition-all duration-300">
-              View Hiring Authorities
-            </button>
+            <a href="/matches" className="btn-primary text-lg px-8 py-4 shadow-medium hover:shadow-large transition-shadow duration-300">
+              🎯 View Authority Matches
+            </a>
+            <a href="/visualizations" className="btn-outline text-lg px-8 py-4 hover:bg-primary-50 transition-colors duration-300">
+              📊 Explore Network
+            </a>
           </div>
         </div>
       </div>
 
-      {/* Network Stats - Hiring Authority Focus */}
+      {/* Network Stats - Real Data */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 max-w-4xl mx-auto">
         <div className="text-center">
-          <div className="text-3xl font-bold text-primary-500">156</div>
+          <div className="text-3xl font-bold text-primary-500">
+            {loading.global ? '...' : stats.totalJobSeekers}
+          </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Job Seekers</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-accent-600">67</div>
+          <div className="text-3xl font-bold text-accent-600">
+            {loading.global ? '...' : stats.totalAuthorities}
+          </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Hiring Authorities</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-secondary-600">23</div>
+          <div className="text-3xl font-bold text-secondary-600">
+            {loading.global ? '...' : stats.totalCompanies}
+          </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Companies</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-primary-600">1,247</div>
+          <div className="text-3xl font-bold text-primary-600">
+            {loading.global ? '...' : stats.skillConnections}
+          </div>
           <div className="text-sm text-candid-gray-500 uppercase tracking-wide">Skill Connections</div>
         </div>
       </div>

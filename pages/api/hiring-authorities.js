@@ -88,14 +88,14 @@ async function handleGet(req, res, db, collections) {
           linkedIn: authority.linkedIn
         }
       `
-      
+
       const cursor = await db.query(query, { id })
       const result = await cursor.next()
-      
+
       if (!result) {
         return res.status(404).json({ error: 'Hiring authority not found' })
       }
-      
+
       return res.status(200).json(result)
     } else {
       // Get all hiring authorities with filters
@@ -117,7 +117,7 @@ async function handleGet(req, res, db, collections) {
         bindVars.companySize = companySize
       }
 
-      const whereClause = filterConditions.length > 0 
+      const whereClause = filterConditions.length > 0
         ? `FILTER ${filterConditions.join(' AND ')}`
         : ''
 
@@ -164,8 +164,13 @@ async function handleGet(req, res, db, collections) {
           COLLECT WITH COUNT INTO total
           RETURN total
       `
-      
-      const countCursor = await db.query(countQuery, bindVars)
+
+      // Create bind vars for count query (exclude limit and offset)
+      const countBindVars = { ...bindVars }
+      delete countBindVars.limit
+      delete countBindVars.offset
+
+      const countCursor = await db.query(countQuery, countBindVars)
       const totalCount = await countCursor.next() || 0
 
       return res.status(200).json({
@@ -194,7 +199,7 @@ async function handlePost(req, res, db, collections) {
     }
 
     const result = await hiringAuthorities.save(authorityData)
-    
+
     return res.status(201).json({
       id: result._key,
       ...authorityData
@@ -207,7 +212,7 @@ async function handlePost(req, res, db, collections) {
 
 async function handlePut(req, res, db, collections) {
   const { id } = req.query
-  
+
   if (!id) {
     return res.status(400).json({ error: 'Authority ID is required' })
   }
@@ -220,7 +225,7 @@ async function handlePut(req, res, db, collections) {
     }
 
     const result = await hiringAuthorities.update(id, updateData)
-    
+
     return res.status(200).json({
       id: result._key,
       ...updateData
@@ -233,7 +238,7 @@ async function handlePut(req, res, db, collections) {
 
 async function handleDelete(req, res, db, collections) {
   const { id } = req.query
-  
+
   if (!id) {
     return res.status(400).json({ error: 'Authority ID is required' })
   }
@@ -241,7 +246,7 @@ async function handleDelete(req, res, db, collections) {
   try {
     const { hiringAuthorities } = collections
     await hiringAuthorities.remove(id)
-    
+
     return res.status(200).json({ message: 'Hiring authority deleted successfully' })
   } catch (error) {
     console.error('Error deleting hiring authority:', error)

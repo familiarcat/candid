@@ -1,24 +1,11 @@
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useData } from '../contexts/DataContext'
 
 export default function DashboardCards() {
-  const [stats, setStats] = useState({})
-  const [loading, setLoading] = useState(true)
+  const { stats, loading } = useData()
 
-  useEffect(() => {
-    // Simulate loading stats
-    setTimeout(() => {
-      setStats({
-        matches: 47,
-        jobSeekers: 156,
-        companies: 23,
-        positions: 89,
-        skills: 127,
-        globalConnections: 342
-      })
-      setLoading(false)
-    }, 1000)
-  }, [])
+  // Calculate global connections for the network view card
+  const globalConnections = stats.skillConnections + stats.totalMatches + stats.totalAuthorities + stats.totalPositions
 
   const cards = [
     {
@@ -27,7 +14,7 @@ export default function DashboardCards() {
       gradient: 'from-primary-500 to-primary-600',
       path: '/matches',
       description: 'Job seeker to hiring authority connections',
-      stat: stats.matches,
+      stat: stats.totalMatches,
       statLabel: 'Active Matches'
     },
     {
@@ -36,7 +23,7 @@ export default function DashboardCards() {
       gradient: 'from-secondary-500 to-secondary-600',
       path: '/job-seekers',
       description: 'Candidates seeking the right hiring authority',
-      stat: stats.jobSeekers,
+      stat: stats.totalJobSeekers,
       statLabel: 'Candidates'
     },
     {
@@ -45,7 +32,7 @@ export default function DashboardCards() {
       gradient: 'from-accent-500 to-accent-600',
       path: '/hiring-authorities',
       description: 'Decision makers across company hierarchies',
-      stat: stats.hiringAuthorities || 67,
+      stat: stats.totalAuthorities,
       statLabel: 'Authorities'
     },
     {
@@ -54,7 +41,7 @@ export default function DashboardCards() {
       gradient: 'from-candid-blue-500 to-candid-blue-600',
       path: '/companies',
       description: 'Organizational structures and hierarchies',
-      stat: stats.companies,
+      stat: stats.totalCompanies,
       statLabel: 'Organizations'
     },
     {
@@ -63,16 +50,16 @@ export default function DashboardCards() {
       gradient: 'from-candid-orange-500 to-candid-orange-600',
       path: '/positions',
       description: 'Roles mapped to hiring authorities',
-      stat: stats.positions,
+      stat: stats.totalPositions,
       statLabel: 'Open Roles'
     },
     {
       title: 'Network View',
       icon: '🌐',
       gradient: 'from-candid-navy-600 to-candid-navy-700',
-      path: '/global-view',
+      path: '/visualizations',
       description: 'Graph visualization of all connections',
-      stat: stats.globalConnections,
+      stat: globalConnections,
       statLabel: 'Connections'
     }
   ]
@@ -94,12 +81,12 @@ export default function DashboardCards() {
 
               {/* Stats */}
               <div className="text-right">
-                {loading ? (
+                {loading.global ? (
                   <div className="w-8 h-8 loading-spinner"></div>
                 ) : (
                   <>
                     <div className="text-2xl font-bold text-candid-navy-900">
-                      {card.stat}
+                      {card.stat || 0}
                     </div>
                     <div className="text-xs text-candid-gray-500 uppercase tracking-wide">
                       {card.statLabel}

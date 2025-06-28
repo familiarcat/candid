@@ -4,6 +4,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import mobile-optimized styles */
+@import './mobile.css';
+
+/* Essential accessibility features (invisible) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  font-weight: 600;
+  transition: top 0.3s ease;
+  z-index: 9999;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Candid Connections Global Styles */
 @layer base {
   html {
@@ -119,6 +165,75 @@
 
   .nav-link-active {
     @apply nav-link text-primary-700 bg-primary-100;
+  }
+
+  /* Brockman/Bento Progressive Navigation Styles */
+  /*
+   * Font Size Scaling Strategy (Brockman Design Theory):
+   * 2xl+ (1536px+): text-sm (14pt) - Full readability
+   * xl-2xl (1280-1535px): text-xs (12pt) - Good readability
+   * lg-xl (1024-1279px): text-xs (10pt) - Minimum threshold
+   * md-lg (768-1023px): Icon only - Below legibility threshold
+   */
+
+  /* Extra Large Navigation Items (2xl+) - 14pt font */
+  .nav-item-xl {
+    @apply flex flex-col items-center px-3 py-2 rounded-lg
+           transition-all duration-200 whitespace-nowrap
+           hover:bg-primary-50 hover:text-primary-600;
+  }
+
+  /* Large Navigation Items (xl-2xl) - 12pt font */
+  .nav-item-lg {
+    @apply flex flex-col items-center px-2.5 py-2 rounded-lg
+           transition-all duration-200 whitespace-nowrap
+           hover:bg-primary-50 hover:text-primary-600;
+  }
+
+  /* Medium Navigation Items (lg-xl) - 10pt font (minimum threshold) */
+  .nav-item-md {
+    @apply flex flex-col items-center px-2 py-1.5 rounded-lg
+           transition-all duration-200 whitespace-nowrap
+           hover:bg-primary-50 hover:text-primary-600;
+  }
+
+  /* Icon-only Navigation (below 10pt threshold) */
+  .nav-icon-only {
+    @apply flex items-center justify-center w-10 h-10 rounded-lg
+           text-lg font-medium transition-all duration-200
+           hover:bg-primary-50 hover:text-primary-600;
+  }
+
+  .nav-icon-only-active {
+    @apply nav-icon-only text-primary-700 bg-primary-100;
+  }
+
+  /* Admin Controls Progressive Styling */
+  .admin-controls-row {
+    @apply border-t border-candid-gray-100 py-2 bg-gradient-to-r
+           from-candid-gray-50 to-white;
+  }
+
+  /* Large Admin Controls */
+  .admin-control-lg {
+    @apply inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium
+           transition-all duration-200;
+  }
+
+  /* Medium Admin Controls */
+  .admin-control-md {
+    @apply inline-flex items-center px-2 py-1 rounded-md text-xs font-medium
+           transition-all duration-200;
+  }
+
+  /* Mobile Navigation Enhancements */
+  .mobile-nav-section {
+    @apply border-t border-candid-gray-200 pt-4 mt-4;
+  }
+
+  .mobile-nav-header {
+    @apply text-xs font-semibold text-candid-gray-500 uppercase
+           tracking-wider px-4 py-2;
   }
 
   /* Form Styles */

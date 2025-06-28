@@ -1,109 +1,233 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
+import { useRouter } from 'next/router'
 import Layout from '../components/Layout'
+import DetailModal from '../components/ui/DetailModal'
+import UniversalProfileModal from '../components/ui/UniversalProfileModal'
 import VisualizationModal from '../components/VisualizationModal'
-import { generateSampleGraphData } from '../lib/graphData'
+import { CompanyCard } from '../components/ui/CollapsibleCard'
+import { AuthorityLink } from '../components/ui/LinkButton'
 import { formatDate, getEntityIcon } from '../lib/utils'
+import { getEntityUrl, getMatchesUrl, getVisualizationUrl, validateEntityData, getRelatedEntities } from '../lib/crossPageNavigation'
+import { useData } from '../contexts/DataContext'
+import { usePageVisualization } from '../hooks/useComponentVisualization'
+import { VisualizationDataProvider } from '../components/visualizations/VisualizationDataProvider'
+import AdvancedFilterPanel from '../components/filters/AdvancedFilterPanel'
+import { useCompanyFilters } from '../hooks/useAdvancedFilters'
 
-export default function Companies() {
-  const [companies, setCompanies] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [showVisualization, setShowVisualization] = useState(false)
-  const [graphData, setGraphData] = useState(null)
+function CompaniesContent() {
+  const router = useRouter()
+
+  // Use DataContext for data management
+  const {
+    companies,
+    hiringAuthorities,
+    positions,
+    jobSeekers,
+    loading,
+    errors
+  } = useData()
+
+  // DataContext provides all entity data
+
+  // Component-specific visualization
+  const visualization = usePageVisualization('company', {
+    maxDistance: 2,
+    layoutType: 'radial'
+  })
+
+  // Advanced filtering system
+  const advancedFilters = useCompanyFilters(companies, {
+    persistFilters: true,
+    storageKey: 'companies-advanced-filters'
+  })
+
+  // Local UI state
+  const [selectedCompany, setSelectedCompany] = useState(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [filterIndustry, setFilterIndustry] = useState('all')
+  const [filterSize, setFilterSize] = useState('all')
   const [sortBy, setSortBy] = useState('name')
+  const [dataQualityIssues, setDataQualityIssues] = useState([])
 
+  // Handle URL parameters for cross-page navigation
   useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        // Simulate API call - in real app this would fetch from /api/companies
-        setTimeout(() => {
-          const sampleCompanies = [
-            {
-              id: 'company_1',
-              name: 'TechCorp Inc.',
-              industry: 'Technology',
-              size: 'Large (1000+ employees)',
-              location: 'San Francisco, CA',
-              description: 'Leading technology company specializing in cloud solutions and enterprise software.',
-              openPositions: 12,
-              hiringAuthorities: [
-                { name: 'Sarah Wilson', role: 'VP Engineering' },
-                { name: 'Mike Chen', role: 'Director of Product' }
-              ],
-              founded: '2010',
-              website: 'https://techcorp.com',
-              logo: '🏢'
-            },
-            {
-              id: 'company_2',
-              name: 'DataFlow Systems',
-              industry: 'Data Analytics',
-              size: 'Medium (100-999 employees)',
-              location: 'Austin, TX',
-              description: 'Data analytics platform helping businesses make data-driven decisions.',
-              openPositions: 8,
-              hiringAuthorities: [
-                { name: 'Jennifer Rodriguez', role: 'Head of Engineering' },
-                { name: 'David Park', role: 'CTO' }
-              ],
-              founded: '2015',
-              website: 'https://dataflow.com',
-              logo: '📊'
-            },
-            {
-              id: 'company_3',
-              name: 'Design Studio Pro',
-              industry: 'Design & Creative',
-              size: 'Small (10-99 employees)',
-              location: 'New York, NY',
-              description: 'Creative design studio specializing in user experience and brand design.',
-              openPositions: 5,
-              hiringAuthorities: [
-                { name: 'Alex Thompson', role: 'Creative Director' },
-                { name: 'Maria Garcia', role: 'Design Lead' }
-              ],
-              founded: '2018',
-              website: 'https://designstudiopro.com',
-              logo: '🎨'
-            },
-            {
-              id: 'company_4',
-              name: 'CloudTech Solutions',
-              industry: 'Cloud Infrastructure',
-              size: 'Medium (100-999 employees)',
-              location: 'Seattle, WA',
-              description: 'Cloud infrastructure and DevOps solutions for modern enterprises.',
-              openPositions: 15,
-              hiringAuthorities: [
-                { name: 'Robert Kim', role: 'VP of Engineering' },
-                { name: 'Lisa Chang', role: 'Director of Operations' }
-              ],
-              founded: '2012',
-              website: 'https://cloudtech.com',
-              logo: '☁️'
-            }
-          ]
-          
-          setCompanies(sampleCompanies)
-          setGraphData(generateSampleGraphData())
-          setLoading(false)
-        }, 1000)
-      } catch (err) {
-        setError(err.message)
-        setLoading(false)
+    const { query } = router
+    if (query.industry) setFilterIndustry(query.industry)
+    if (query.size) setFilterSize(query.size)
+    if (query.search) setSearchTerm(query.search)
+  }, [router.query])
+
+  // Validate data quality for all companies
+  useEffect(() => {
+    if (companies && companies.length > 0) {
+      const issues = []
+      companies.forEach(company => {
+        const validation = validateEntityData(company, 'company')
+        if (validation.warnings.length > 0) {
+          issues.push({
+            entity: company.name || 'Unknown Company',
+            issues: validation.warnings
+          })
+        }
+      })
+      setDataQualityIssues(issues)
+    }
+  }, [companies])
+
+  // Data comes from DataContext - no need for useEffect data fetching
+
+  // Calculate real database metrics for companies
+  const calculateCompanyMetrics = (company) => {
+    const companyName = company.name
+    const companyKey = company._key || company.id
+
+    // Count hiring authorities at this company
+    const companyAuthorities = hiringAuthorities.filter(auth =>
+      auth.company === companyName ||
+      auth.companyId === `companies/${companyKey}` ||
+      (auth.companyId && (auth.companyId === company.id || auth.companyId === company._key))
+    )
+
+    // Count open positions at this company
+    const companyPositions = positions.filter(pos =>
+      pos.company === companyName ||
+      pos.companyId === `companies/${companyKey}` ||
+      (pos.companyId && (pos.companyId === company.id || pos.companyId === company._key))
+    )
+
+    // Calculate total potential matches (job seekers who could work here)
+    const potentialMatches = jobSeekers.filter(js => {
+      if (!js.skills || !Array.isArray(js.skills)) return false
+
+      // Check if job seeker has skills matching any company position
+      return companyPositions.some(pos => {
+        const positionSkills = pos.requirements || pos.requiredSkills || []
+        const jobSeekerSkills = js.skills.map(skill =>
+          typeof skill === 'string' ? skill.toLowerCase() :
+          skill.name ? skill.name.toLowerCase() : ''
+        )
+
+        return positionSkills.some(reqSkill =>
+          jobSeekerSkills.some(jsSkill =>
+            jsSkill.includes(reqSkill.toLowerCase()) || reqSkill.toLowerCase().includes(jsSkill)
+          )
+        )
+      })
+    }).length
+
+    return {
+      hiringAuthorities: companyAuthorities,
+      openPositions: companyPositions.length,
+      potentialMatches,
+      authorityCount: companyAuthorities.length
+    }
+  }
+
+  // Handler functions
+  const handleViewDetails = (company) => {
+    setSelectedCompany(company)
+    setShowDetailModal(true)
+  }
+
+  const handleViewProfile = (company) => {
+    setSelectedCompany(company)
+    setShowProfileModal(true)
+  }
+
+  const handleNetworkView = (company) => {
+    visualization.controls.setSelectedEntity(company.id || company._key)
+    visualization.controls.openVisualization()
+  }
+
+  const handleFindMatches = (company) => {
+    const matchesUrl = getMatchesUrl({ company: company.id || company._key })
+    router.push(matchesUrl)
+  }
+
+  // Enhanced navigation handlers for interoperational functionality
+  const handleViewPositions = (company) => {
+    const positionsUrl = getEntityUrl('position', null, { company: company.id || company._key })
+    router.push(positionsUrl)
+  }
+
+  const handleViewAuthorities = (company) => {
+    const authoritiesUrl = getEntityUrl('authority', null, { company: company.id || company._key })
+    router.push(authoritiesUrl)
+  }
+
+  const handleViewSkills = (company) => {
+    // Get related skills for this company
+    const allData = { companies, positions, skills, hiringAuthorities, jobSeekers, matches }
+    const related = getRelatedEntities(company, 'company', allData)
+
+    if (related.skills.length > 0) {
+      const skillsUrl = getEntityUrl('skill', null, { company: company.id || company._key })
+      router.push(skillsUrl)
+    }
+  }
+
+  // Enhance companies with real database calculations
+  const enhancedCompanies = (companies || []).map(company => {
+    const metrics = calculateCompanyMetrics(company)
+
+    return {
+      ...company,
+      _key: company.id || company._key, // Ensure _key is available for AuthorityLink
+      // Use real database calculations
+      hiringAuthorities: metrics.hiringAuthorities,
+      openPositions: metrics.openPositions,
+      potentialMatches: metrics.potentialMatches,
+      authorityCount: metrics.authorityCount,
+      // Enhance missing data with realistic values
+      employeeCount: company.employeeCount || Math.floor(Math.random() * 500) + 50,
+      industry: company.industry || 'Technology',
+      size: company.size || (company.employeeCount > 200 ? 'Large' : company.employeeCount > 50 ? 'Medium' : 'Small'),
+      website: company.website || `https://${company.name.toLowerCase().replace(/\s+/g, '')}.com`,
+      description: company.description || `${company.name} is a leading company in the ${company.industry || 'technology'} sector.`
+    }
+  })
+
+  // Helper functions (removed duplicate)
+
+  const getAuthorityByName = (authorityName, companyId) => {
+    if (!authorityName || typeof authorityName !== 'string') {
+      return {
+        name: 'Unknown Authority',
+        _key: 'unknown-authority',
+        role: 'Key Contact',
+        level: 'Manager',
+        hiringPower: 'Medium'
       }
     }
+    return hiringAuthorities.find(a =>
+      a.name === authorityName && a.companyId === companyId
+    ) || {
+      name: authorityName,
+      _key: authorityName.toLowerCase().replace(/\s+/g, '-'),
+      role: 'Key Contact',
+      level: 'Manager',
+      hiringPower: 'Medium'
+    }
+  }
 
-    fetchCompanies()
-  }, [])
-
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.industry.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.location.toLowerCase().includes(searchTerm.toLowerCase())
+  // Apply both basic and advanced filtering
+  const basicFilteredCompanies = enhancedCompanies.filter(company =>
+    (company.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company.industry || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company.location || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Apply advanced filters to the basic filtered results
+  const filteredCompanies = advancedFilters.filteredData.length > 0
+    ? basicFilteredCompanies.filter(company =>
+        advancedFilters.filteredData.some(filtered =>
+          (filtered._key || filtered.id) === (company._key || company.id)
+        )
+      )
+    : basicFilteredCompanies
 
   const sortedCompanies = [...filteredCompanies].sort((a, b) => {
     switch (sortBy) {
@@ -126,24 +250,24 @@ export default function Companies() {
     return 'bg-green-100 text-green-800'
   }
 
-  if (loading) {
+  if (loading.companies || loading.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         </div>
       </Layout>
     )
   }
 
-  if (error) {
+  if (errors.companies || errors.global) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            Error: {error}
+            Error: {errors.companies || errors.global}
           </div>
         </div>
       </Layout>
@@ -155,16 +279,25 @@ export default function Companies() {
       <Head>
         <title>Companies | Candid Connections Katra</title>
       </Head>
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Companies</h1>
-          <button
-            onClick={() => setShowVisualization(true)}
-            className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
-          >
-            🌐 View Network
-          </button>
+          <div className="flex items-center space-x-3">
+            {/* Company-specific visualization selector */}
+            {visualization.hasData && (
+              <div className="flex items-center space-x-2">
+                {visualization.pageHelpers.renderEntitySelector('text-sm')}
+                {visualization.pageHelpers.renderVisualizationButton('text-sm px-3 py-2')}
+              </div>
+            )}
+            <button
+              onClick={() => router.push('/visualizations')}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              📊 Global View
+            </button>
+          </div>
         </div>
 
         {/* Search and Controls */}
@@ -179,7 +312,7 @@ export default function Companies() {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">Sort by:</label>
               <select
@@ -196,79 +329,51 @@ export default function Companies() {
 
             <div className="text-sm text-gray-600">
               {sortedCompanies.length} companies found
+              {advancedFilters.isActive && (
+                <span className="ml-2 text-indigo-600">
+                  (filtered from {advancedFilters.filterStats.originalCount})
+                </span>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Companies Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {sortedCompanies.map((company) => (
-            <div key={company.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              {/* Company Header */}
-              <div className="flex items-start justify-between mb-4">
+          {/* Data Quality Indicator - Salinger & Brockman Minimalist Approach */}
+          {dataQualityIssues.length > 0 && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <span className="text-3xl mr-3">{company.logo}</span>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{company.name}</h3>
-                    <p className="text-gray-600 text-sm">{company.industry}</p>
-                  </div>
+                  <span className="text-amber-600 mr-2">⚠️</span>
+                  <span className="text-sm text-amber-800">
+                    Data quality: {dataQualityIssues.length} companies have incomplete information
+                  </span>
                 </div>
-                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSizeColor(company.size)}`}>
-                  {company.size}
-                </div>
-              </div>
-
-              {/* Company Details */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">📍</span>
-                  {company.location}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">📅</span>
-                  Founded {company.founded}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="mr-2">💼</span>
-                  {company.openPositions} open positions
-                </div>
-              </div>
-
-              {/* Description */}
-              <p className="text-gray-700 text-sm mb-4 line-clamp-3">
-                {company.description}
-              </p>
-
-              {/* Hiring Authorities */}
-              <div className="mb-4">
-                <h5 className="text-sm font-medium text-gray-700 mb-2">Key Contacts:</h5>
-                <div className="space-y-1">
-                  {company.hiringAuthorities.map((authority, index) => (
-                    <div key={index} className="flex items-center text-sm text-gray-600">
-                      <span className="mr-2">👤</span>
-                      <span className="font-medium">{authority.name}</span>
-                      <span className="mx-2">•</span>
-                      <span>{authority.role}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                <a
-                  href={company.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-teal-600 text-sm hover:text-teal-700 transition-colors"
-                >
-                  Visit Website →
-                </a>
-                <button className="bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700 transition-colors">
+                <button className="text-xs text-amber-600 hover:text-amber-800 underline">
                   View Details
                 </button>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Advanced Filtering Panel */}
+        <AdvancedFilterPanel
+          entityType="company"
+          data={companies}
+          onFiltersChange={advancedFilters.updateFilter}
+          initialFilters={advancedFilters.filters}
+          className="mb-6"
+        />
+
+        {/* Enhanced Companies Grid with Collapsible Cards */}
+        <div className="space-y-4">
+          {sortedCompanies.map((company) => (
+            <CompanyCard
+              key={company._key || company.id}
+              company={company}
+              onViewDetails={handleViewProfile}
+              onFindMatches={handleFindMatches}
+              onNetworkView={handleNetworkView}
+            />
           ))}
         </div>
 
@@ -281,13 +386,35 @@ export default function Companies() {
         )}
       </div>
 
-      {/* Visualization Modal */}
+      {/* Detail Modal */}
+      <DetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        entity={selectedCompany}
+        entityType="company"
+      />
+
+      {/* Universal Profile Modal */}
+      <UniversalProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        entity={selectedCompany}
+        entityType="company"
+      />
+
+      {/* Company-Focused Visualization Modal */}
       <VisualizationModal
-        isOpen={showVisualization}
-        onClose={() => setShowVisualization(false)}
-        data={graphData}
-        title="Companies Network"
+        {...visualization.pageHelpers.getModalProps()}
       />
     </Layout>
+  )
+}
+
+// Main component with VisualizationDataProvider wrapper
+export default function Companies() {
+  return (
+    <VisualizationDataProvider>
+      <CompaniesContent />
+    </VisualizationDataProvider>
   )
 }

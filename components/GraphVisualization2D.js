@@ -25,14 +25,22 @@ export default function GraphVisualization2D({ data }) {
       .force('charge', d3.forceManyBody().strength(-400))
       .force('center', d3.forceCenter(width / 2, height / 2))
 
-    // Create links
+    // Create links with enhanced visibility
     const link = svg.append('g')
       .selectAll('line')
       .data(data.links)
       .join('line')
-      .attr('stroke', '#999')
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', d => Math.sqrt(d.value || 1))
+      .attr('stroke', d => {
+        // Use consistent colors from visualization constants
+        switch(d.type) {
+          case 'hiring': return '#00d4ff' // Cyan for hiring connections
+          case 'company': return '#8b5cf6' // Purple for company connections
+          case 'skill': return '#f97316' // Orange for skill connections
+          default: return '#6b7280' // Gray for other connections
+        }
+      })
+      .attr('stroke-opacity', 0.8) // Increased opacity
+      .attr('stroke-width', d => Math.max(2, Math.sqrt(d.value || d.strength || 1) * 2)) // Thicker lines
 
     // Create nodes
     const node = svg.append('g')
@@ -42,10 +50,11 @@ export default function GraphVisualization2D({ data }) {
       .attr('r', d => d.size || 5)
       .attr('fill', d => {
         switch(d.type) {
-          case 'jobSeeker': return '#3b82f6' // blue
-          case 'company': return '#14b8a6' // teal
-          case 'position': return '#10b981' // emerald
-          case 'skill': return '#f59e0b' // amber
+          case 'company': return '#8b5cf6' // purple - FIXED
+          case 'authority': return '#00d4ff' // cyan
+          case 'jobSeeker': return '#f97316' // orange
+          case 'skill': return '#10b981' // green
+          case 'position': return '#ef4444' // red
           default: return '#6366f1' // indigo
         }
       })

@@ -486,6 +486,189 @@ const mockData = {
       remote: true,
       bio: 'Data scientist with business impact focus'
     }
+  ],
+
+  // Positions with authority relationships
+  positions: [
+    // TechFlow Innovations (Startup) - CTO hiring
+    {
+      _key: 'pos_senior_frontend_techflow',
+      title: 'Senior Frontend Developer',
+      companyId: 'companies/startup_techflow',
+      authorityId: 'hiringAuthorities/cto_techflow',
+      requirements: ['React', 'TypeScript', 'Node.js', 'Blockchain'],
+      level: 'Senior',
+      type: 'Full-time',
+      location: 'San Francisco, CA',
+      remote: true,
+      salary: '$120,000 - $150,000',
+      description: 'Lead frontend development for our blockchain payment platform',
+      benefits: ['Equity', 'Health Insurance', 'Remote Work'],
+      status: 'active',
+      postedDate: '2024-01-15',
+      applicants: 12
+    },
+    {
+      _key: 'pos_blockchain_dev_techflow',
+      title: 'Blockchain Developer',
+      companyId: 'companies/startup_techflow',
+      authorityId: 'hiringAuthorities/ceo_techflow',
+      requirements: ['Blockchain', 'Solidity', 'Node.js', 'FinTech'],
+      level: 'Mid-level',
+      type: 'Full-time',
+      location: 'San Francisco, CA',
+      remote: true,
+      salary: '$110,000 - $140,000',
+      description: 'Build smart contracts and DeFi protocols',
+      benefits: ['Equity', 'Health Insurance', 'Learning Budget'],
+      status: 'active',
+      postedDate: '2024-01-20',
+      applicants: 8
+    },
+
+    // CloudTech Solutions (Mid-size) - VP Engineering hiring
+    {
+      _key: 'pos_devops_engineer_cloudtech',
+      title: 'Senior DevOps Engineer',
+      companyId: 'companies/midsize_cloudtech',
+      authorityId: 'hiringAuthorities/vp_eng_cloudtech',
+      requirements: ['Kubernetes', 'Docker', 'Terraform', 'AWS', 'Python'],
+      level: 'Senior',
+      type: 'Full-time',
+      location: 'Austin, TX',
+      remote: false,
+      salary: '$130,000 - $160,000',
+      description: 'Scale our cloud infrastructure and DevOps practices',
+      benefits: ['401k Match', 'Health Insurance', 'PTO'],
+      status: 'active',
+      postedDate: '2024-01-10',
+      applicants: 15
+    },
+    {
+      _key: 'pos_product_manager_cloudtech',
+      title: 'Senior Product Manager',
+      companyId: 'companies/midsize_cloudtech',
+      authorityId: 'hiringAuthorities/dir_product_cloudtech',
+      requirements: ['Product Management', 'Agile', 'Cloud Platforms', 'Analytics'],
+      level: 'Senior',
+      type: 'Full-time',
+      location: 'Austin, TX',
+      remote: true,
+      salary: '$115,000 - $145,000',
+      description: 'Drive product strategy for our cloud platform',
+      benefits: ['Stock Options', 'Health Insurance', 'Remote Work'],
+      status: 'active',
+      postedDate: '2024-01-12',
+      applicants: 22
+    },
+
+    // MegaCorp Industries (Enterprise) - HR and Engineering Manager hiring
+    {
+      _key: 'pos_embedded_engineer_megacorp',
+      title: 'Embedded Systems Engineer',
+      companyId: 'companies/enterprise_megacorp',
+      authorityId: 'hiringAuthorities/eng_manager_megacorp',
+      requirements: ['C++', 'Embedded Systems', 'Robotics', 'PLC Programming'],
+      level: 'Mid-level',
+      type: 'Full-time',
+      location: 'Detroit, MI',
+      remote: false,
+      salary: '$95,000 - $120,000',
+      description: 'Develop embedded systems for industrial automation',
+      benefits: ['Pension', 'Health Insurance', 'Training Programs'],
+      status: 'active',
+      postedDate: '2024-01-08',
+      applicants: 18
+    },
+    {
+      _key: 'pos_operations_manager_megacorp',
+      title: 'Operations Manager',
+      companyId: 'companies/enterprise_megacorp',
+      authorityId: 'hiringAuthorities/hr_director_megacorp',
+      requirements: ['Operations', 'Six Sigma', 'Project Management', 'Manufacturing'],
+      level: 'Manager',
+      type: 'Full-time',
+      location: 'Detroit, MI',
+      remote: false,
+      salary: '$85,000 - $110,000',
+      description: 'Manage manufacturing operations and process improvement',
+      benefits: ['Pension', 'Health Insurance', 'Career Development'],
+      status: 'active',
+      postedDate: '2024-01-05',
+      applicants: 25
+    },
+
+    // Design Studio Pro (Mid-size) - Creative Director hiring
+    {
+      _key: 'pos_senior_ux_designer_design',
+      title: 'Senior UX Designer',
+      companyId: 'companies/midsize_designstudio',
+      authorityId: 'hiringAuthorities/creative_director_design',
+      requirements: ['Figma', 'User Research', 'Design Systems', 'Prototyping'],
+      level: 'Senior',
+      type: 'Full-time',
+      location: 'New York, NY',
+      remote: true,
+      salary: '$105,000 - $135,000',
+      description: 'Lead UX design for Fortune 500 client projects',
+      benefits: ['Creative Time', 'Health Insurance', 'Conference Budget'],
+      status: 'active',
+      postedDate: '2024-01-18',
+      applicants: 31
+    },
+    {
+      _key: 'pos_product_designer_design',
+      title: 'Product Designer',
+      companyId: 'companies/midsize_designstudio',
+      authorityId: 'hiringAuthorities/creative_director_design',
+      requirements: ['Figma', 'User Research', 'Product Management', 'Leadership'],
+      level: 'Mid-level',
+      type: 'Full-time',
+      location: 'New York, NY',
+      remote: true,
+      salary: '$90,000 - $115,000',
+      description: 'Design digital products from concept to launch',
+      benefits: ['Creative Time', 'Health Insurance', 'Flexible Hours'],
+      status: 'active',
+      postedDate: '2024-01-22',
+      applicants: 19
+    },
+
+    // AI Ventures (Startup) - Founder hiring
+    {
+      _key: 'pos_ml_engineer_ai',
+      title: 'Senior Machine Learning Engineer',
+      companyId: 'companies/startup_aiventures',
+      authorityId: 'hiringAuthorities/founder_ai',
+      requirements: ['Machine Learning', 'Python', 'TensorFlow', 'Research'],
+      level: 'Senior',
+      type: 'Full-time',
+      location: 'Seattle, WA',
+      remote: true,
+      salary: '$140,000 - $170,000',
+      description: 'Research and develop cutting-edge AI solutions',
+      benefits: ['Equity', 'Health Insurance', 'Research Budget'],
+      status: 'active',
+      postedDate: '2024-01-25',
+      applicants: 14
+    },
+    {
+      _key: 'pos_ai_researcher_ai',
+      title: 'AI Research Scientist',
+      companyId: 'companies/startup_aiventures',
+      authorityId: 'hiringAuthorities/founder_ai',
+      requirements: ['Machine Learning', 'Python', 'TensorFlow', 'PhD', 'Research'],
+      level: 'Senior',
+      type: 'Full-time',
+      location: 'Seattle, WA',
+      remote: true,
+      salary: '$150,000 - $180,000',
+      description: 'Lead AI research initiatives and publish findings',
+      benefits: ['Equity', 'Health Insurance', 'Publication Support'],
+      status: 'active',
+      postedDate: '2024-01-28',
+      applicants: 7
+    }
   ]
 }
 
@@ -528,6 +711,39 @@ export async function seedDatabase() {
       await collections.jobSeekers.save(jobSeeker)
     }
 
+    console.log('📋 Seeding positions...')
+    for (const position of mockData.positions) {
+      const savedPosition = await collections.positions.save(position)
+
+      // Create skill requirement relationships
+      for (const skillName of position.requirements) {
+        // Find skill by name
+        const skillQuery = `
+          FOR skill IN skills
+            FILTER LOWER(skill.name) == LOWER(@skillName)
+            RETURN skill
+        `
+        const skillCursor = await db.query(skillQuery, { skillName })
+        const skills = await skillCursor.all()
+
+        if (skills.length > 0) {
+          // Create requirement relationship
+          await collections.requires.save({
+            _from: savedPosition._id,
+            _to: skills[0]._id,
+            createdAt: new Date().toISOString()
+          })
+        }
+      }
+
+      // Create authority posting relationship
+      await collections.posts.save({
+        _from: position.authorityId,
+        _to: savedPosition._id,
+        createdAt: new Date().toISOString()
+      })
+    }
+
     console.log('🎯 Generating authority matches...')
     const matches = await generateAllMatches(
       mockData.jobSeekers,
@@ -545,16 +761,18 @@ export async function seedDatabase() {
     console.log(`   👔 ${mockData.hiringAuthorities.length} hiring authorities`)
     console.log(`   👥 ${mockData.jobSeekers.length} job seekers`)
     console.log(`   🛠️ ${mockData.skills.length} skills`)
+    console.log(`   📋 ${mockData.positions.length} positions`)
     console.log(`   🎯 ${matches.length} authority matches`)
 
     return {
       success: true,
-      message: 'Database seeded successfully with authority matches',
+      message: 'Database seeded successfully with positions and authority matches',
       stats: {
         companies: mockData.companies.length,
         hiringAuthorities: mockData.hiringAuthorities.length,
         jobSeekers: mockData.jobSeekers.length,
         skills: mockData.skills.length,
+        positions: mockData.positions.length,
         matches: matches.length
       }
     }
