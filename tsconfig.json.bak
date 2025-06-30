@@ -24,9 +24,7 @@
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "app/*"
-      ]
+      "@/*": ["app/*"]
     }
   },
   "include": [

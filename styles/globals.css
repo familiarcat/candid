@@ -437,3 +437,11 @@
     }
   }
 }
+@layer utilities {
+  .bg-candid-gray-50 {
+    background-color: #f9fafb;
+  }
+  .text-candid-navy-800 {
+    color: #1f2937;
+  }
+}
