@@ -6,12 +6,6 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        "lcars-black": "#000000",
-        "lcars-peach": "#FFB870",
-        "lcars-blue": "#2F9ED4",
-        "lcars-orange": "#D67E2C"
-      },
-      colors: {
         'candid-gray-50': '#f9fafb',
         'secondary-100': '#e0e7ff',
         'secondary-800': '#303f9f',
