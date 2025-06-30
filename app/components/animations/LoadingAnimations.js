@@ -2,7 +2,7 @@
 // Provides various loading states with smooth animations
 
 import { useState, useEffect } from 'react'
-import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
+import { cssAnimator, ANIMATION_CONFIG } from '../../../lib/animationSystem'
 
 /**
  * Network visualization loading animation

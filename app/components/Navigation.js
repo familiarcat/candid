@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useState, useRef, useEffect } from 'react'
-import { cssAnimator, ANIMATION_CONFIG } from '../lib/animationSystem'
-import { mobileDetector, touchAnimator } from '../lib/mobileAnimations'
+import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
+import { mobileDetector, touchAnimator } from '../../lib/mobileAnimations'
 
 export default function Navigation() {
   const router = useRouter()

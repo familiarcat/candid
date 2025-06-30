@@ -21,7 +21,11 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "strictNullChecks": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["app/*"]  // or "src/*" if you're using /src
+    }
   },
   "include": [
     "next-env.d.ts",

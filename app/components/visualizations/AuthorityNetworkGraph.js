@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
-import { getNodeColor, getLinkColor } from '../../lib/visualizationConstants'
+import { getNodeColor, getLinkColor } from '../../../lib/visualizationConstants'
 
 export default function AuthorityNetworkGraph({
   data,

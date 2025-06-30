@@ -2,8 +2,8 @@
 // Provides responsive components that work great on mobile devices
 
 import { useState, useEffect, useRef } from 'react'
-import { touchAnimator, responsiveAnimator, mobileDetector } from '../../lib/mobileAnimations'
-import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
+import { touchAnimator, responsiveAnimator, mobileDetector } from '../../../lib/mobileAnimations'
+import { cssAnimator, ANIMATION_CONFIG } from '../../../lib/animationSystem'
 
 /**
  * Mobile-optimized button with touch animations

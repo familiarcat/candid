@@ -2,7 +2,7 @@
 // Provides reusable hover animations for enhanced user experience
 
 import { useState, useRef, useEffect } from 'react'
-import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
+import { cssAnimator, ANIMATION_CONFIG } from '../../../lib/animationSystem'
 
 /**
  * Animated button with hover effects

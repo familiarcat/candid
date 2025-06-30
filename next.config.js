@@ -5,6 +5,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['d3', 'three', '3d-force-graph', '@react-three/fiber', '@react-three/drei'],
   }
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

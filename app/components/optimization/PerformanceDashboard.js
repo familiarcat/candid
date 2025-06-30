@@ -2,8 +2,8 @@
 // Provides real-time performance metrics and optimization insights
 
 import { useState, useEffect, useRef } from 'react'
-import { performanceMonitor, smartCache } from '../../lib/performanceOptimizer'
-import { optimizedFetcher } from '../../lib/dataOptimizer'
+import { performanceMonitor, smartCache } from '../../../lib/performanceOptimizer'
+import { optimizedFetcher } from '../../../lib/dataOptimizer'
 
 export default function PerformanceDashboard({ 
   isVisible = false, 

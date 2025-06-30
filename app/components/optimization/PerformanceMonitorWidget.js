@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import PerformanceDashboard from './PerformanceDashboard'
-import { performanceMonitor } from '../../lib/performanceOptimizer'
+import { performanceMonitor } from '../../../lib/performanceOptimizer'
 
 export default function PerformanceMonitorWidget({ 
   enabled = process.env.NODE_ENV === 'development',

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import Navigation from './Navigation'
 import PerformanceMonitorWidget from './optimization/PerformanceMonitorWidget'
-import { accessibilityManager } from '../lib/accessibilitySystem'
+import { accessibilityManager } from '../../lib/accessibilitySystem'
 
 export default function Layout({ children }) {
   // Initialize accessibility features

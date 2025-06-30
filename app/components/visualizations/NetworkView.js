@@ -3,10 +3,10 @@ import { useVisualizationData } from './VisualizationDataProvider'
 import AuthorityNetworkGraph from './AuthorityNetworkGraph'
 import NetworkVisualization3D from './NetworkVisualization3D_Simple'
 import GraphCard from './GraphCard'
-import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
+import { cssAnimator, ANIMATION_CONFIG } from '../../../lib/animationSystem'
 import { LoadingOverlay, VisualizationLoadingAnimation, PageTransition } from '../animations/LoadingAnimations'
 import { ResponsiveVisualizationContainer, MobileVisualizationControls, MobileVisualizationGestures } from '../mobile/ResponsiveVisualization'
-import { mobileDetector } from '../../lib/mobileAnimations'
+import { mobileDetector } from '../../../lib/mobileAnimations'
 
 export default function NetworkView() {
   const { globalNetworkData, loading, errors } = useVisualizationData()

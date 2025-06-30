@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react'
-import { generateNetworkData, generateFocusedNetworkData } from '../../lib/graphDataGenerator'
-import { processRootNodeVisualization } from '../../lib/rootNodeProcessor'
-import { sortNetworkNodes, SORTING_METHODS } from '../../lib/visualizationSorting'
+import { generateNetworkData, generateFocusedNetworkData } from '../../../lib/graphDataGenerator'
+import { processRootNodeVisualization } from '../../../lib/rootNodeProcessor'
+import { sortNetworkNodes, SORTING_METHODS } from '../../../lib/visualizationSorting'
 import {
   visualizationCache,
   optimizeNetworkData,
   performanceMonitor,
   memoize
-} from '../../lib/performanceOptimizations'
+} from '../../../lib/performanceOptimizations'
 
 // Visualization Data Context
 const VisualizationDataContext = createContext()

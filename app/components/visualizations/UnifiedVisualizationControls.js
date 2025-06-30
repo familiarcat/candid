@@ -2,8 +2,8 @@
 // Provides root node selection, sorting, filtering, and layout controls
 
 import { useState, useEffect, useRef } from 'react'
-import { SORTING_METHODS, getAvailableSortingMethods, getSortingMethodLabel } from '../../lib/visualizationSorting'
-import { cssAnimator, ANIMATION_CONFIG } from '../../lib/animationSystem'
+import { SORTING_METHODS, getAvailableSortingMethods, getSortingMethodLabel } from '../../../lib/visualizationSorting'
+import { cssAnimator, ANIMATION_CONFIG } from '../../../lib/animationSystem'
 
 export default function UnifiedVisualizationControls({
   // Data props

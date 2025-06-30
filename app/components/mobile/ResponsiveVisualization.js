@@ -2,7 +2,7 @@
 // Automatically adapts visualization size and controls for different screen sizes
 
 import { useState, useEffect, useRef } from 'react'
-import { responsiveAnimator, mobileDetector } from '../../lib/mobileAnimations'
+import { responsiveAnimator, mobileDetector } from '../../../lib/mobileAnimations'
 import { MobileTabs } from './MobileOptimizedComponents'
 
 /**
