@@ -1,16 +1,19 @@
-'use client';
-import DashboardCard from '@/components/DashboardCards';
-import React from 'react';
+// app/dashboard/page.tsx
+"use client";
+import LcarsShell from "@/components/lcars/LcarsShell";
+import LcarsShellGrid from "@/components/lcars/LcarsShellGrid";
+import LcarsPanel from "@/components/lcars/LcarsPanel";
+import LcarsButton from "@/components/lcars/LcarsButton";
 
 export default function DashboardPage() {
   return (
-    <main className="p-md space-y-md">
-      <h1 className="text-4xl font-bold text-lcars-peach mb-md">LCARS Observation Dashboard</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
-        <DashboardCard title="Connections" value={42} description="Total networked users" />
-        <DashboardCard title="Missions" value={5} description="Active threads" />
-        <DashboardCard title="Pending" value={13} description="Unresolved interactions" />
-      </div>
-    </main>
+    <LcarsShell>
+      <LcarsShellGrid>
+        <LcarsPanel>
+          <h1 className="text-4xl font-bold mb-4">Welcome to the LCARS Dashboard</h1>
+          <LcarsButton label="Begin Mission" onClick={() => alert("Mission initiated")} />
+        </LcarsPanel>
+      </LcarsShellGrid>
+    </LcarsShell>
   );
 }

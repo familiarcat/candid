@@ -1,12 +1,21 @@
-import '../styles/globals.css';
-import type { ReactNode } from 'react';
+import './globals.css'
+import type { Metadata } from 'next'
+import { Orbitron } from 'next/font/google'
+import LcarsShellGrid from '@/components/lcars/LcarsShellGrid'
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+const orbitron = Orbitron({ subsets: ['latin'], weight: ['400', '700'] })
+
+export const metadata: Metadata = {
+  title: 'LCARS Observation Lounge',
+  description: 'Mission control for starship operations',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-lcars-black text-lcars-white font-lcars">
-        {children}
+      <body className={`${orbitron.className} bg-lcars-black text-lcars-peach`}>
+        <LcarsShellGrid>{children}</LcarsShellGrid>
       </body>
     </html>
-  );
+  )
 }

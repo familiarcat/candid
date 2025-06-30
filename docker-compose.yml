@@ -1,18 +1,24 @@
 version: '3.8'
 
 services:
-  arangodb:
-    image: arangodb:3.11
-    container_name: candid-connections-arangodb
-    environment:
-      ARANGO_NO_AUTH: 1
+  app:
+    build: .
     ports:
-      - "8529:8529"
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
     volumes:
-      - arangodb_data:/var/lib/arangodb3
-      - arangodb_apps:/var/lib/arangodb3-apps
-    restart: unless-stopped
+      - .:/app
+    depends_on:
+      - db
 
-volumes:
-  arangodb_data:
-  arangodb_apps:
+  db:
+    image: arangodb:latest
+    environment:
+      - ARANGO_ROOT_PASSWORD=password
+    ports:
+      - '8529:8529'
+
+    volumes:
+      - ./scripts/seed_arangodb.js:/docker-entrypoint-initdb.d/seed_arangodb.js
+    command: ["arangod", "--server.endpoint", "tcp://0.0.0.0:8529"]

@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional fallback for legacy browsers or SSR preview */
+body {
+  @apply bg-lcars-black text-lcars-peach font-lcars;
+}

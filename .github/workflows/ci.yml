@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      arangodb:
+        image: arangodb
+        ports:
+          - 8529:8529
+        options: >-
+          --health-cmd="curl --fail http://localhost:8529/_api/version || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        env:
+          ARANGO_ROOT_PASSWORD: password
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build app
+      run: npm run build
+      env:
+        ARANGO_URL: http://localhost:8529
+        ARANGO_ROOT_PASSWORD: password
