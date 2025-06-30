@@ -6,6 +6,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        'candid-gray-50': '#f9fafb',
+        'candid-navy-800': '#1f2937','"candid-navy-900"': '#101624',
+
+        'lcars-black': '#000000',
+        'lcars-white': '#ffffff',
+      },
+      fontFamily: {
+        'lcars': ['"LCARS"', 'sans-serif'],
+      },
+      colors: {
+        'candid-gray-50': '#f9fafb',
+        'candid-navy-800': '#1f2937','"candid-navy-900"': '#101624',
+
         candid: {
           'gray-50': '#f9fafb',
           'gray-100': '#f3f4f6',

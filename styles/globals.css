@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /* Import mobile-optimized styles */
-@import './mobile.css';
+/* @import './mobile.css'; // Removed: file missing */
 
 /* Essential accessibility features (invisible) */
 .sr-only {
@@ -443,5 +443,24 @@
   }
   .text-candid-navy-800 {
     color: #1f2937;
+  }
+}
+
+
+@layer utilities {
+  .shadow-soft {
+    @apply shadow-sm;
+  }
+  .shadow-medium {
+    @apply shadow-md;
+  }
+  .bg-candid-gray-50 {
+    background-color: #f9fafb;
+  }
+  .text-candid-navy-800 {
+    color: #1f2937;
+  }
+  .text-candid-navy-900 {
+    color: #101624;
   }
 }
