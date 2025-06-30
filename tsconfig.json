@@ -21,10 +21,10 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["app/*"]  // or "src/*" if you're using /src
+      "@/*": ["app/*"]
     }
   },
   "include": [
