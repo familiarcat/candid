@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const defaultTheme = require('tailwindcss/defaultTheme');
 
 module.exports = {
@@ -6,6 +7,7 @@ module.exports = {
     extend: {
       colors: {
         lcars: {
+          'candid-gray-50': '#f9fafb',
           peach: '#FFB870',
           blue: '#4FC3F7',
           violet: '#AB47BC',
