@@ -7,6 +7,34 @@ module.exports = {
     extend: {
       colors: {
         'candid-gray-50': '#f9fafb',
+        'secondary-100': '#e0e7ff',
+        'secondary-800': '#303f9f',
+        'candid-navy-800': '#1f2937',
+        'candid-navy-900': '#101624',
+      },
+
+      colors: {
+        'candid-gray-50': '#f9fafb',
+        'candid-gray-100': '#f3f4f6',
+        'candid-gray-200': '#e5e7eb',
+        'candid-gray-300': '#d1d5db',
+        'candid-gray-400': '#9ca3af',
+        'candid-gray-500': '#6b7280',
+        'candid-gray-600': '#4b5563',
+        'candid-gray-700': '#374151',
+        'candid-gray-800': '#1f2937',
+        'candid-gray-900': '#111827',
+        'candid-navy-600': '#374151',
+        'candid-navy-800': '#1f2937',
+        'candid-navy-900': '#101624',
+      },
+      boxShadow: {
+        soft: '0 1px 2px rgba(0, 0, 0, 0.05)',
+        medium: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      },
+
+      colors: {
+        'candid-gray-50': '#f9fafb',
         'candid-navy-800': '#1f2937','"candid-navy-900"': '#101624',
 
         'lcars-black': '#000000',
