@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import Navigation from './Navigation'
-import PerformanceMonitorWidget from './optimization/PerformanceMonitorWidget'
 import { accessibilityManager } from '../lib/accessibilitySystem'
 
 export default function Layout({ children }) {
@@ -10,7 +9,7 @@ export default function Layout({ children }) {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-12H4">
       {/* Skip to main content link */}
       <a
         href="#main-content"
@@ -31,8 +30,6 @@ export default function Layout({ children }) {
         {children}
       </main>
 
-      {/* Development tools */}
-      <PerformanceMonitorWidget />
     </div>
   )
 }
